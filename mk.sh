@@ -60,13 +60,38 @@ build_kernel()
 	return 0
 }
 
+build_update()
+{
+	cd ${BS_DIR_RELEASE} || return 1
+	
+	# Make update-linux.img
+	echo "create update-linux.img..."
+	cp -av ${BS_DIR_TOOLS}/package-file ${BS_DIR_OUTPUT}/package-file || return 1;
+	${BS_DIR_TOOLS}/afptool -pack ${BS_DIR_OUTPUT}/ ${BS_DIR_OUTPUT}/temp.img || return 1;
+	${BS_DIR_TOOLS}/rkImageMaker -RK330C ${BS_DIR_OUTPUT}/RK3399MiniLoaderAll_V1.05.bin ${BS_DIR_OUTPUT}/temp.img ${BS_DIR_OUTPUT}/update-linux.img -os_type:androidos || return 1;
+	rm -fr ${BS_DIR_OUTPUT}/temp.img || return 1;
+
+	return 0
+}
+
+copy_other_files()
+{
+	cd ${BS_DIR_TOP} || return 1
+
+	cp -av ${BS_DIR_TOOLS}/parameter.txt ${BS_DIR_OUTPUT} || return 1;
+	ln -sf ${BS_DIR_TOOLS}/linux-rootfs.img ${BS_DIR_OUTPUT}/linux-rootfs.img || return 1;
+	return 0
+}
+
 threads=1
 uboot=no
 kernel=no
+update=no
 
 if [ -z $1 ]; then
 	uboot=yes
 	kernel=yes
+	update=yes
 fi
 
 while [ "$1" ]; do
@@ -81,9 +106,13 @@ while [ "$1" ]; do
 	-k|--kernel)
 	    kernel=yes
 	    ;;
+	-U|--update)
+		update=yes
+	    ;;
 	-a|--all)
 		uboot=yes
 		kernel=yes
+		update=yes
 	    ;;
 	-h|--help)
 	    cat >&2 <<EOF
@@ -93,6 +122,7 @@ Build script for compile the source of telechips project.
   -j=n                 using n threads when building source project (example: -j=16)
   -u, --uboot          build bootloader uboot from source
   -k, --kernel         build kernel from source
+  -U, --update         build update file
   -a, --all            build all, include anything
   -h, --help           display this help and exit
 EOF
@@ -107,6 +137,7 @@ EOF
 done
 
 setup_environment || exit 1
+copy_other_files || exit 1
 
 if [ "${uboot}" = yes ]; then
 	build_bootloader_uboot || exit 1
@@ -114,6 +145,10 @@ fi
 
 if [ "${kernel}" = yes ]; then
 	build_kernel || exit 1
+fi
+
+if [ "${update}" = yes ]; then
+	build_update || exit 1
 fi
 
 exit 0

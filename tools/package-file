@@ -1,0 +1,18 @@
+# NAME			Relative path
+#
+#HWDEF			HWDEF
+package-file	package-file
+bootloader		RK3399MiniLoaderAll_V1.05.bin
+parameter		parameter.txt
+trust			trust.img
+uboot			uboot.img
+misc			RESERVED
+resource		resource.img
+kernel			kernel.img
+boot			RESERVED
+recovery		RESERVED
+system			RESERVED
+backup			RESERVED
+userdata		linux-rootfs.img
+#update-script	update-script
+#recover-script	recover-script
