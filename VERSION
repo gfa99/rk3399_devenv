@@ -1,0 +1,29 @@
+https://github.com/rockchip-linux
+=================================
+
+Copy some code from x3399_nougat:
+
+commit 6e1d47e6c03bd43ff34ddd46f3696456d19511f0
+Author: jianjun jiang <8192542@qq.com>
+Date:   Thu Mar 23 18:16:58 2017 +0800
+
+    [kernel][dts]disable irq_enable for gsensor
+
+commit 35a2b5f6aa802ee2c5b33c3e0c694cdd34589a1f
+Author: jianjun jiang <8192542@qq.com>
+Date:   Thu Mar 23 17:24:00 2017 +0800
+
+    [kernel]change kernel/arch/arm64/configs/x3399_defconfig
+
+commit e92cf93222be12fb677adb3f6dc02d7dae91c35b
+Author: jianjun jiang <8192542@qq.com>
+Date:   Thu Mar 23 16:41:32 2017 +0800
+
+    [kernel][dts]change audio codec order
+
+commit 65cba81e29eb406f9ddad2dfa2767556515f012d
+Author: jianjun jiang <8192542@qq.com>
+Date:   Thu Mar 23 12:57:31 2017 +0800
+
+    [AndroidTest]fix AndroidTest
+

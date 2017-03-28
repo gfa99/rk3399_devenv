@@ -1,0 +1,11 @@
+#
+# Normal rules
+#
+*~
+
+#
+# Top-level generic files
+#
+/output
+/output/*
+
