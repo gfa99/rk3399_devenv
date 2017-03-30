@@ -243,18 +243,6 @@
 	};
 };
 
-&i2c3 {
-	status = "okay";
-	i2c-scl-rising-time-ns = <300>;
-	i2c-scl-falling-time-ns = <15>;
-	clock-frequency = <10000>;
-
-	xic@20 {
-		compatible = "9tripod,xic";
-		reg = <0x20>;
-	};
-};
-
 &i2c4 {
 	status = "okay";
 	i2c-scl-rising-time-ns = <600>;
@@ -309,6 +297,18 @@
 		irq-gpio = <&gpio4 24 IRQ_TYPE_EDGE_FALLING>;
 		irq_enable = <1>;
 		poll_delay_ms = <30>;
+	};
+};
+
+&i2c6 {
+    status = "okay";
+    i2c-scl-rising-time-ns = <345>;
+    i2c-scl-falling-time-ns = <11>;
+    clock-frequency = <20000>;
+
+	xic@20 {
+		compatible = "9tripod,xic";
+		reg = <0x20>;
 	};
 };
 
