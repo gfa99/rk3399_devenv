@@ -4,6 +4,7 @@
 #include <linux/list.h>
 #include <linux/sysfs.h>
 #include <linux/ctype.h>
+#include <linux/delay.h>
 #include <linux/of.h>
 
 enum {
@@ -327,7 +328,10 @@ static int xic_power_reboot(struct i2c_client * client)
 void xic_poweroff(void)
 {
 	if(g_client)
+	{
 		xic_power_off(g_client);
+		mdelay(1500);
+	}
 }
 EXPORT_SYMBOL_GPL(xic_poweroff);
 
