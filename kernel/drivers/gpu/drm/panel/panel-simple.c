@@ -1353,6 +1353,29 @@ static const struct panel_desc shelly_sca07010_bfn_lnn = {
 	.bus_format = MEDIA_BUS_FMT_RGB666_1X18,
 };
 
+static const struct drm_display_mode samsung_ltl101dl03_mode = {
+	.clock = 271560,
+	.hdisplay = 2560,
+	.hsync_start = 2560 + 12,
+	.hsync_end = 2560 + 12 + 16,
+	.htotal = 2560 + 12 + 16 + 48,
+	.vdisplay = 1600,
+	.vsync_start = 1600 + 8,
+	.vsync_end = 1600 + 8 + 4,
+	.vtotal = 1600 + 8 + 4 + 8,
+	.vrefresh = 60,
+};
+
+static const struct panel_desc samsung_ltl101dl03 = {
+	.modes = &samsung_ltl101dl03_mode,
+	.num_modes = 1,
+	.size = {
+		.width = 216,
+		.height = 135,
+	},
+	.bus_format = MEDIA_BUS_FMT_RGB666_1X18,
+};
+
 static const struct of_device_id platform_of_match[] = {
 	{
 		.compatible = "simple-panel",
@@ -1474,6 +1497,9 @@ static const struct of_device_id platform_of_match[] = {
 	}, {
 		.compatible = "shelly,sca07010-bfn-lnn",
 		.data = &shelly_sca07010_bfn_lnn,
+	}, {
+		.compatible = "samsung,ltl101dl03",
+		.data = &samsung_ltl101dl03,
 	}, {
 		/* sentinel */
 	}

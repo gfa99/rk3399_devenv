@@ -428,8 +428,7 @@ u8 gtp_dat_9_7[] = {
 
 u8 gtp_dat_10_1[] = 
 {
-            //TODO:Puts your update firmware data here!
-#include "WGJ10187_GT9271_Config_20140623_104014_0X41.cfg"    //<1200, 1920> 10.1    
+#include "YTG-610055-F3-2560-1600.cfg"
 };
 
 #endif /* _GOODIX_GT9XX_H_ */
