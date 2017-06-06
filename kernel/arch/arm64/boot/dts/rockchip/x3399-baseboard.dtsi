@@ -215,7 +215,7 @@
 		compatible = "9tripod,xgpio";
 		pinctrl-names = "default";
 		pinctrl-0 = <&fan_gpio>;
-		gpio = <&gpio4 5 GPIO_ACTIVE_HIGH>;
+		gpio = <&gpio1 18 GPIO_ACTIVE_HIGH>;
 		status = "okay";
 	};
 };
@@ -432,7 +432,7 @@
 	
 	xgpio_fan {
 		fan_gpio: fan-gpio {
-			rockchip,pins = <4 5 RK_FUNC_GPIO &pcfg_pull_up>;
+			rockchip,pins = <1 18 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
 };
