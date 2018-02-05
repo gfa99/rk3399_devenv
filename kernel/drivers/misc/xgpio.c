@@ -28,7 +28,8 @@ static ssize_t xgpio_state_show(struct device * dev, struct device_attribute * a
 
 	if(!strcmp(attr->attr.name, "state"))
 	{
-		if(gpio_direction_input(xdev->gpio) == 0)
+		gpio_direction_input(xdev->gpio);
+		if(gpio_get_value(xdev->gpio) == 0)
 			return strlcpy(buf, "0\n", 3);
 		else
 			return strlcpy(buf, "1\n", 3);
