@@ -2,7 +2,7 @@
 #
 #HWDEF			HWDEF
 package-file	package-file
-bootloader		RK3399MiniLoaderAll_V1.05.bin
+bootloader		rk3399_loader_v1.12.109.bin
 parameter		parameter.txt
 trust			trust.img
 uboot			uboot.img

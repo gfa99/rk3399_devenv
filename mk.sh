@@ -39,7 +39,7 @@ build_bootloader_uboot()
 
 	# Copy bootloader to release directory
 	cp -v ${BS_DIR_UBOOT}/trust.img ${BS_DIR_OUTPUT}
-	cp -v ${BS_DIR_UBOOT}/*MiniLoaderAll_*.bin ${BS_DIR_OUTPUT}
+	cp -v ${BS_DIR_UBOOT}/rk3399_loader_*.bin ${BS_DIR_OUTPUT}
 	cp -v ${BS_DIR_UBOOT}/uboot.img ${BS_DIR_OUTPUT}
 
 	return 0
@@ -69,7 +69,7 @@ build_update()
 	ln -sf ${BS_DIR_OUTPUT}/debian-rootfs.img ${BS_DIR_OUTPUT}/linux-rootfs.img || return 1;
 	cp -av ${BS_DIR_TOOLS}/package-file ${BS_DIR_OUTPUT}/package-file || return 1;
 	${BS_DIR_TOOLS}/afptool -pack ${BS_DIR_OUTPUT}/ ${BS_DIR_OUTPUT}/temp.img || return 1;
-	${BS_DIR_TOOLS}/rkImageMaker -RK330C ${BS_DIR_OUTPUT}/RK3399MiniLoaderAll_V1.05.bin ${BS_DIR_OUTPUT}/temp.img ${BS_DIR_OUTPUT}/update-debian.img -os_type:androidos || return 1;
+	${BS_DIR_TOOLS}/rkImageMaker -RK330C ${BS_DIR_OUTPUT}/rk3399_loader_v1.12.109.bin ${BS_DIR_OUTPUT}/temp.img ${BS_DIR_OUTPUT}/update-debian.img -os_type:androidos || return 1;
 	rm -fr ${BS_DIR_OUTPUT}/temp.img || return 1;
 
 	# Make update-ubuntu.img
@@ -77,7 +77,7 @@ build_update()
 	ln -sf ${BS_DIR_OUTPUT}/ubuntu-rootfs.img ${BS_DIR_OUTPUT}/linux-rootfs.img || return 1;
 	cp -av ${BS_DIR_TOOLS}/package-file ${BS_DIR_OUTPUT}/package-file || return 1;
 	${BS_DIR_TOOLS}/afptool -pack ${BS_DIR_OUTPUT}/ ${BS_DIR_OUTPUT}/temp.img || return 1;
-	${BS_DIR_TOOLS}/rkImageMaker -RK330C ${BS_DIR_OUTPUT}/RK3399MiniLoaderAll_V1.05.bin ${BS_DIR_OUTPUT}/temp.img ${BS_DIR_OUTPUT}/update-ubuntu.img -os_type:androidos || return 1;
+	${BS_DIR_TOOLS}/rkImageMaker -RK330C ${BS_DIR_OUTPUT}/rk3399_loader_v1.12.109.bin ${BS_DIR_OUTPUT}/temp.img ${BS_DIR_OUTPUT}/update-ubuntu.img -os_type:androidos || return 1;
 	rm -fr ${BS_DIR_OUTPUT}/temp.img || return 1;
 
 	return 0
