@@ -88,6 +88,7 @@ copy_other_files()
 	cd ${BS_DIR_TOP} || return 1
 
 	cp -av ${BS_DIR_TOOLS}/parameter.txt ${BS_DIR_OUTPUT} || return 1;
+	cp -av ${BS_DIR_TOOLS}/boot.img ${BS_DIR_OUTPUT} || return 1;
 	if [ ! -f ${BS_DIR_OUTPUT}/debian-rootfs.img ]; then
 		tar xvf ${BS_DIR_TOOLS}/debian-rootfs.img.tar.bz2 -C ${BS_DIR_OUTPUT}/
 	fi

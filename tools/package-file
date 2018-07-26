@@ -9,7 +9,7 @@ uboot			uboot.img
 misc			RESERVED
 resource		resource.img
 kernel			kernel.img
-boot			RESERVED
+boot			boot.img
 recovery		RESERVED
 system			RESERVED
 backup			RESERVED
