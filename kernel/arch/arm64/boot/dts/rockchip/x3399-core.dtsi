@@ -12,7 +12,7 @@
  *     License, or (at your option) any later version.
  *
  *     This file is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of&gmac&gmac&&gmacgmac
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
  *
@@ -201,7 +201,7 @@
 	pinctrl-0 = <&rgmii_pins>;
 	tx_delay = <0x28>;
 	rx_delay = <0x11>;
-	status = "okay";
+	status = "disabled";
 };
 
 &gpu {
@@ -571,7 +571,7 @@
 	rockchip,hw-tshut-mode = <1>;
 	rockchip,hw-tshut-polarity = <1>;
 	rockchip,hw-tshut-temp = <110000>;
-	status = "disabled";
+	status = "okay";
 };
 
 &saradc {
@@ -608,7 +608,12 @@
 &uart2 {
 	status = "okay";
 };
-
+&uart3 {
+	status = "okay";
+};
+&uart1 {
+	status = "okay";
+};
 &usbdrd3_0 {
 	status = "okay";
 	extcon = <&fusb0>;
