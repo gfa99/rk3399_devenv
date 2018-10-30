@@ -145,7 +145,7 @@
 		BT,reset_gpio    = <&gpio0 9 GPIO_ACTIVE_HIGH>; /* GPIO0_B1 */
 		BT,wake_gpio     = <&gpio2 26 GPIO_ACTIVE_HIGH>; /* GPIO2_D2 */
 		BT,wake_host_irq = <&gpio0 4 GPIO_ACTIVE_HIGH>; /* GPIO0_A4 */
-		status = "okay";
+		status = "disabled";
 	};
 	
 	hall_sensor: hall-mh248 {
@@ -247,63 +247,6 @@
     status = "okay";
 };
 
-&i2c4 {
-	status = "okay";
-	i2c-scl-rising-time-ns = <600>;
-	i2c-scl-falling-time-ns = <20>;
-	clock-frequency = <400000>;
-
-	lsm330_accel@1e {
-		status = "okay";
-		compatible = "lsm330_acc";
-		pinctrl-names = "default";
-		pinctrl-0 = <&lsm330a_irq_gpio>;
-		reg = <0x1e>;
-		irq-gpio = <&gpio1 22 IRQ_TYPE_EDGE_RISING>;
-		type = <SENSOR_TYPE_ACCEL>;
-		irq_enable = <0>;
-		poll_delay_ms = <30>;
-		layout = <4>;
-	};
-
-	lsm330_gyro@6a {
-		status = "okay";
-		compatible = "lsm330_gyro";
-		pinctrl-names = "default";
-		pinctrl-0 = <&lsm330g_irq_gpio>;
-		reg = <0x6a>;
-		irq-gpio = <&gpio1 24 IRQ_TYPE_EDGE_RISING>;
-		type = <SENSOR_TYPE_GYROSCOPE>;
-		irq_enable = <0>;
-		poll_delay_ms = <30>;
-	};
-	
-	sensor@0f {
-		status = "okay";
-		compatible = "ak8963";
-		pinctrl-names = "default";
-		pinctrl-0 = <&ak8963_irq_gpio>;
-		reg = <0x0f>;
-		type = <SENSOR_TYPE_COMPASS>;
-		irq-gpio = <&gpio1 0 IRQ_TYPE_EDGE_RISING>;
-		irq_enable = <0>;
-		poll_delay_ms = <30>;
-		layout = <3>;
-	};
-
-	sensor@10 {
-		status = "okay";
-		compatible = "capella,light_cm3218";
-		pinctrl-names = "default";
-		pinctrl-0 = <&cm3218_irq_gpio>;
-		reg = <0x10>;
-		type = <SENSOR_TYPE_LIGHT>;
-		irq-gpio = <&gpio4 24 IRQ_TYPE_EDGE_FALLING>;
-		irq_enable = <1>;
-		poll_delay_ms = <30>;
-	};
-};
-
 &i2c6 {
     status = "okay";
     i2c-scl-rising-time-ns = <345>;
@@ -317,8 +260,6 @@
 };
 
 &uart0 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&uart0_xfer &uart0_cts>;
 	status = "okay";
 };
 

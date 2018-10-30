@@ -274,13 +274,21 @@ static void dw8250_set_termios(struct uart_port *p, struct ktermios *termios,
 	if ((rate_temp < rate) && ((rate - rate_temp) > diff)) {
 		ret = clk_set_rate(d->clk, rate + diff);
 		rate_temp = clk_get_rate(d->clk);
-		if ((rate_temp < rate) && ((rate - rate_temp) > diff))
+		if ((rate_temp < rate) && ((rate - rate_temp) > diff)) {
 			dev_info(p->dev, "set rate:%d, but get rate:%d\n",
 				 rate, rate_temp);
-		else if ((rate < rate_temp) && ((rate_temp - rate) > diff))
+			printk(KERN_ERR "1 temi set rate:%d, but get rate:%d\n",
+			rate, rate_temp);
+		}
+		else if ((rate < rate_temp) && ((rate_temp - rate) > diff)) {
 			dev_info(p->dev, "set rate:%d, but get rate:%d\n",
 				 rate, rate_temp);
+			printk(KERN_ERR "2 temi set rate:%d, but get rate:%d\n",
+			rate, rate_temp);
+		}
 	}
+	printk(KERN_ERR "3 temi set rate:%d, but get rate:%d\n",
+			rate, rate_temp);
 #else
 	rate = clk_round_rate(d->clk, baud * 16);
 	ret = clk_set_rate(d->clk, rate);
