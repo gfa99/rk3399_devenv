@@ -433,12 +433,7 @@
 			};
 		};
 	};
-};
 
-&i2c4 {
-	status = "okay";
-	i2c-scl-rising-time-ns = <475>;
-	i2c-scl-falling-time-ns = <26>;
 
 	fusb0: fusb30x@22 {
 		compatible = "fairchild,fusb302";
@@ -449,6 +444,7 @@
 		vbus-5v-gpios = <&gpio4 26 GPIO_ACTIVE_LOW>;
 		status = "okay";
 	};
+
 };
 
 &i2s0 {
