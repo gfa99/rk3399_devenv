@@ -8,8 +8,6 @@
 #include <sys/stat.h>  
 #include <version.h>
 
-//#define USE_P_RC4
-
 bool gDebug = 
 #ifdef DEBUG
 	true;
@@ -19,12 +17,15 @@ bool gDebug =
 
 #define ENTRY_ALIGN  (2048)
 options gOpts;
-
-
+char gLegacyPath[MAX_LINE_LEN] = {0};
+char gNewPath[MAX_LINE_LEN] = {0};
 char gSubfix[MAX_LINE_LEN] = OUT_SUBFIX;
 char gEat[MAX_LINE_LEN];
 char* gConfigPath;
-uint8_t gBuf[MAX_MERGE_SIZE];
+uint8_t *gBuf;
+bool enableRC4 = false;
+
+static uint32_t g_merge_max_size = MAX_MERGE_SIZE;
 
 uint32_t gTable_Crc32[256] =
 {
@@ -139,11 +140,27 @@ void P_RC4(uint8_t* buf, uint32_t len) {
 
 static inline void fixPath(char* path) {
 	int i, len = strlen(path);
+	char tmp[MAX_LINE_LEN];
+	char *start, *end;
+
 	for(i=0; i<len; i++) {
 		if (path[i] == '\\')
 			path[i] = '/';
 		else if (path[i] == '\r' || path[i] == '\n')
 			path[i] = '\0';
+	}
+
+	if (strlen(gLegacyPath) && strlen(gNewPath)) {
+		start = strstr(path, gLegacyPath);
+		if (start) {
+			end = start + strlen(gLegacyPath);
+			/* Backup, so tmp can be src for strcat()*/
+			strcpy(tmp, end);
+			/* Terminate, so path can be dest for strcat() */
+			*start = '\0';
+			strcat(path, gNewPath);
+			strcat(path, tmp);
+		}
 	}
 }
 
@@ -743,9 +760,8 @@ static inline void getBoothdr(rk_boot_header* hdr) {
 	hdr->loaderNum = gOpts.loaderNum;
 	hdr->loaderOffset = hdr->code472Offset + gOpts.code472Num * hdr->code472Size;
 	hdr->loaderSize = sizeof(rk_boot_entry);
-#ifndef USE_P_RC4
-	hdr->rc4Flag = 1;
-#endif
+	if (!enableRC4)
+		hdr->rc4Flag = 1;
 }
 
 static inline uint32_t getCrc(const char* path) {
@@ -953,6 +969,8 @@ static void printHelp(void) {
 	printf("\t" OPT_HELP "\t\t\tDisplay this information.\n");
 	printf("\t" OPT_VERSION "\t\tDisplay version information.\n");
 	printf("\t" OPT_SUBFIX "\t\tSpec subfix.\n");
+	printf("\t" OPT_REPLACE "\t\tReplace some part of binary path.\n");
+	printf("\t" OPT_SIZE "\t\tImage size.\"--size [image KB size]\", must be 512KB aligned\n");
 	printf("Usage2: boot_merger [options] [parameter]\n");
 	printf("All below five option are must in this mode!\n");
 	printf("\t" OPT_CHIP "\t\tChip type, used for check with usbplug.\n");
@@ -987,9 +1005,25 @@ int main(int argc, char** argv) {
 			merge = true;
 		} else if (!strcmp(OPT_UNPACK, argv[i])) {
 			merge = false;
+		} else if (!strcmp(OPT_RC4, argv[i])) {
+			printf("enable RC4 for IDB data(both ddr and preloader)\n");
+			enableRC4 = true;
 		} else if (!strcmp(OPT_SUBFIX, argv[i])) {
 			i++;
 			snprintf(gSubfix, sizeof(gSubfix), "%s", argv[i]);
+		} else if (!strcmp(OPT_REPLACE, argv[i])) {
+			i++;
+			snprintf(gLegacyPath, sizeof(gLegacyPath), "%s", argv[i]);
+			i++;
+			snprintf(gNewPath, sizeof(gNewPath), "%s", argv[i]);
+		} else if (!strcmp(OPT_SIZE, argv[i])) {
+			g_merge_max_size =
+				strtoul(argv[++i], NULL, 10);
+			if (g_merge_max_size % 512) {
+				printHelp();
+				return -1;
+			}
+			g_merge_max_size *= 1024;	/* bytes */
 		} else {
 			optPath = argv[i];
 			break;
@@ -998,6 +1032,12 @@ int main(int argc, char** argv) {
 	if (!merge && !optPath) {
 		fprintf(stderr, "need set out path to unpack!\n");
 		printHelp();
+		return -1;
+	}
+
+	gBuf = calloc(g_merge_max_size, 1);
+	if (!gBuf) {
+		LOGE("Merge image: calloc buffer error.\n");
 		return -1;
 	}
 
@@ -1019,5 +1059,3 @@ int main(int argc, char** argv) {
 	}
 	return 0;
 }
-
-
