@@ -3,6 +3,13 @@ if ARCH_ROCKCHIP || COMPILE_TEST
 #
 # Rockchip Soc drivers
 #
+config ROCKCHIP_OPP
+	bool "Rockchip OPP select support"
+	depends on PM_DEVFREQ
+	default y
+	help
+	  Say y here to enable rockchip OPP support.
+
 config ROCKCHIP_PM_TEST
 	bool "Rockchip pm_test support"
 	default n

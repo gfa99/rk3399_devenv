@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 ARM Limited. All rights reserved.
+ * Copyright (C) 2013-2017 ARM Limited. All rights reserved.
  * 
  * This program is free software and is provided to you under the terms of the GNU General Public License version 2
  * as published by the Free Software Foundation, and any use by you of this program is subject to the terms of such GNU licence.
@@ -30,6 +30,9 @@
 #include "mali_memory_cow.h"
 #include "mali_memory_swap_alloc.h"
 #include "mali_memory_defer_bind.h"
+#if defined(CONFIG_DMA_SHARED_BUFFER)
+#include "mali_memory_secure.h"
+#endif
 
 extern unsigned int mali_dedicated_mem_size;
 extern unsigned int mali_shared_mem_size;
@@ -121,6 +124,8 @@ static int mali_mem_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 		}
 	} else {
 		MALI_PRINT_ERROR(("Mali vma fault! It never happen, indicating some logic errors in caller.\n"));
+		/*NOT support yet or OOM*/
+		return VM_FAULT_OOM;
 	}
 	return VM_FAULT_NOPAGE;
 }
@@ -244,6 +249,13 @@ int mali_mmap(struct file *filp, struct vm_area_struct *vma)
 			(MALI_MEM_BACKEND_FLAG_SWAP_COWED == (mem_bkend->flags & MALI_MEM_BACKEND_FLAG_SWAP_COWED)))) {
 		/*For swappable memory, CPU page table will be created by page fault handler. */
 		ret = 0;
+	} else if (mem_bkend->type == MALI_MEM_SECURE) {
+#if defined(CONFIG_DMA_SHARED_BUFFER)
+		ret = mali_mem_secure_cpu_map(mem_bkend, vma);
+#else
+		MALI_DEBUG_PRINT(1, ("DMA not supported for mali secure memory\n"));
+		return -EFAULT;
+#endif
 	} else {
 		/* Not support yet*/
 		MALI_DEBUG_PRINT_ERROR(("Invalid type of backend memory! \n"));
@@ -349,7 +361,6 @@ _mali_osk_errcode_t mali_memory_session_begin(struct mali_session_data *session_
 	session_data->cow_lock = _mali_osk_mutex_init(_MALI_OSK_LOCKFLAG_UNORDERED, 0);
 	if (NULL == session_data->cow_lock) {
 		_mali_osk_mutex_term(session_data->memory_lock);
-		_mali_osk_free(session_data);
 		MALI_ERROR(_MALI_OSK_ERR_FAULT);
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2015 ARM Limited. All rights reserved.
+ * Copyright (C) 2010-2017 ARM Limited. All rights reserved.
  * 
  * This program is free software and is provided to you under the terms of the GNU General Public License version 2
  * as published by the Free Software Foundation, and any use by you of this program is subject to the terms of such GNU licence.
@@ -13,7 +13,7 @@
  * @file mali_osk_mali.c
  * Implementation of the OS abstraction layer which is specific for the Mali kernel device driver
  */
-#include "../platform/rk30/custom_log.h"
+#include "../platform/rk/custom_log.h"
 
 #include <linux/kernel.h>
 #include <asm/uaccess.h>
@@ -27,6 +27,15 @@
 #include "mali_osk.h"           /* kernel side OS functions */
 #include "mali_kernel_linux.h"
 
+static mali_bool mali_secure_mode_enabled = MALI_FALSE;
+static mali_bool mali_secure_mode_supported = MALI_FALSE;
+
+/* Function that init the mali gpu secure mode */
+void (*mali_secure_mode_deinit)(void) = NULL;
+/* Function that reset GPU and enable the mali gpu secure mode */
+int (*mali_gpu_reset_and_secure_mode_enable)(void) = NULL;
+/* Function that reset GPU and disable the mali gpu secure mode */
+int (*mali_gpu_reset_and_secure_mode_disable)(void) = NULL;
 
 
 #ifdef CONFIG_MALI_DT
@@ -76,11 +85,12 @@ static _mali_osk_resource_t mali_osk_resource_bank[MALI_OSK_MAX_RESOURCE_NUMBER]
 	{.description = "Mali_PP1", .base = MALI_OFFSET_PP1, .irq_name = "Mali_PP1_IRQ",},
 	/* {.description = "Mali_PP1_MMU", .base = MALI_OFFSET_PP1_MMU, .irq_name = "IRQPPMMU1",}, */
 	{.description = "Mali_PP1_MMU", .base = MALI_OFFSET_PP1_MMU, .irq_name = "Mali_PP1_MMU_IRQ",},
+
+	{.description = "Mali_PP2", .base = MALI_OFFSET_PP2, .irq_name = "Mali_PP2_IRQ",},
+	{.description = "Mali_PP2_MMU", .base = MALI_OFFSET_PP2_MMU, .irq_name = "Mali_PP2_MMU_IRQ",},
+	{.description = "Mali_PP3", .base = MALI_OFFSET_PP3, .irq_name = "Mali_PP3_IRQ",},
+	{.description = "Mali_PP3_MMU", .base = MALI_OFFSET_PP3_MMU, .irq_name = "Mali_PP3_MMU_IRQ",},
 	/*-------------------------------------------------------*/
-	{.description = "Mali_PP2", .base = MALI_OFFSET_PP2, .irq_name = "IRQPP2",},
-	{.description = "Mali_PP2_MMU", .base = MALI_OFFSET_PP2_MMU, .irq_name = "IRQPPMMU2",},
-	{.description = "Mali_PP3", .base = MALI_OFFSET_PP3, .irq_name = "IRQPP3",},
-	{.description = "Mali_PP3_MMU", .base = MALI_OFFSET_PP3_MMU, .irq_name = "IRQPPMMU3",},
 	{.description = "Mali_PP4", .base = MALI_OFFSET_PP4, .irq_name = "IRQPP4",},
 	{.description = "Mali_PP4_MMU", .base = MALI_OFFSET_PP4_MMU, .irq_name = "IRQPPMMU4",},
 	{.description = "Mali_PP5", .base = MALI_OFFSET_PP5, .irq_name = "IRQPP5",},
@@ -409,3 +419,95 @@ mali_bool _mali_osk_shared_interrupts(void)
 
 	return MALI_FALSE;
 }
+
+_mali_osk_errcode_t _mali_osk_gpu_secure_mode_init(void)
+{
+	_mali_osk_device_data data = { 0, };
+
+	if (_MALI_OSK_ERR_OK ==  _mali_osk_device_data_get(&data)) {
+		if ((NULL != data.secure_mode_init) && (NULL != data.secure_mode_deinit)
+		    && (NULL != data.gpu_reset_and_secure_mode_enable) && (NULL != data.gpu_reset_and_secure_mode_disable)) {
+			int err = data.secure_mode_init();
+			if (err) {
+				MALI_DEBUG_PRINT(1, ("Failed to init gpu secure mode.\n"));
+				return _MALI_OSK_ERR_FAULT;
+			}
+
+			mali_secure_mode_deinit = data.secure_mode_deinit;
+			mali_gpu_reset_and_secure_mode_enable = data.gpu_reset_and_secure_mode_enable;
+			mali_gpu_reset_and_secure_mode_disable = data.gpu_reset_and_secure_mode_disable;
+
+			mali_secure_mode_supported = MALI_TRUE;
+			mali_secure_mode_enabled = MALI_FALSE;
+			return _MALI_OSK_ERR_OK;
+		}
+	}
+	MALI_DEBUG_PRINT(3, ("GPU secure mode not supported.\n"));
+	return _MALI_OSK_ERR_UNSUPPORTED;
+
+}
+
+_mali_osk_errcode_t _mali_osk_gpu_secure_mode_deinit(void)
+{
+	if (NULL !=  mali_secure_mode_deinit) {
+		mali_secure_mode_deinit();
+		mali_secure_mode_enabled = MALI_FALSE;
+		mali_secure_mode_supported = MALI_FALSE;
+		return _MALI_OSK_ERR_OK;
+	}
+	MALI_DEBUG_PRINT(3, ("GPU secure mode not supported.\n"));
+	return _MALI_OSK_ERR_UNSUPPORTED;
+
+}
+
+
+_mali_osk_errcode_t _mali_osk_gpu_reset_and_secure_mode_enable(void)
+{
+	/* the mali executor lock must be held before enter this function. */
+
+	MALI_DEBUG_ASSERT(MALI_FALSE == mali_secure_mode_enabled);
+
+	if (NULL !=  mali_gpu_reset_and_secure_mode_enable) {
+		if (mali_gpu_reset_and_secure_mode_enable()) {
+			MALI_DEBUG_PRINT(1, ("Failed to reset GPU or enable gpu secure mode.\n"));
+			return _MALI_OSK_ERR_FAULT;
+		}
+		mali_secure_mode_enabled = MALI_TRUE;
+		return _MALI_OSK_ERR_OK;
+	}
+	MALI_DEBUG_PRINT(1, ("GPU secure mode not supported.\n"));
+	return _MALI_OSK_ERR_UNSUPPORTED;
+}
+
+_mali_osk_errcode_t _mali_osk_gpu_reset_and_secure_mode_disable(void)
+{
+	/* the mali executor lock must be held before enter this function. */
+
+	MALI_DEBUG_ASSERT(MALI_TRUE == mali_secure_mode_enabled);
+
+	if (NULL != mali_gpu_reset_and_secure_mode_disable) {
+		if (mali_gpu_reset_and_secure_mode_disable()) {
+			MALI_DEBUG_PRINT(1, ("Failed to reset GPU or disable gpu secure mode.\n"));
+			return _MALI_OSK_ERR_FAULT;
+		}
+		mali_secure_mode_enabled = MALI_FALSE;
+
+		return _MALI_OSK_ERR_OK;
+
+	}
+	MALI_DEBUG_PRINT(1, ("GPU secure mode not supported.\n"));
+	return _MALI_OSK_ERR_UNSUPPORTED;
+
+}
+
+mali_bool _mali_osk_gpu_secure_mode_is_enabled(void)
+{
+	return mali_secure_mode_enabled;
+}
+
+mali_bool _mali_osk_gpu_secure_mode_is_supported(void)
+{
+	return mali_secure_mode_supported;
+}
+
+
