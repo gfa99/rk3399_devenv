@@ -34,7 +34,98 @@ struct clk;
 #define HIWORD_UPDATE(val, mask, shift) \
 		((val) << (shift) | (mask) << ((shift) + 16))
 
-/* register positions shared by RK2928, RK3036, RK3066, RK3188 and RK3228 */
+#define BOOST_PLL_H_CON(x)		((x) * 0x4)
+#define BOOST_CLK_CON			0x0008
+#define BOOST_BOOST_CON			0x000c
+#define BOOST_SWITCH_CNT		0x0010
+#define BOOST_HIGH_PERF_CNT0		0x0014
+#define BOOST_HIGH_PERF_CNT1		0x0018
+#define BOOST_STATIS_THRESHOLD		0x001c
+#define BOOST_SHORT_SWITCH_CNT		0x0020
+#define BOOST_SWITCH_THRESHOLD		0x0024
+#define BOOST_FSM_STATUS		0x0028
+#define BOOST_PLL_L_CON(x)		((x) * 0x4 + 0x2c)
+#define BOOST_PLL_CON_MASK		0xffff
+#define BOOST_CORE_DIV_MASK		0x1f
+#define BOOST_CORE_DIV_SHIFT		0
+#define BOOST_BACKUP_PLL_MASK		0x3
+#define BOOST_BACKUP_PLL_SHIFT		8
+#define BOOST_BACKUP_PLL_USAGE_MASK	0x1
+#define BOOST_BACKUP_PLL_USAGE_SHIFT	12
+#define BOOST_BACKUP_PLL_USAGE_BORROW	0
+#define BOOST_BACKUP_PLL_USAGE_TARGET	1
+#define BOOST_ENABLE_MASK		0x1
+#define BOOST_ENABLE_SHIFT		0
+#define BOOST_RECOVERY_MASK		0x1
+#define BOOST_RECOVERY_SHIFT		1
+#define BOOST_SW_CTRL_MASK		0x1
+#define BOOST_SW_CTRL_SHIFT		2
+#define BOOST_LOW_FREQ_EN_MASK		0x1
+#define BOOST_LOW_FREQ_EN_SHIFT		3
+#define BOOST_STATIS_ENABLE_MASK	0x1
+#define BOOST_STATIS_ENABLE_SHIFT	4
+#define BOOST_BUSY_STATE		BIT(8)
+
+#define PX30_PLL_CON(x)			((x) * 0x4)
+#define PX30_CLKSEL_CON(x)		((x) * 0x4 + 0x100)
+#define PX30_CLKGATE_CON(x)		((x) * 0x4 + 0x200)
+#define PX30_GLB_SRST_FST		0xb8
+#define PX30_GLB_SRST_SND		0xbc
+#define PX30_SOFTRST_CON(x)		((x) * 0x4 + 0x300)
+#define PX30_MODE_CON			0xa0
+#define PX30_MISC_CON			0xa4
+#define PX30_SDMMC_CON0			0x380
+#define PX30_SDMMC_CON1			0x384
+#define PX30_SDIO_CON0			0x388
+#define PX30_SDIO_CON1			0x38c
+#define PX30_EMMC_CON0			0x390
+#define PX30_EMMC_CON1			0x394
+
+#define PX30_PMU_PLL_CON(x)		((x) * 0x4)
+#define PX30_PMU_CLKSEL_CON(x)		((x) * 0x4 + 0x40)
+#define PX30_PMU_CLKGATE_CON(x)		((x) * 0x4 + 0x80)
+#define PX30_PMU_MODE			0x0020
+
+/*
+ * register positions shared by RV1108, RK1808 RK2928, RK3036,
+ * RK3066, RK3188 and RK3228
+ */
+
+#define RV1108_PLL_CON(x)		((x) * 0x4)
+#define RV1108_CLKSEL_CON(x)		((x) * 0x4 + 0x60)
+#define RV1108_CLKGATE_CON(x)		((x) * 0x4 + 0x120)
+#define RV1108_SOFTRST_CON(x)		((x) * 0x4 + 0x180)
+#define RV1108_GLB_SRST_FST		0x1c0
+#define RV1108_GLB_SRST_SND		0x1c4
+#define RV1108_MISC_CON			0x1cc
+#define RV1108_SDMMC_CON0		0x1d8
+#define RV1108_SDMMC_CON1		0x1dc
+#define RV1108_SDIO_CON0		0x1e0
+#define RV1108_SDIO_CON1		0x1e4
+#define RV1108_EMMC_CON0		0x1e8
+#define RV1108_EMMC_CON1		0x1ec
+
+#define RK1808_PLL_CON(x)		((x) * 0x4)
+#define RK1808_MODE_CON			0xa0
+#define RK1808_MISC_CON			0xa4
+#define RK1808_MISC1_CON		0xa8
+#define RK1808_GLB_SRST_FST		0xb8
+#define RK1808_GLB_SRST_SND		0xbc
+#define RK1808_CLKSEL_CON(x)		((x) * 0x4 + 0x100)
+#define RK1808_CLKGATE_CON(x)		((x) * 0x4 + 0x230)
+#define RK1808_SOFTRST_CON(x)		((x) * 0x4 + 0x300)
+#define RK1808_SDMMC_CON0		0x380
+#define RK1808_SDMMC_CON1		0x384
+#define RK1808_SDIO_CON0		0x388
+#define RK1808_SDIO_CON1		0x38c
+#define RK1808_EMMC_CON0		0x390
+#define RK1808_EMMC_CON1		0x394
+
+#define RK1808_PMU_PLL_CON(x)		((x) * 0x4 + 0x4000)
+#define RK1808_PMU_MODE_CON		0x4020
+#define RK1808_PMU_CLKSEL_CON(x)	((x) * 0x4 + 0x4040)
+#define RK1808_PMU_CLKGATE_CON(x)	((x) * 0x4 + 0x4080)
+
 #define RK2928_PLL_CON(x)		((x) * 0x4)
 #define RK2928_MODE_CON		0x40
 #define RK2928_CLKSEL_CON(x)	((x) * 0x4 + 0x44)
@@ -695,6 +786,9 @@ void rockchip_clk_register_armclk(struct rockchip_clk_provider *ctx,
 			const struct rockchip_cpuclk_rate_table *rates,
 			int nrates);
 void rockchip_clk_protect_critical(const char *const clocks[], int nclocks);
+int rockchip_pll_clk_adaptive_scaling(struct clk *clk, int sel);
+int rockchip_pll_clk_rate_to_scale(struct clk *clk, unsigned long rate);
+int rockchip_pll_clk_scale_to_rate(struct clk *clk, unsigned int scale);
 void rockchip_register_restart_notifier(struct rockchip_clk_provider *ctx,
 					unsigned int reg, void (*cb)(void));
 

@@ -31,7 +31,7 @@
 #include <linux/clk.h>
 #include <linux/regulator/consumer.h>
 #include <linux/mali/mali_utgard.h>
-// #include <soc/rockchip/rockchip_opp_select.h>
+#include <soc/rockchip/rockchip_opp_select.h>
 
 #include "mali_kernel_common.h"
 #include "mali_session.h"

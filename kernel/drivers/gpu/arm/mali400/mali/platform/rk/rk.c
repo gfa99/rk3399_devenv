@@ -35,7 +35,7 @@
 #include <linux/pm_runtime.h>
 #include <linux/delay.h>
 #include <linux/rockchip/cpu.h>
-// #include <soc/rockchip/rockchip_opp_select.h>
+#include <soc/rockchip/rockchip_opp_select.h>
 
 #include <linux/mali/mali_utgard.h>
 #include "mali_kernel_common.h"

@@ -85,7 +85,7 @@
 
 #if (KERNEL_VERSION(3, 13, 0) <= LINUX_VERSION_CODE)
 #include <linux/pm_opp.h>
-// #include <soc/rockchip/rockchip_opp_select.h>
+#include <soc/rockchip/rockchip_opp_select.h>
 #else
 #include <linux/opp.h>
 #endif
@@ -3254,9 +3254,9 @@ static int power_control_init(struct platform_device *pdev)
 		}
 	}
 
-	// err = kbase_platform_rk_init_opp_table(kbdev);
-	// if (err)
-	// 	dev_err(kbdev->dev, "Failed to init_opp_table (%d)\n", err);
+	err = kbase_platform_rk_init_opp_table(kbdev);
+	if (err)
+		dev_err(kbdev->dev, "Failed to init_opp_table (%d)\n", err);
 
 	return 0;
 
