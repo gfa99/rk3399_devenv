@@ -1145,6 +1145,8 @@
 		clocks = <&pmucru SCLK_UART4_PMU>, <&pmucru PCLK_UART4_PMU>;
 		clock-names = "baudclk", "apb_pclk";
 		interrupts = <GIC_SPI 102 IRQ_TYPE_LEVEL_HIGH 0>;
+		dmas = <&dmac_peri 8>, <&dmac_peri 9>;
+		dma-names = "tx", "rx";
 		reg-shift = <2>;
 		reg-io-width = <4>;
 		pinctrl-names = "default";

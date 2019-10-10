@@ -2020,8 +2020,10 @@ dont_test_tx_en:
 	/*
 	 * Request DMA channels for both RX and TX.
 	 */
+	printk(KERN_ERR "*** temi up->dma : %d.\n", up->dma ? 1 : 0);
 	if (up->dma) {
 		retval = serial8250_request_dma(up);
+		printk(KERN_ERR "temi uart%d dma request - %d.\n", up->port.line, retval);
 		if (retval) {
 			/*pr_warn_ratelimited("ttyS%d - failed to request DMA\n",
 					    serial_index(port));*/
