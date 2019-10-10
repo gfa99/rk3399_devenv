@@ -247,7 +247,6 @@
     status = "okay";
 };
 
-	status = "okay";
 &i2c6 {
     status = "okay";
     i2c-scl-rising-time-ns = <345>;

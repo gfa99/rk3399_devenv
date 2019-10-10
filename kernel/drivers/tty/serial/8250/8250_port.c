@@ -2012,8 +2012,14 @@ dont_test_tx_en:
 	/*
 	 * Request DMA channels for both RX and TX.
 	 */
+	if (up->dma) 
+		printk(KERN_ERR "temi uart%d dma true.\n", up->port.line);
+	else
+		printk(KERN_ERR "temi uart%d dma false.\n", up->port.line);
+
 	if (up->dma) {
 		retval = serial8250_request_dma(up);
+		printk(KERN_ERR "temi uart%d dma request - %d.\n", up->port.line, retval);
 		if (retval) {
 #ifdef CONFIG_ARCH_ROCKCHIP
 			pr_warn_ratelimited("ttyS%d - failed to request DMA, use interrupt mode\n",

@@ -31,7 +31,7 @@
 #include <asm/byteorder.h>
 
 #include "8250.h"
-
+#define TEMI_WEIRD_BAUDRATE 1
 /* Offsets for the DesignWare specific registers */
 #define DW_UART_USR	0x1f /* UART Status Register */
 #define DW_UART_RFL	0x21 /* UART Receive Fifo Level Register */
@@ -292,6 +292,17 @@ static void dw8250_set_termios(struct uart_port *p, struct ktermios *termios,
 #else
 	rate = clk_round_rate(d->clk, baud * 16);
 	ret = clk_set_rate(d->clk, rate);
+#endif
+#ifdef TEMI_WEIRD_BAUDRATE
+	if ( d->line == 4) { // motherboard
+		rate = clk_round_rate(d->clk, 24000000);
+		ret = clk_set_rate(d->clk, rate);
+	}
+	else if ( d->line == 0) { // lidar
+		rate = clk_round_rate(d->clk, 24000000);
+		ret = clk_set_rate(d->clk, rate);
+	}
+	printk(KERN_ERR "temi set uart%d rate:%d.\n", d->line, rate);
 #endif
 	clk_prepare_enable(d->clk);
 

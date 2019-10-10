@@ -544,6 +544,22 @@
 		status = "disabled";
 	};
 
+	
+	uart4: serial@ff370000 {
+		compatible = "rockchip,rk3399-uart", "snps,dw-apb-uart";
+		reg = <0x0 0xff370000 0x0 0x100>;
+		clocks = <&pmucru SCLK_UART4_PMU>, <&pmucru PCLK_UART4_PMU>;
+		clock-names = "baudclk", "apb_pclk";
+		interrupts = <GIC_SPI 102 IRQ_TYPE_LEVEL_HIGH 0>;
+		dmas = <&dmac_peri 8>, <&dmac_peri 9>;
+		dma-names = "tx", "rx";
+		reg-shift = <2>;
+		reg-io-width = <4>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&uart4_xfer>;
+		status = "disabled";
+	};
+
 	i2c1: i2c@ff110000 {
 		compatible = "rockchip,rk3399-i2c";
 		reg = <0x0 0xff110000 0x0 0x1000>;
@@ -628,8 +644,8 @@
 		clocks = <&cru SCLK_UART0>, <&cru PCLK_UART0>;
 		clock-names = "baudclk", "apb_pclk";
 		interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH 0>;
-		dmas = <&dmac_peri 0>, <&dmac_peri 1>;
-		dma-names = "!tx", "rx";
+		#dmas = <&dmac_peri 0>, <&dmac_peri 1>;
+		#dma-names = "tx", "rx";
 		reg-shift = <2>;
 		reg-io-width = <4>;
 		pinctrl-names = "default";
@@ -643,6 +659,8 @@
 		clocks = <&cru SCLK_UART1>, <&cru PCLK_UART1>;
 		clock-names = "baudclk", "apb_pclk";
 		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH 0>;
+		#dmas = <&dmac_peri 2>, <&dmac_peri 3>;
+		#dma-names = "tx", "rx";
 		reg-shift = <2>;
 		reg-io-width = <4>;
 		pinctrl-names = "default";
@@ -656,6 +674,8 @@
 		clocks = <&cru SCLK_UART2>, <&cru PCLK_UART2>;
 		clock-names = "baudclk", "apb_pclk";
 		interrupts = <GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH 0>;
+		#dmas = <&dmac_peri 4>, <&dmac_peri 5>;
+		#dma-names = "tx", "rx";
 		reg-shift = <2>;
 		reg-io-width = <4>;
 		pinctrl-names = "default";
@@ -669,6 +689,8 @@
 		clocks = <&cru SCLK_UART3>, <&cru PCLK_UART3>;
 		clock-names = "baudclk", "apb_pclk";
 		interrupts = <GIC_SPI 101 IRQ_TYPE_LEVEL_HIGH 0>;
+		#dmas = <&dmac_peri 6>, <&dmac_peri 7>;
+		#dma-names = "tx", "rx";
 		reg-shift = <2>;
 		reg-io-width = <4>;
 		pinctrl-names = "default";
@@ -1138,20 +1160,6 @@
 		pinctrl-0 = <&spi3_clk &spi3_tx &spi3_rx &spi3_cs0>;
 		#address-cells = <1>;
 		#size-cells = <0>;
-		status = "disabled";
-	};
-
-	uart4: serial@ff370000 {
-		compatible = "rockchip,rk3399-uart", "snps,dw-apb-uart";
-		reg = <0x0 0xff370000 0x0 0x100>;
-		clocks = <&pmucru SCLK_UART4_PMU>, <&pmucru PCLK_UART4_PMU>;
-		clock-names = "baudclk", "apb_pclk";
-		interrupts = <GIC_SPI 102 IRQ_TYPE_LEVEL_HIGH 0>;
-		
-		reg-shift = <2>;
-		reg-io-width = <4>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&uart4_xfer>;
 		status = "disabled";
 	};
 
