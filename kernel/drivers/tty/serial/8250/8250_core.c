@@ -126,7 +126,7 @@ static irqreturn_t serial8250_interrupt(int irq, void *dev_id)
 		up = list_entry(l, struct uart_8250_port, list);
 		port = &up->port;
 
-		if (port->handle_irq(port)) {
+		if (port->handle_irq(port)) {printk_ratelimited(KERN_ERR "serial8250_irq: %d\n", irq);
 			handled = 1;
 			end = NULL;
 		} else if (end == NULL)
