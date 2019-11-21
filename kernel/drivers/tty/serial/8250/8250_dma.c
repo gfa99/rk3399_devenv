@@ -39,7 +39,7 @@ static void __dma_tx_complete(void *param)
 
 	ret = serial8250_tx_dma(p);
 
-	if (ret) {printk_ratelimited(KERN_ERR "__dma_tx_complete: ret=%d\n", ret);
+	if (ret) {
 		p->ier |= UART_IER_THRI;
 		serial_port_out(&p->port, UART_IER, p->ier);
 	}
@@ -72,7 +72,7 @@ static void __dma_rx_complete(void *param)
 	p->ier |= (UART_IER_RLSI | UART_IER_RDI);
 	p->port.read_status_mask |= UART_LSR_DR;
 	serial_port_out(&p->port, UART_IER, p->ier);
-printk_ratelimited(KERN_ERR "__dma_rx_complete: %d\n", 0);
+
 	spin_unlock_irqrestore(&p->port.lock, flags);
 }
 
@@ -84,7 +84,7 @@ void __dma_rx_timer_callback(unsigned long param)
 	struct dma_tx_state	state;
 	int			count;
 	unsigned long		flags;
-printk_ratelimited(KERN_ERR "__dma_rx_timer_callback: %d\n", dma->rx_running);
+
 	if (dma->rx_running == 0)
 		return;
 
@@ -137,7 +137,7 @@ int serial8250_tx_dma(struct uart_8250_port *p)
 	
 	if (dma->tx_err) {
 		dma->tx_err = 0;
-		if (p->ier & UART_IER_THRI) {printk_ratelimited(KERN_ERR "serial8250_tx_dma: terr=%d, %d\n", dma->tx_err, p->ier & UART_IER_THRI);
+		if (p->ier & UART_IER_THRI) {
 			p->ier &= ~UART_IER_THRI;
 			serial_out(p, UART_IER, p->ier);
 		}
@@ -156,24 +156,24 @@ int serial8250_rx_dma(struct uart_8250_port *p, unsigned int iir)
 	switch (iir & 0x3f) {
 	case UART_IIR_RLSI:
 		/* 8250_core handles errors and break interrupts */
-		printk_ratelimited(KERN_ERR "******** rx_dma- IOerr\n");
-		return -EIO;
+		printk_ratelimited(KERN_ERR "serial8250_rx_dma: UART_IIR_RLSI, iir=%d\n", iir);
+		//return -EIO;
 	case UART_IIR_RX_TIMEOUT:
+		printk_ratelimited(KERN_ERR "serial8250_rx_dma: UART_IIR_RX_TIMEOUT, iir=%d\n", iir);
 		/*
 		 * If RCVR FIFO trigger level was not reached, complete the
 		 * transfer and let 8250_core copy the remaining data.
-		 */
-		printk_ratelimited(KERN_ERR "******** rx_dma- TOT\n");
+		 
 		if (dma->rx_running) {
 			dmaengine_pause(dma->rxchan);
 			__dma_rx_complete(p);
 			dmaengine_terminate_all(dma->rxchan);
 		}
-		return -ETIMEDOUT;
+		return -ETIMEDOUT;*/
 	default:
 		break;
 	}
-printk_ratelimited(KERN_ERR "serial8250_rx_dma: ri=%d, iir=%d\n", dma->rx_running, iir);
+
 	if (dma->rx_running){
 		return 0;
 	}
@@ -257,7 +257,6 @@ int serial8250_request_dma(struct uart_8250_port *p)
 	}
 
 	dev_dbg_ratelimited(p->port.dev, "got both dma channels\n");
-	printk_ratelimited(KERN_ERR "got both dma channels: %d\n", 0);
 
 	/* init rx timer */
 	dma->dma_rx_timer.function = __dma_rx_timer_callback;
@@ -277,7 +276,7 @@ EXPORT_SYMBOL_GPL(serial8250_request_dma);
 void serial8250_release_dma(struct uart_8250_port *p)
 {
 	struct uart_8250_dma *dma = p->dma;
-printk_ratelimited(KERN_ERR "serial8250_release_dma: %d\n", 0);
+
 	if (!dma)
 		return;
 
@@ -298,7 +297,7 @@ printk_ratelimited(KERN_ERR "serial8250_release_dma: %d\n", 0);
 	dma_release_channel(dma->txchan);
 	dma->txchan = NULL;
 	dma->tx_running = 0;
-printk_ratelimited(KERN_ERR "serial8250_release_dma: %d\n", 1);
+
 	dev_dbg_ratelimited(p->port.dev, "dma channels released\n");
 }
 EXPORT_SYMBOL_GPL(serial8250_release_dma);
