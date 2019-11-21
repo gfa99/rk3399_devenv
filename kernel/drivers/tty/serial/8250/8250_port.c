@@ -1284,9 +1284,6 @@ static inline void __stop_tx(struct uart_8250_port *p)
 {
 	if (p->ier & UART_IER_THRI) {
 		p->ier &= ~UART_IER_THRI;
-#ifdef CONFIG_ARCH_ROCKCHIP
-                p->ier &= ~UART_IER_PTIME;
-#endif
 		serial_out(p, UART_IER, p->ier);
 		serial8250_rpm_put_tx(p);
 	}
@@ -1311,40 +1308,33 @@ static void serial8250_stop_tx(struct uart_port *port)
 
 static void serial8250_start_tx(struct uart_port *port)
 {
-    struct uart_8250_port *up = up_to_u8250p(port);
+	struct uart_8250_port *up = up_to_u8250p(port);
 
-    serial8250_rpm_get_tx(up);
-#ifdef CONFIG_ARCH_ROCKCHIP
-    if (up->dma && up->dma->txchan && !up->dma->tx_dma(up))
-        return;
-#else
-    if (up->dma && !up->dma->tx_dma(up))
-        return;
-#endif
+	serial8250_rpm_get_tx(up);
 
-    if (!(up->ier & UART_IER_THRI)) {
-        up->ier |= UART_IER_THRI;
-#ifdef CONFIG_ARCH_ROCKCHIP
-        up->ier |= UART_IER_PTIME;
-#endif
-        serial_port_out(port, UART_IER, up->ier);
+	if (up->dma && !up->dma->tx_dma(up))
+		return;
 
-        if (up->bugs & UART_BUG_TXEN) {
-            unsigned char lsr;
-            lsr = serial_in(up, UART_LSR);
-            up->lsr_saved_flags |= lsr & LSR_SAVE_FLAGS;
-            if (lsr & UART_LSR_THRE)
-                serial8250_tx_chars(up);
-        }
-    }
+	if (!(up->ier & UART_IER_THRI)) {
+		up->ier |= UART_IER_THRI;
+		serial_port_out(port, UART_IER, up->ier);
 
-    /*
-     * Re-enable the transmitter if we disabled it.
-     */
-    if (port->type == PORT_16C950 && up->acr & UART_ACR_TXDIS) {
-        up->acr &= ~UART_ACR_TXDIS;
-        serial_icr_write(up, UART_ACR, up->acr);
-    }
+		if (up->bugs & UART_BUG_TXEN) {
+			unsigned char lsr;
+			lsr = serial_in(up, UART_LSR);
+			up->lsr_saved_flags |= lsr & LSR_SAVE_FLAGS;
+			if (lsr & UART_LSR_THRE)
+				serial8250_tx_chars(up);
+		}
+	}
+
+	/*
+	 * Re-enable the transmitter if we disabled it.
+	 */
+	if (port->type == PORT_16C950 && up->acr & UART_ACR_TXDIS) {
+		up->acr &= ~UART_ACR_TXDIS;
+		serial_icr_write(up, UART_ACR, up->acr);
+	}
 }
 
 static void serial8250_throttle(struct uart_port *port)
@@ -1558,67 +1548,43 @@ EXPORT_SYMBOL_GPL(serial8250_modem_status);
  */
 int serial8250_handle_irq(struct uart_port *port, unsigned int iir)
 {
-    unsigned char status;
-    unsigned long flags;
-    struct uart_8250_port *up = up_to_u8250p(port);
-    int dma_err = -1, idx;
+	unsigned char status;
+	unsigned long flags;
+	struct uart_8250_port *up = up_to_u8250p(port);
+	int dma_err = 0;
 
-    if (iir & UART_IIR_NO_INT)
-        return 0;
+	if (iir & UART_IIR_NO_INT)
+		return 0;
 
-    spin_lock_irqsave(&port->lock, flags);
+	spin_lock_irqsave(&port->lock, flags);
 
-    status = serial_port_in(port, UART_LSR);
+	status = serial_port_in(port, UART_LSR);
 
-    DEBUG_INTR("status = %x...", status);
-#ifdef CONFIG_ARCH_ROCKCHIP
-    if (status & (UART_LSR_DR | UART_LSR_BI)) {
-        if (up->dma && up->dma->rxchan)
-            dma_err = up->dma->rx_dma(up, iir);
+	DEBUG_INTR("status = %x...", status);
 
-        if (!up->dma || dma_err)
-            status = serial8250_rx_chars(up, status);
-    }
-#else
-    if (status & (UART_LSR_DR | UART_LSR_BI)) {
-        if (up->dma)
-            dma_err = up->dma->rx_dma(up, iir);
+	if (status & (UART_LSR_DR | UART_LSR_BI)) {
+		if (up->dma) {
+			/*
+			 * The RDI must be masked, or interrupt
+			 * would occur all the time.
+			 */
+			up->ier &= ~(UART_IER_RLSI | UART_IER_RDI);
+			up->port.read_status_mask &= ~UART_LSR_DR;
+			serial_port_out(port, UART_IER, up->ier);
 
-        if (!up->dma || dma_err)
-            status = serial8250_rx_chars(up, status);
-    }
-#endif
-    serial8250_modem_status(up);
-#ifdef CONFIG_ARCH_ROCKCHIP
-    if ((!up->dma || (up->dma && (!up->dma->txchan || up->dma->tx_err))) &&
-        ((iir & 0xf) == UART_IIR_THRI))
-        serial8250_tx_chars(up);
-#else
-    if ((!up->dma || (up->dma && up->dma->tx_err)) &&
-        (status & UART_LSR_THRE))
-        serial8250_tx_chars(up);
-#endif
+			dma_err = up->dma->rx_dma(up, iir);
+		}
+		if (!up->dma || dma_err){
+			status = serial8250_rx_chars(up, status);
+	    }
+	}
+	serial8250_modem_status(up);
+	if ((!up->dma || (up->dma && up->dma->tx_err)) &&
+	    (status & UART_LSR_THRE))
+		serial8250_tx_chars(up);
 
-#ifdef CONFIG_ARCH_ROCKCHIP
-    if (status & UART_LSR_BRK_ERROR_BITS) {
-
-        idx = serial_index(port);
-
-        if (status & UART_LSR_OE)
-            pr_err("ttyS%d: Overrun error!\n", idx);
-        if (status & UART_LSR_PE)
-            pr_err("ttyS%d: Parity error!\n", idx);
-        if (status & UART_LSR_FE)
-            pr_err("ttyS%d: Frame error!\n", idx);
-        if (status & UART_LSR_BI)
-            pr_err("ttyS%d: Break interrupt!\n", idx);
-
-        pr_err("ttyS%d: maybe rx pin is low or baudrate is not correct!\n",
-            idx);
-    }
-#endif
-    spin_unlock_irqrestore(&port->lock, flags);
-    return 1;
+	spin_unlock_irqrestore(&port->lock, flags);
+	return 1;
 }
 EXPORT_SYMBOL_GPL(serial8250_handle_irq);
 
@@ -2055,10 +2021,8 @@ dont_test_tx_en:
 	/*
 	 * Request DMA channels for both RX and TX.
 	 */
-	printk(KERN_ERR "*** temi up->dma : %d. irq=%d\n", up->dma ? 1 : 0, port->irq);
 	if (up->dma) {
 		retval = serial8250_request_dma(up);
-		printk(KERN_ERR "temi uart%d dma request - %d.\n", up->port.line, retval);
 		if (retval) {
 			/*pr_warn_ratelimited("ttyS%d - failed to request DMA\n",
 					    serial_index(port));*/
@@ -2091,9 +2055,8 @@ EXPORT_SYMBOL_GPL(serial8250_do_startup);
 
 static int serial8250_startup(struct uart_port *port)
 {
-	if (port->startup){printk_ratelimited(KERN_ERR "serial8250_startup: %d\n", port->irq);
+	if (port->startup)
 		return port->startup(port);
-	}printk_ratelimited(KERN_ERR "here serial8250_startup: %d\n", port->irq);
 	return serial8250_do_startup(port);
 }
 
@@ -2101,7 +2064,7 @@ void serial8250_do_shutdown(struct uart_port *port)
 {
 	struct uart_8250_port *up = up_to_u8250p(port);
 	unsigned long flags;
-printk_ratelimited(KERN_ERR "serial8250_do_shutdown: %d\n", port->irq);
+
 	serial8250_rpm_get(up);
 	/*
 	 * Disable interrupts from this port
@@ -2150,9 +2113,8 @@ EXPORT_SYMBOL_GPL(serial8250_do_shutdown);
 
 static void serial8250_shutdown(struct uart_port *port)
 {
-	if (port->shutdown){printk_ratelimited(KERN_ERR "serial8250_shutdown: %d\n", port->irq);
+	if (port->shutdown)
 		port->shutdown(port);
-	}
 	else
 		serial8250_do_shutdown(port);
 }
@@ -2809,7 +2771,7 @@ static const struct uart_ops serial8250_pops = {
 void serial8250_init_port(struct uart_8250_port *up)
 {
 	struct uart_port *port = &up->port;
-printk_ratelimited(KERN_ERR "serial8250_init_port: %d\n", 89);
+
 	spin_lock_init(&port->lock);
 	port->ops = &serial8250_pops;
 
@@ -2820,7 +2782,7 @@ EXPORT_SYMBOL_GPL(serial8250_init_port);
 void serial8250_set_defaults(struct uart_8250_port *up)
 {
 	struct uart_port *port = &up->port;
-printk_ratelimited(KERN_ERR "serial8250_set_defaults: %d\n", 99);
+
 	if (up->port.flags & UPF_FIXED_TYPE) {
 		unsigned int type = up->port.type;
 

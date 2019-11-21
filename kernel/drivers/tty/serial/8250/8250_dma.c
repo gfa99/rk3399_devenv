@@ -38,7 +38,6 @@ static void __dma_tx_complete(void *param)
 		uart_write_wakeup(&p->port);
 
 	ret = serial8250_tx_dma(p);
-
 	if (ret) {
 		p->ier |= UART_IER_THRI;
 		serial_port_out(&p->port, UART_IER, p->ier);
@@ -134,7 +133,6 @@ int serial8250_tx_dma(struct uart_8250_port *p)
 				   UART_XMIT_SIZE, DMA_TO_DEVICE);
 
 	dma_async_issue_pending(dma->txchan);
-	
 	if (dma->tx_err) {
 		dma->tx_err = 0;
 		if (p->ier & UART_IER_THRI) {
@@ -159,7 +157,6 @@ int serial8250_rx_dma(struct uart_8250_port *p, unsigned int iir)
 		printk_ratelimited(KERN_ERR "serial8250_rx_dma: UART_IIR_RLSI, iir=%d\n", iir);
 		//return -EIO;
 	case UART_IIR_RX_TIMEOUT:
-		printk_ratelimited(KERN_ERR "serial8250_rx_dma: UART_IIR_RX_TIMEOUT, iir=%d\n", iir);
 		/*
 		 * If RCVR FIFO trigger level was not reached, complete the
 		 * transfer and let 8250_core copy the remaining data.
@@ -170,13 +167,14 @@ int serial8250_rx_dma(struct uart_8250_port *p, unsigned int iir)
 			dmaengine_terminate_all(dma->rxchan);
 		}
 		return -ETIMEDOUT;*/
+		printk_ratelimited(KERN_ERR "serial8250_rx_dma: UART_IIR_RX_TIMEOUT, iir=%d\n", iir);
 	default:
 		break;
 	}
 
-	if (dma->rx_running){
+	if (dma->rx_running)
 		return 0;
-	}
+
 	desc = dmaengine_prep_slave_single(dma->rxchan, dma->rx_addr,
 					   dma->rx_size, DMA_DEV_TO_MEM,
 					   DMA_PREP_INTERRUPT | DMA_CTRL_ACK);
