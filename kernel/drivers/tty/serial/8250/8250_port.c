@@ -1436,8 +1436,11 @@ serial8250_rx_chars(struct uart_8250_port *up, unsigned char lsr)
 				port->icount.parity++;
 			else if (lsr & UART_LSR_FE)
 				port->icount.frame++;
-			if (lsr & UART_LSR_OE)
+			if (lsr & UART_LSR_OE){
 				port->icount.overrun++;
+				printk_ratelimited(KERN_ERR
+				"serial8250_rx_chars: overrurn=%d\n", port->icount.overrun);
+			}
 
 			/*
 			 * Mask off conditions which should be ignored.
