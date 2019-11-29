@@ -1388,6 +1388,14 @@ static void serial8250_enable_ms(struct uart_port *port)
 	serial8250_rpm_put(up);
 }
 
+#include <linux/time.h>
+#include <linux/timex.h>
+int idx = 0;
+unsigned int cnt = 0;
+unsigned char acHead[3];
+
+struct timeval start,end;
+long start_time, end_time;
 /*
  * serial8250_rx_chars: processes according to the passed in LSR
  * value, and returns the remaining LSR bits not handled
@@ -1400,6 +1408,7 @@ serial8250_rx_chars(struct uart_8250_port *up, unsigned char lsr)
 	unsigned char ch;
 	int max_count = 256;
 	char flag;
+	// unsigned int tmp = 0;
 
 	do {
 		if (likely(lsr & UART_LSR_DR))
@@ -1459,6 +1468,59 @@ serial8250_rx_chars(struct uart_8250_port *up, unsigned char lsr)
 			goto ignore_char;
 
 		uart_insert_char(port, lsr, UART_LSR_OE, ch, flag);
+		
+		if(4 == serial_index(port))
+		{
+			if(0xA5 == ch && idx == 0)
+			{
+				acHead[idx++] = ch;
+			}
+			else if(0 < idx && idx < 3)
+			{
+				acHead[idx++] = ch;
+				if(idx == 3)
+				{
+					if(acHead[0] == 0xA5
+					&& acHead[1] == 0x5A
+					&& acHead[2] == 0xA6)
+					{
+						/*
+						tmp = cnt++ % 100;
+						
+						if(tmp < 21)
+						{
+						printk(KERN_ERR
+						"****** recv Head cnt=%d<<<<<\n", tmp);
+						}
+						else if(tmp == 21)
+						{
+							printk(KERN_ERR
+						    "@@@@@@@@ recv Head @@@@@@@@@@@\n");
+						}
+						*/
+
+						if( (cnt++ % 2) == 0)
+						{
+							do_gettimeofday(&start); //获取开始时间
+							start_time = ((long)start.tv_sec)*1000 + (long)start.tv_usec/1000;
+							//printk("Start time: %ld ms\n", start_time);//打印开始时间
+						}
+						else
+						{
+							do_gettimeofday(&end); //获取结束时间
+							end_time = ((long)end.tv_sec)*1000 + (long)end.tv_usec/1000;
+							if( (end_time - start_time) > 12000)
+							{
+								printk(KERN_ERR
+						        "@@@@@@@@ OVER TIME:%ld, %ld @@@@@@@@@@@\n", start_time, end_time);
+							}
+						}
+					}
+					idx = 0;
+				}
+			}
+		}
+		
 
 ignore_char:
 		lsr = serial_in(up, UART_LSR);
