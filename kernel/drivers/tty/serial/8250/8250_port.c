@@ -1439,7 +1439,7 @@ serial8250_rx_chars(struct uart_8250_port *up, unsigned char lsr)
 			if (lsr & UART_LSR_OE){
 				port->icount.overrun++;
 				printk_ratelimited(KERN_ERR
-				"serial8250_rx_chars: overrurn=%d\n", port->icount.overrun);
+				"serial8250_rx_chars: ttyS%d: overrurn=%d\n", port->line, port->icount.overrun);
 			}
 
 			/*
