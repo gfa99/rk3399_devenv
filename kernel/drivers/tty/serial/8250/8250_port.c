@@ -82,7 +82,7 @@ static const struct serial8250_config uart_config[] = {
 		.name		= "16550A",
 		.fifo_size	= 16,
 		.tx_loadsz	= 16,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_00,
+		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
 		.rxtrig_bytes	= {1, 4, 8, 14},
 		.flags		= UART_CAP_FIFO,
 	},
@@ -2050,6 +2050,10 @@ dont_test_tx_en:
 	}
 	retval = 0;
 out:
+	if(4 == port->line) {
+		port->state->port.low_latency = 1;
+	}
+	printk(KERN_ERR "TEMI special port handling -- %d, low_latency %d\n", port->line, port->state->port.low_latency);
 	serial8250_rpm_put(up);
 	return retval;
 }
