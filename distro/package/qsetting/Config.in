@@ -1,0 +1,4 @@
+config BR2_PACKAGE_QSETTING
+	bool "qsetting app"
+	help
+	  "setting app based on QT5"

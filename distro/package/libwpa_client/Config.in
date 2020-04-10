@@ -1,0 +1,5 @@
+config BR2_PACKAGE_LIBWPA_CLIENT
+	bool "libwpa_client"
+	help
+	  "libwpa_client built from wpa_supplicant"
+

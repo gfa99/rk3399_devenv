@@ -1,0 +1,5 @@
+config BR2_PACKAGE_RKTOOLKIT
+	bool "rktoolkit"
+	help
+	  "io and update tool"
+
