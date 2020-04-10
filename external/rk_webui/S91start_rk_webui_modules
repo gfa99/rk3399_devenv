@@ -1,0 +1,46 @@
+#!/bin/sh
+
+case "$1" in
+	start)
+		if [ ! -d "/userdata/" ];then
+			echo "userdata is not mounted!!!"
+			//exit 1
+		fi
+
+		mkdir -p /userdata/cfg
+		mkdir -p /userdata/bin
+
+		if [ ! -f "/userdata/cfg/wpa_supplicant.conf" ];then
+			echo "wpa_supplicant.conf init"
+			cp /etc/wpa_supplicant.conf /userdata/cfg/
+		fi
+		
+		killall wpa_supplicant
+		sleep 1
+		wpa_supplicant -B -i wlan0 -c /data/cfg/wpa_supplicant.conf
+		sleep 1
+
+		MAC_ADDR=`ifconfig | grep wlan0 | awk '{print $5}'`
+		MAC1=`echo ${MAC_ADDR:12:2}`
+		MAC2=`echo ${MAC_ADDR:15:2}`
+		softapDemo Rockchip_WebUI_${MAC1}${MAC2}
+
+		sleep 1
+		boa
+
+		;;
+	stop)
+
+		echo 0 > /sys/class/rfkill/rfkill0/state
+
+		;;
+	restart|reload)
+		$0 stop
+		$0 start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+esac
+
+exit 0
