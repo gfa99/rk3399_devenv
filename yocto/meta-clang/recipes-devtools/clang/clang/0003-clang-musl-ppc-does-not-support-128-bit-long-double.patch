@@ -1,0 +1,27 @@
+From 48fa180df65f7ee63a85dd69fd2c1382609c5e95 Mon Sep 17 00:00:00 2001
+From: Khem Raj <raj.khem@gmail.com>
+Date: Tue, 10 May 2016 02:00:11 -0700
+Subject: [PATCH 3/8] clang: musl/ppc does not support 128-bit long double
+
+Signed-off-by: Khem Raj <raj.khem@gmail.com>
+---
+ lib/Basic/Targets/PPC.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lib/Basic/Targets/PPC.h b/lib/Basic/Targets/PPC.h
+index 439c73a0e3..8da698ee21 100644
+--- a/lib/Basic/Targets/PPC.h
++++ b/lib/Basic/Targets/PPC.h
+@@ -328,7 +328,8 @@ public:
+       break;
+     }
+ 
+-    if (getTriple().getOS() == llvm::Triple::FreeBSD) {
++    if (getTriple().getOS() == llvm::Triple::FreeBSD
++        || getTriple().isMusl()) {
+       LongDoubleWidth = LongDoubleAlign = 64;
+       LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+     }
+-- 
+2.18.0
+
