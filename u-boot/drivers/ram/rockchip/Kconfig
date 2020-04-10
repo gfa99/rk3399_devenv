@@ -1,0 +1,10 @@
+config ROCKCHIP_DMC
+	bool "ROCKCHIP DMC"
+	help
+	  This enable dram devfreq driver.
+
+config ROCKCHIP_SDRAM_COMMON
+	bool "Enable rockchip sdram common driver"
+	depends on TPL_RAM || SPL_RAM
+	help
+	  This enable sdram common driver
