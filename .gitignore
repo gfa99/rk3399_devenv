@@ -1,0 +1,10 @@
+#
+# Normal rules
+#
+*~
+.repo/
+.git/
+
+#
+# temporary files during compiling phase
+#
