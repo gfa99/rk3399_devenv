@@ -1,0 +1,223 @@
+body{font-family: arial; margin:0; padding:0; background:#f8fafb;}
+.header{padding:1vw 0; text-align:center; font-size:6vw; color:#4c78d9; border-bottom:2px #dcdfe0 solid; position: relative; background:#fff; min-height:72px; line-height: 72px; vertical-align: middle;}
+.header .backmenu{display: block; background:url('/res/icon_back_02.png') no-repeat; width:72px; height:72px; position: absolute; left:1%;}
+.header .backmenu:hover{background:url('/res/icon_back_02.png') no-repeat;}
+.header .wifi_scan{display: block; background:url('/res/icon_scan_01.png') no-repeat; width:72px; height:72px; position: absolute; right:5%; top:1vw;}
+.header .wifi_scan:hover{background:url('/res/icon_scan_02.png') no-repeat;}
+.clearboth{clear: both; height:0; font-size:0;}
+
+.content_box{border-top:1px #e8eeef solid;border-bottom:1px #e8eeef solid; margin:2vw auto;background:#fff;}
+.content_li{width:100%; }
+.content_li:hover{background:#f8fafb;}
+.content_list_wifi{margin:0 3vw; padding:1.6vw 0.6vw; border-bottom:1px #e8eeef solid; color:#6e727a; font-size:4vw; position:relative; height:72px; line-height: 72px; vertical-align: middle;}
+.content_list_wifi a{text-decoration: none; color:#6e727a;}
+.content_list_wifi .wifi_title{ display: block;}
+.content_list_wifi .wifi_sign{position: absolute; right:20px; top:1.6vw; z-index:99;}
+.content_list_wifi .wifi_Connected{display:block; position: absolute; right:204px; top:1.6vw; z-index:99; background:url('/res/icon_Connected_01.png') no-repeat; width:72px;height:72px;}
+.content_list_wifi .wifi_Connected:hover{background:url('/res/icon_Connected_02.png') no-repeat;}
+.content_list_wifi .wifi_Forget{display:block; position: absolute; right:112px; top:1.6vw;  z-index:99; background:url('/res/icon_Forget_01.png') no-repeat; width:72px;height:72px;}
+.content_list_wifi .wifi_Forget:hover{background:url('/res/icon_Forget_02.png') no-repeat;}
+.content_list_wifi .wifi_Disconnect{display:block; position: absolute; right:20px; top:1.6vw;  z-index:99; background:url('/res/icon_Disconnect_01.png') no-repeat; width:72px;height:72px;}
+.content_list_wifi .wifi_Disconnect:hover{background:url('/res/icon_Disconnect_02.png') no-repeat;}
+
+.content_list{margin:1vw 3vw; padding:0.6vw; border-bottom:1px #e8eeef solid; color:#6e727a; font-size:4vw; position:relative;}
+.content_list a{text-decoration: none; color:#6e727a;}
+.content_list .wifi_sign{position: absolute; right:2vw;}
+.content_list p{margin:0.1vw; padding:0.3vw;}
+.content_list .info{font-size:3vw;}
+.no_solid{border:0;}
+.content_input{margin:1vw 3vw; padding:0.2vw; color:#6e727a; font-size:2vw;}
+.password{
+	border:2px #c0c5c6 solid;
+	border-bottom:none;
+	border-right:none;
+	height:6vw; width:55vw;
+	background:#f8fafb;
+	font-size:4vw;
+}
+
+
+.content_input .regular-radio {
+	display: none;
+}
+
+.content_input .regular-radio + label {
+	-webkit-appearance: none;
+	background-color: #e8eeef;
+	border: 1px solid #c0c5c6;
+	box-shadow: 1px 1px 0 rgba(0,0,0,0.05), inset 2px 2px 1px 0px rgba(0,0,0,0.1);
+	padding: 16px;
+	border-radius: 50px;
+	display: inline-block;
+	position: relative;
+}
+
+.content_input .regular-radio:checked + label:after {
+	content: ' ';
+	width: 23px;
+	height: 23px;
+	border-radius: 50px;
+	position: absolute;
+	top: 5px;
+	background: #4c78d9;
+	box-shadow: inset 2px 2px 1px 0px rgba(0,0,0,0.05);
+	text-shadow: 0px;
+	left: 5px;
+	font-size: 32px;
+}
+
+.content_input .regular-radio:checked + label {
+	background-color: #e8eeef;
+	color: #99a1a7;
+	border: 1px solid #c0c5c6;
+	box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 2px 2px 1px 0px rgba(0,0,0,0.05), inset 15px 10px -12px rgba(255,255,255,0.1), inset 0px 0px 10px rgba(0,0,0,0.1);
+}
+
+.content_input .regular-radio + label:active, .content_input .regular-radio:checked + label:active {
+	box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0px 1px 3px rgba(0,0,0,0.1);
+}
+.menu_1{
+	background:#d1d4d9;
+	width:20vw;
+	padding:2vw;
+	text-align:center;
+	border:0;
+	color:#fff;
+	margin:2vw auto;
+	font-size:3vw;
+	border-radius:3px;
+	text-decoration:none;
+}
+.menu_1:hover{
+	background:#4c78d9;
+}
+
+.content_icon{ 
+	text-align:center;
+	margin:2vw;
+	padding:2vw;
+}
+.content_icon a{
+	text-decoration: none; display: block;
+	padding:270px 0 0 0;
+	margin:0 auto;
+	width:90%;
+	min-width:256px;
+	color:#9fb3e7;
+	font-size:4vw;
+}
+.content_icon a:hover{ color:#4c78d9;}
+.content_icon .icon_wifi{ 
+	background:url(/res/icon_wifi_01.png) center top no-repeat;
+}
+.content_icon .icon_wifi:hover{ 
+	background:url(/res/icon_wifi_01.png) center top no-repeat;
+}
+
+.content_icon .icon_switch{ 
+	background:url(/res/icon_refresh_01.png) center top no-repeat;
+}
+.content_icon .icon_switch:hover{ 
+	background:url(/res/icon_refresh_01.png) center top no-repeat;
+}
+
+
+.content_icon .icon_media{ 
+	background:url(/res/icon_play_01.png) center top no-repeat;
+}
+.content_icon .icon_media:hover{ 
+	background:url(/res/icon_play_01.png) center top no-repeat;
+}
+
+.content_icon .icon_settings{ 
+	background:url(/res/icon_set_01.png) center top no-repeat;
+}
+.content_icon .icon_settings:hover{ 
+	background:url(/res/icon_set_01.png) center top no-repeat;
+}
+
+
+
+.content_box .set_txt{width:85%; margin:2vw auto;color:#6e727a; font-size:4vw;}
+.content_box .set_input{width:75%; margin:4vw auto; text-align:center;font-size:3vw; }
+.redio_line{display: table-cell;vertical-align: middle;}
+.control_menu_1{width:70%; text-align:center; margin:5vw auto;}
+.control_menu_2{text-align:center; width:70%; margin:0 auto 5vw auto;  border:#e8eeef 1px solid;border-radius:5px; padding:0.5vw 1vw;}
+.control_menu_1 a, .control_menu_2 a{display: block;}
+.control_menu_1 table, .control_menu_2 table{border:0;margin:0;border-collapse:collapse;border-spacing:0; width:100%;}
+.control_vol_down{
+	width:136px;
+	height:136px;
+	background:url(/res/in_icon_vola_02.png) center top no-repeat;
+}
+.control_vol_down:hover{ 
+	background:url(/res/in_icon_vola_02.png) center top no-repeat;
+}
+
+.control_play{
+	width:256px;
+	height:256px;
+	background:url(/res/in_icon_play_02.png) center top no-repeat;
+}
+.control_play:hover{ 
+	background:url(/res/in_icon_play_02.png) center top no-repeat;
+}
+
+.control_pause{
+	width:256px;
+	height:256px;
+	background:url(/res/in_icon_stop_02.png) center top no-repeat;
+}
+.control_pause:hover{ 
+	background:url(/res/in_icon_stop_02.png) center top no-repeat;
+}
+
+.control_vol_up{
+	width:136px;
+	height:136px;
+	background:url(/res/in_icon_volb_02.png) center top no-repeat;
+}
+.control_vol_up:hover{ 
+	background:url(/res/in_icon_volb_02.png) center top no-repeat;
+}
+
+.control_pre{
+	width:64px;
+	height:64px;
+	background:url(/res/s_icon_pre_02.png) center top no-repeat;
+}
+.control_pre:hover{ 
+	background:url(/res/s_icon_pre_02.png) center top no-repeat;
+}
+.control_rew{
+	width:64px;
+	height:64px;
+	background:url(/res/s_icon_back_02.png) center top no-repeat;
+}
+.control_rew:hover{ 
+	background:url(/res/s_icon_back_02.png) center top no-repeat;
+}
+.control_stop{
+	width:64px;
+	height:64px;
+	background:url(/res/s_icon_stop_02.png) center top no-repeat;
+}
+.control_stop:hover{ 
+	background:url(/res/s_icon_stop_02.png) center top no-repeat;
+}
+.control_ffw{
+	width:64px;
+	height:64px;
+	background:url(/res/s_icon_forward_02.png) center top no-repeat;
+}
+.control_ffw:hover{ 
+	background:url(/res/s_icon_forward_02.png) center top no-repeat;
+}
+.control_next{
+	width:64px;
+	height:64px;
+	background:url(/res/s_icon_next_02.png) center top no-repeat;
+}
+.control_next:hover{ 
+	background:url(/res/s_icon_next_02.png) center top no-repeat;
+}
