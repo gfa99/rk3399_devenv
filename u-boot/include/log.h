@@ -101,6 +101,8 @@ int _log(enum log_category_t cat, enum log_level_t level, const char *file,
 		      pr_fmt(_fmt), ##_args); \
 	})
 
+#define DEBUG
+
 #ifdef DEBUG
 #define _DEBUG	1
 #else
@@ -156,7 +158,7 @@ int _log(enum log_category_t cat, enum log_level_t level, const char *file,
 void __assert_fail(const char *assertion, const char *file, unsigned int line,
 		   const char *function);
 #define assert(x) \
-	({ if (!(x) && _DEBUG) \
+	({ if (!(x) && 0) \
 		__assert_fail(#x, __FILE__, __LINE__, __func__); })
 
 #ifdef CONFIG_LOG_ERROR_RETURN

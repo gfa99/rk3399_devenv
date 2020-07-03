@@ -541,7 +541,7 @@ pack_uboot_image()
 	# Check file size
 	UBOOT_KB=`ls -l u-boot.bin | awk '{print $5}'`
 	if [ "$PLATFORM_UBOOT_IMG_SIZE" = "" ]; then
-		UBOOT_MAX_KB=1046528
+		UBOOT_MAX_KB=$((1046528+2048))
 	else
 		UBOOT_MAX_KB=`echo $PLATFORM_UBOOT_IMG_SIZE | awk '{print strtonum($2)}'`
 		UBOOT_MAX_KB=$(((UBOOT_MAX_KB-HEAD_KB)*1024))
@@ -559,7 +559,7 @@ pack_uboot_image()
 		UBOOT_LOAD_ADDR=`sed -n "/CONFIG_SYS_TEXT_BASE=/s/CONFIG_SYS_TEXT_BASE=//p" ${OUTDIR}/.config|tr -d '\r'`
 	fi
 
-	${RKTOOLS}/loaderimage --pack --uboot ${OUTDIR}/u-boot.bin uboot.img ${UBOOT_LOAD_ADDR} ${PLATFORM_UBOOT_IMG_SIZE}
+	${RKTOOLS}/loaderimage --pack --uboot ${OUTDIR}/u-boot.bin uboot.img ${UBOOT_LOAD_ADDR} ${PLATFORM_UBOOT_IMG_SIZE} --size 2048 2
 
 	# Delete u-boot.img and u-boot-dtb.img, which makes users not be confused with final uboot.img
 	if [ -f ${OUTDIR}/u-boot.img ]; then
