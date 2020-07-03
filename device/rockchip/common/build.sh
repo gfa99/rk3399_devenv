@@ -14,6 +14,7 @@ function usage()
 	echo "BoardConfig*.mk    -switch to specified board config"
 	echo "uboot              -build uboot"
 	echo "kernel             -build kernel"
+	echo "dtb                -build kernel dtb"
 	echo "modules            -build kernel modules"
 	echo "rootfs             -build default rootfs, currently build buildroot as default"
 	echo "buildroot          -build buildroot rootfs"
@@ -66,6 +67,29 @@ function build_kernel(){
 	fi
 }
 
+function build_dtb(){
+	echo "============Start build kernel dtb============"
+	devname="$RK_KERNEL_DTS"
+	src_dts=$devname.dts
+	pre_dts=/tmp/$devname.pre.dts
+	dec_dts=/tmp/$devname.dec.dts
+	dst_dtb=$devname.dtb
+	echo "Preprocessed  dts: $pre_dts"
+	echo "Decompilation dts: $dec_dts"
+
+	cd $TOP_DIR/kernel/arch/arm64/boot/dts/rockchip
+	cpp -nostdinc -I$TOP_DIR/kernel/include -undef -x assembler-with-cpp $src_dts > $pre_dts
+	dtc -O dtb -b 0 -o $dst_dtb $pre_dts
+	dtc -I dtb -O dts $dst_dtb -o $dec_dts
+	cd - > /dev/null
+	if [ $? -eq 0 ]; then
+		echo "====Build dtb ok!===="
+	else
+		echo "====Build dtb failed!===="
+		exit 1
+	fi
+}
+
 function build_modules(){
 	echo "============Start build kernel modules============"
 	echo "TARGET_ARCH          =$RK_ARCH"
@@ -73,9 +97,9 @@ function build_modules(){
 	echo "=================================================="
 	cd $TOP_DIR/kernel && make ARCH=$RK_ARCH $RK_KERNEL_DEFCONFIG && make ARCH=$RK_ARCH modules -j$RK_JOBS && cd -
 	if [ $? -eq 0 ]; then
-		echo "====Build kernel ok!===="
+		echo "====Build modules ok!===="
 	else
-		echo "====Build kernel failed!===="
+		echo "====Build modules failed!===="
 		exit 1
 	fi
 }
