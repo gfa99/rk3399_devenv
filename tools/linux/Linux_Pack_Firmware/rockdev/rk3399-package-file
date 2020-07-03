@@ -10,14 +10,14 @@ misc		Image/misc.img
 #resource	Image/resource.img
 #kernel		Image/kernel.img
 boot		Image/boot.img
-recovery	Image/recovery.img
+#recovery	Image/recovery.img
 rootfs		Image/rootfs.img
 oem		Image/oem.img
 userdata:grow	Image/userdata.img
-# ÒªĞ´Èëbackup·ÖÇøµÄÎÄ¼ş¾ÍÊÇ×ÔÉí£¨update.img£©
-# SELF ÊÇ¹Ø¼ü×Ö£¬±íÊ¾Éı¼¶ÎÄ¼ş£¨update.img£©×ÔÉí
-# ÔÚÉú³ÉÉı¼¶ÎÄ¼şÊ±£¬²»¼ÓÈëSELFÎÄ¼şµÄÄÚÈİ£¬µ«ÔÚÍ·²¿ĞÅÏ¢ÖĞÓĞ¼ÇÂ¼
-# ÔÚ½â°üÉı¼¶ÎÄ¼şÊ±£¬²»½â°üSELFÎÄ¼şµÄÄÚÈİ¡£
+# è¦å†™å…¥backupåˆ†åŒºçš„æ–‡ä»¶å°±æ˜¯è‡ªèº«ï¼ˆupdate.imgï¼‰
+# SELF æ˜¯å…³é”®å­—ï¼Œè¡¨ç¤ºå‡çº§æ–‡ä»¶ï¼ˆupdate.imgï¼‰è‡ªèº«
+# åœ¨ç”Ÿæˆå‡çº§æ–‡ä»¶æ—¶ï¼Œä¸åŠ å…¥SELFæ–‡ä»¶çš„å†…å®¹ï¼Œä½†åœ¨å¤´éƒ¨ä¿¡æ¯ä¸­æœ‰è®°å½•
+# åœ¨è§£åŒ…å‡çº§æ–‡ä»¶æ—¶ï¼Œä¸è§£åŒ…SELFæ–‡ä»¶çš„å†…å®¹ã€‚
 backup		RESERVED
 #update-script	update-script
 #recover-script	recover-script
