@@ -1,1 +1,0 @@
-device/rockchip/common/rk-repo2git.sh
