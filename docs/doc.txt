@@ -1,13 +1,13 @@
 .
-├── avl
+├── AVL
 │   ├── RKeMMCSupportList Ver1.47_2019_11_15.pdf
 │   ├── RKNandFlashSupportList Ver2.73_20180615.pdf
 │   ├── RK SpiNor and  SLC Nand SupportList Ver1.17_20190925.pdf
 │   ├── Rockchip_Camera_Module_AVL_v2.1.pdf
-│   ├── Rockchip_Support_List_DDR_Ver2.40.pdf
+│   ├── Rockchip_Support_List_DDR_Ver2.41.pdf
 │   └── Rockchip_Support_List_WiFi_and_BT_20190801_EN.pdf
 ├── doc.txt
-├── driver
+├── Kernel
 │   ├── Audio
 │   │   └── Rockchip Audio 开发指南 V1.1-20170215-linux4.4.pdf
 │   ├── CRU
@@ -42,19 +42,6 @@
 │   ├── MMC
 │   │   ├── Rockchip-Developer-Guide-linux4.4-SDMMC-SDIO-eMMC.pdf
 │   │   └── Rockchip-Developer-Guide-SD-Boot.pdf
-│   ├── NPU
-│   │   ├── RK3399Pro_Linux&Android_RKNN_API_V0.9.6_20190514_eng.pdf
-│   │   ├── RK3399Pro_Linux&Android_RKNN_API_V0.9.6_20190514.pdf
-│   │   ├── RKNN Convolution Acceleration Tips.pdf
-│   │   ├── RKNN-Toolkit ARM平台快速上手指南.pdf
-│   │   ├── RKNN-Toolkit FAQ.pdf
-│   │   ├── RKNN-Toolkit User Guide V1.0.0.pdf
-│   │   ├── RKNN-Toolkit快速上手指南_V1.0.0.pdf
-│   │   ├── RKNN-Toolkit使用指南_V1.0.0.pdf
-│   │   ├── Rockchip_RK1808_Developer_Guide_Linux_RKNN_CN.pdf
-│   │   ├── Rockchip_RK1808_Developer_Guide_Linux_RKNN_EN.pdf
-│   │   ├── Rock-X_SDK开发指南_v1.0_20190611.pdf
-│   │   └── 基于RKNN的深度神经网络模型设计建议.pdf
 │   ├── NVM
 │   │   ├── appnote rk flash storage 2017.09.06.pdf
 │   │   ├── appnote rk vendor storage 2017.01.23.pdf
@@ -110,9 +97,11 @@
 │   ├── UART
 │   │   └── Rockchip-Developer-Guide-Linux4.4-UART.pdf
 │   ├── U-Boot
+│   │   ├── firefly_u-boot-2018-09分析_v1.pdf
 │   │   ├── Rockchip-Developer-Guide-Linux-AB-System.pdf
 │   │   ├── Rockchip_Developer_Guide_UBoot_Nextdev_CN.pdf
-│   │   └── Rockchip-Developer-Guide-UBoot-rkdevelop-vs-nextdev.pdf
+│   │   ├── Rockchip-Developer-Guide-UBoot-rkdevelop-vs-nextdev.pdf
+│   │   └── Rockchip Linux SDK uboot logo显示开发指南.pdf
 │   └── USB
 │       ├── Rockchip-Developer-Guide-Linux4.4-USB-CN.pdf
 │       ├── Rockchip-Developer-Guide-Linux4.4-USB-FFS-Test-Demo-CN.pdf
@@ -122,8 +111,8 @@
 │       ├── Rockchip-Developer-Guide-USB-PHY-CN.pdf
 │       ├── Rockchip-Developer-Guide-USB-SQ-Test-CN.pdf
 │       └── Rockchip-RK3399-Developer-Guide-Linux4.4-USB-DTS-CN.pdf
-├── linux
-│   ├── application note
+├── Linux
+│   ├── ApplicationNote
 │   │   ├── Rockchip-Developer-Guide-Debian-Docker.pdf
 │   │   ├── Rockchip_Developer_Guide_DeviceIo_Key_CN.pdf
 │   │   ├── Rockchip_Developer_Guide_DeviceIo_Led_CN.pdf
@@ -134,7 +123,7 @@
 │   │   ├── Rockchip_Instruction_Linux_ROS_CN.pdf
 │   │   ├── Rockchip_Instruction_Linux_ROS_EN.pdf
 │   │   └── The Buildroot User Manual.pdf
-│   ├── display
+│   ├── Display
 │   │   ├── Rockchip_Developer_Guide_Linux_HDMI_CEC_CN.pdf
 │   │   ├── Rockchip_Developer_Guide_Linux_HDMI_CEC_EN.pdf
 │   │   ├── Rockchip_Instruction_Linux_Debian_Dual_Display_Audio_CN .pdf
@@ -142,7 +131,7 @@
 │   ├── GUI
 │   │   ├── Rockchip_Developer_Guide_Linux_MiniGUI_Desktop_CN.pdf
 │   │   └── Rockchip_Developer_Guide_QT_Application_CN.pdf
-│   ├── multimedia
+│   ├── Multimedia
 │   │   ├── camera_engine_rkisp_user_manual_v2.0.pdf
 │   │   ├── Camera_External_FAQ_v1.0 .pdf
 │   │   ├── CIF_ISP10_Driver_User_Manual_v1.0.pdf
@@ -153,6 +142,7 @@
 │   │   ├── RKISP1_IQ_Parameters_User_Guide_v1.0_20190603.pdf
 │   │   ├── RKISP_Driver_User_Manual_v1.2_20190508_EN.pdf
 │   │   ├── RKISP_Driver_User_Manual_v1.2_20190508.pdf
+│   │   ├── RK_linux_camera_gstreamer_应用开发_v1.0_20171212.pdf
 │   │   ├── Rockchip_Camera_AVL_v2.1_Package_20181016.7z
 │   │   ├── Rockchip_Developer_Guide_Linux_Camera_CN.pdf
 │   │   ├── Rockchip_Developer_Guide_Linux_Camera_EN.pdf
@@ -169,7 +159,7 @@
 │   ├── Secure
 │   │   ├── Rockchip_Developer_Guide_Linux4.4_SecureBoot_CN.pdf
 │   │   └── Rockchip_Developer_Guide_Linux4.4_SecureBoot_EN.pdf
-│   └── wifibt
+│   └── Wifibt
 │       ├── AP模组 RF测试
 │       │   ├── AP6236 RF测试
 │       │   │   ├── AP6236 RF测试.txt
@@ -204,7 +194,7 @@
 │           └── 性能测试.txt
 ├── Rockchip_Developer_Guide_Linux_Software_CN.pdf
 ├── Rockchip_Developer_Guide_Linux_Software_EN.pdf
-├── soc_public
+├── Soc_public
 │   ├── PX30
 │   │   ├── PX30_Linux_SDK_Release_Note.txt
 │   │   ├── PX30 MINI EVB硬件操作指南_20180710.pdf
@@ -238,14 +228,20 @@
 │   │   ├── Rockchip RK3328 Datasheet V1.2-20180205.pdf
 │   │   └── Rockchip_RK3328_Linux_SDK_Release_V1.0.0_20181102_CN.pdf
 │   ├── RK3399
+│   │   ├── RK3399_EVB_User_Guide-20160920.pdf
+│   │   ├── RK3399_hardware_reference2019.zip
 │   │   ├── RK3399_Linux_NN_SDK_V1.0_20180713发布说明.pdf
 │   │   ├── RK3399_Linux_SDK_Release_Note.txt
 │   │   ├── RK3399 Multimedia Codec Benchmark v1.2.pdf
+│   │   ├── rk3399-q7-user-manual-v14.pdf
 │   │   ├── RK3399_SSD_Android&Linux_V1.0_20180522.pdf
 │   │   ├── Rockchip-Developer-Guide-linux4.4-MCU.pdf
 │   │   ├── Rockchip RK3399 Datasheet V1.8-20180529.pdf
-│   │   ├── Rockchip_RK3399_Linux_SDK_Release_V2.2.1_20191014_CN.pdf
-│   │   ├── Rockchip_RK3399_Linux_SDK_Release_V2.2.1_20191014_EN.pdf
+│   │   ├── Rockchip_RK3399_Linux_SDK_Release_V2.3.0_20191203_CN.pdf
+│   │   ├── Rockchip_RK3399_Linux_SDK_Release_V2.3.0_20191203_EN.pdf
+│   │   ├── Rockchip+RK3399TRM+V1.3+Part1.pdf
+│   │   ├── Rockchip+RK3399TRM+V1.3+Part2.pdf
+│   │   ├── Rockchip_RK3399TRM_V1.4_Part1-20170408.pdf
 │   │   └── Rockchip RK3399挖掘机用户使用指南_V3.0_20190305.pdf
 │   └── RK3399PRO
 │       ├── RK3399PRO_Linux_SDK_Release_Note.txt
@@ -256,10 +252,12 @@
 │       ├── Rockchip_RK3399Pro_Instruction_Linux_NPU_CN.pdf
 │       ├── Rockchip_RK3399Pro_User_Guide_Hardware_CN.pdf
 │       └── Rockchip_RK3399Pro_User_Guide_Hardware_EN.pdf
-└── tools
+└── Tools
     ├── Android 增加一个分区配置指南 V1.00.pdf
+    ├── Linux SDK压力测试方法.pdf
     ├── Linux开发工具使用手册_v1.32.pdf
     ├── REPO镜像服务器搭建和管理_V2.2_20131231.pdf
+    ├── RK3308_EQ_DRC_TOOL_v1.22.pdf
     ├── Rockchip-Parameter-File-Format-Version1.4.pdf
     ├── Rockchip_RK3308_User_Manual_Linux_Audio_EQ_TOOL_CN.pdf
     ├── Rockchip Bug 系统使用指南 V1.0-201712.pdf
@@ -269,5 +267,4 @@
     ├── WNpctool简要使用说明_V1.1.0_0920.pdf
     └── 瑞芯微开发工具手册_v1.1.pdf
 
-51 directories, 218 files
-
+50 directories, 217 files
