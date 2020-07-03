@@ -1,0 +1,1 @@
+ubuntu/AIO-3399C-UBUNTU16.04-GPT-20190820-1710.img.7z filter=lfs diff=lfs merge=lfs -text
