@@ -23,8 +23,8 @@
 4) 在 /etc/rc.local 中添加命令: **nohup bash your_lfs_server_abspath/lfs-server/bin/run-lfs-server.sh & **用以配置server开机启动
 2. 客户端
 1) 安装配置git-lfs
-2) 在 ~/.gitconfig 中新增如下配置
-3) git clone ; git checkout
+2) 方式一: 在 ~/.gitconfig 中新增如下配置, 之后 git clone ; git checkout
+3) 方式二: 先 git init 初始化一个空的仓库, 然后修改 .git/config 之后 git fetch (注: 对于使用git-lfs跟踪过大文件的分支,必须经过首次checkout下载大文件后才能在本地保存使用)
 ```
 ~/.gitconfig 中需要添加的配置如下(在地址前配置用户名和密码方便每次git checkout时不用再手动输入用户密码):
 
@@ -32,6 +32,19 @@
 	url = "lfs-server-scheme://lfs-admin-user:lfs-admin-passwd@lfs-server-addr:lfs-server-port/"
 	# example:
 	# url = "http://lfs_admin_user:lfs_admin_pass@172.16.6.6:9999/"
+```
+
+```
+.git/config 中需要添加的配置如下(在地址前配置用户名和密码方便每次git checkout时不用再手动输入用户密码):
+
+[remote "origin"]
+	url = git@git_server_addr:/git_repo_abspath
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[lfs]
+	url = "lfs-server-scheme://lfs-admin-user:lfs-admin-passwd@lfs-server-addr:lfs-server-port/"
+[lfs "lfs-server-scheme://lfs-admin-user:lfs-admin-passwd@lfs-server-addr:lfs-server-port/"]
+	locksverify = false
+	access = basic
 ```
 
 ## git-lfs 安装配置及使用
