@@ -10,8 +10,8 @@
 	access = basic
 ```
 > 接上文,
-4. 对于每个使用lfs跟踪过大文件的分支, 需要先checkout到该分支后,才能push该分支(否则跟踪的大文件无法上传到lfs-server)
-5. 对应剩余的其它分支,执行命令: **git push origin --all** 将其推送到新建的git repo中
+4. 首先向刚新建的git repo中push一个未使用git-lfs跟踪过大文件的分支(如果master满足要求,则最好: git push origin master)
+5. 对应剩余的其它分支(无论是否包含用lfs跟踪过大文件),直接执行命令: **git push origin --all (或 git push origin --mirror)** 将其推送到新建的git repo中
 6. 到此新建的git repo即可对外开放作为公用的代码仓库
 
 
