@@ -915,6 +915,8 @@ void board_init_f(ulong boot_flags)
 	gd->flags = boot_flags;
 	gd->have_console = 0;
 
+	printf("*** RoboTemi u-boot Starting... ***\n");
+
 #if defined(CONFIG_DISABLE_CONSOLE)
 	gd->flags |= GD_FLG_DISABLE_CONSOLE;
 #endif
