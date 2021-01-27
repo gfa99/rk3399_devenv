@@ -21,6 +21,7 @@ function usage()
 	echo "ramboot            -build ramboot image"
 	echo "multi-npu_boot     -build boot image for multi-npu board"
 	echo "yocto              -build yocto rootfs"
+	echo "ubuntu             -build ubuntu rootfs"
 	echo "debian             -build debian9 stretch rootfs"
 	echo "distro             -build debian10 buster rootfs"
 	echo "pcba               -build pcba"
@@ -171,6 +172,20 @@ function build_yocto(){
 	fi
 }
 
+function build_ubuntu(){
+	cd ubuntu
+
+	# TODO: 
+
+	cd ..
+	if [ $? -eq 0 ]; then
+		echo "====Build Ubuntu ok!===="
+	else
+		echo "====Build Ubuntu failed!===="
+		exit 1
+	fi
+}
+
 function build_debian(){
 	cd debian
 
@@ -227,6 +242,10 @@ function build_rootfs(){
 		distro)
 			build_distro
 			ROOTFS_IMG=rootfs/linaro-rootfs.img
+			;;
+		ubuntu)
+			build_ubuntu
+			ROOTFS_IMG=ubuntu/ubuntu-rootfs.img
 			;;
 		*)
 			build_buildroot
@@ -413,7 +432,7 @@ for option in ${OPTIONS:-allsave}; do
 
 			ln -sf $CONF $BOARD_CONFIG
 			;;
-		buildroot|debian|distro|yocto)
+		buildroot|ubuntu|debian|distro|yocto)
 			build_rootfs $option
 			;;
 		recovery)
