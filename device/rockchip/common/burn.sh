@@ -16,6 +16,7 @@ NEW_TOOL=tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/upgrade_tool
 
 OLD_PATH=rockdev
 OLD_TOOL=tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/upgrade_tool_v1.24
+RFS_TYPE=ubuntu
 
 function fw_burn_usage()
 {
@@ -61,7 +62,7 @@ function old_mbr_fw_burn()
             r) sudo ${OLD_TOOL} di resource ${OLD_PATH}/resource.img ;;
             m) sudo ${OLD_TOOL} di misc ${OLD_PATH}/misc.img ;;
             b) sudo ${OLD_TOOL} di boot ${OLD_PATH}/boot.img ;;
-            f) sudo ${OLD_TOOL} di userdata ${OLD_PATH}/rootfs.img ;;
+            f) sudo ${OLD_TOOL} di userdata ${OLD_PATH}/${RFS_TYPE}.img ;;
             d) sudo ${OLD_TOOL} rd ;;
             E) earse_flash ${OLD_PATH}/rk3399_loader_v1.22.115.bin ;;
             U) echo "do nothing ..." ;;
@@ -75,7 +76,7 @@ function old_mbr_fw_burn()
                sudo ${OLD_TOOL} di misc ${OLD_PATH}/misc.img ${OLD_PATH}/parameter.txt
                sudo ${OLD_TOOL} di boot ${OLD_PATH}/boot.img ${OLD_PATH}/parameter.txt
 
-               sudo ${OLD_TOOL} di userdata ${OLD_PATH}/rootfs.img ${OLD_PATH}/parameter.txt
+               sudo ${OLD_TOOL} di userdata ${OLD_PATH}/${RFS_TYPE}.img ${OLD_PATH}/parameter.txt
                 ;;
             h|*|?)
                [ "$arg" != "h" ] && echo "Unkown arg, do nothing!"
@@ -103,7 +104,7 @@ function new_gpt_fw_burn()
 
             b) sudo ${NEW_TOOL} di -b ${NEW_PATH}/boot.img ;;
             R) sudo ${NEW_TOOL} di -r ${NEW_PATH}/recovery.img ;;
-            f) sudo ${NEW_TOOL} di -rootfs ${NEW_PATH}/rootfs.img ;;
+            f) sudo ${NEW_TOOL} di -rootfs ${NEW_PATH}/${RFS_TYPE}.img ;;
             O) sudo ${NEW_TOOL} di -oem ${NEW_PATH}/oem.img ;;
 			D) sudo ${NEW_TOOL} di -userdata ${NEW_PATH}/userdata.img ;;
             E) earse_flash ${NEW_PATH}/MiniLoaderAll.bin ;;
@@ -135,7 +136,7 @@ function new_gpt_fw_burn()
                 sudo ${NEW_TOOL} di -b ${NEW_PATH}/boot.img
                 sudo ${NEW_TOOL} di -recovery ${NEW_PATH}/recovery.img
                 sudo ${NEW_TOOL} di -oem ${NEW_PATH}/oem.img
-                sudo ${NEW_TOOL} di -rootfs ${NEW_PATH}/rootfs.img
+                sudo ${NEW_TOOL} di -rootfs ${NEW_PATH}/${RFS_TYPE}.img
                 sudo ${NEW_TOOL} di -userdata ${NEW_PATH}/userdata.img
                 ;;
             h|?)

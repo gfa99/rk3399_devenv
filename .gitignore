@@ -4,6 +4,7 @@
 *~
 .repo/
 .git/
+IMAGE/
 
 #
 # temporary files during compiling phase
