@@ -99,14 +99,15 @@ function new_gpt_fw_burn()
             t) sudo ${NEW_TOOL} di -t ${NEW_PATH}/trust.img ;;
             m) sudo ${NEW_TOOL} di -m ${NEW_PATH}/misc.img ;;
 
-            r) sudo ${NEW_TOOL} di resource ${NEW_PATH}/resource.img ;;
+            r) sudo ${NEW_TOOL} di -resource ${NEW_PATH}/resource.img ;;
             k) sudo ${NEW_TOOL} di -k ${NEW_PATH}/kernel.img ;;
 
             b) sudo ${NEW_TOOL} di -b ${NEW_PATH}/boot.img ;;
             R) sudo ${NEW_TOOL} di -r ${NEW_PATH}/recovery.img ;;
-            f) sudo ${NEW_TOOL} di -rootfs ${NEW_PATH}/${RFS_TYPE}.img ;;
+            s) sudo ${NEW_TOOL} di -s ${NEW_PATH}/system.img ;;
             O) sudo ${NEW_TOOL} di -oem ${NEW_PATH}/oem.img ;;
-			D) sudo ${NEW_TOOL} di -userdata ${NEW_PATH}/userdata.img ;;
+            f) sudo ${NEW_TOOL} di -rootfs ${NEW_PATH}/${RFS_TYPE}.img ;;
+            D) sudo ${NEW_TOOL} di -userdata ${NEW_PATH}/userdata.img ;;
             E) earse_flash ${NEW_PATH}/MiniLoaderAll.bin ;;
             U) sudo ${NEW_TOOL} uf ${NEW_PATH}/AIO-3399C-UBUNTU16.04-GPT-20190820-1710.img ;;
             d) sudo ${NEW_TOOL} rd ;;
@@ -135,9 +136,10 @@ function new_gpt_fw_burn()
                 sudo ${NEW_TOOL} di -misc ${NEW_PATH}/misc.img
                 sudo ${NEW_TOOL} di -b ${NEW_PATH}/boot.img
                 sudo ${NEW_TOOL} di -recovery ${NEW_PATH}/recovery.img
-                sudo ${NEW_TOOL} di -oem ${NEW_PATH}/oem.img
+                # sudo ${NEW_TOOL} di -system ${NEW_PATH}/system.img
+                # sudo ${NEW_TOOL} di -oem ${NEW_PATH}/oem.img
+                # sudo ${NEW_TOOL} di -userdata ${NEW_PATH}/userdata.img
                 sudo ${NEW_TOOL} di -rootfs ${NEW_PATH}/${RFS_TYPE}.img
-                sudo ${NEW_TOOL} di -userdata ${NEW_PATH}/userdata.img
                 ;;
             h|?)
                 [ "$arg" != "h" ] && echo "Unkown arg, do nothing!"
