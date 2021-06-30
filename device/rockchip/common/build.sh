@@ -75,13 +75,14 @@ function build_dtb(){
 	pre_dts=/tmp/$devname.pre.dts
 	dec_dts=/tmp/$devname.dec.dts
 	dst_dtb=$devname.dtb
+	dtc_cmd=$TOP_DIR/kernel/scripts/dtc/dtc
 	echo "Preprocessed  dts: $pre_dts"
 	echo "Decompilation dts: $dec_dts"
 
 	cd $TOP_DIR/kernel/arch/arm64/boot/dts/rockchip
 	cpp -nostdinc -I$TOP_DIR/kernel/include -undef -x assembler-with-cpp $src_dts > $pre_dts
-	dtc -O dtb -b 0 -o $dst_dtb $pre_dts
-	dtc -I dtb -O dts $dst_dtb -o $dec_dts
+	$dtc_cmd -O dtb -b 0 -o $dst_dtb $pre_dts
+	$dtc_cmd -I dtb -O dts $dst_dtb -o $dec_dts
 	cd - > /dev/null
 	if [ $? -eq 0 ]; then
 		echo "====Build dtb ok!===="
