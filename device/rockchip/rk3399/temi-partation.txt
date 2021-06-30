@@ -1,0 +1,57 @@
+FIRMWARE_VER: 8.1
+MACHINE_MODEL: RK3399
+MACHINE_ID: 007
+MANUFACTURER: RK3399
+MAGIC: 0x5041524B
+ATAG: 0x00200800
+MACHINE: 3399
+CHECK_MASK: 0x80
+PWR_HLD: 0,0,A,0,1
+TYPE: GPT
+CMDLINE: console=ttyFIQ0 root=/dev/mmcblk1p15 rw rootfstype=ext4 init=/sbin/init mtdparts=rk29xxnand:0x00002000@0x00004000(uboot),0x00002000@0x00006000(trust),0x00002000@0x00008000(misc),0x00010000@0x0000a000(boot),0x00010000@0x0001a000(recovery),0x00010000@0x0002a000(backup),0x00020000@0x0003a000(oem),0x00300000@0x0005a000(system),0x02000000@0x0035a000(rootfs),-@0x0235a000(userdata:grow)
+uuid:rootfs=614e0000-0000-4b53-8000-1d28000054a9
+
+{Size     @Addr      (Name)} (Unit: sector, 512Bytes)
+0x00002000@0x00004000(uboot)         4M @    8M
+0x00002000@0x00006000(trust)         4M @   12M
+0x00002000@0x00008000(misc)          4M @   16M
+
+0x00010000@0x0000a000(boot)         32M @   20M
+
+0x00010000@0x0001a000(recovery)     32M @   52M
+0x00010000@0x0002a000(backup)       32M @   84M
+0x00020000@0x0003a000(oem)          64M @  116M
+0x00300000@0x0005a000(system)      1.5G @  180M
+0x02000000@0x0035a000(rootfs)       16G @ 1720M
+-@0x0235a000(userdata:grow)
+
+=======================================================
+
+FIRMWARE_VER: 6.0.1
+MACHINE_MODEL: RK3399
+MACHINE_ID: 007
+MANUFACTURER: RK3399
+MAGIC: 0x5041524B
+ATAG: 0x00200800
+MACHINE: 3399
+CHECK_MASK: 0x80
+PWR_HLD: 0,0,A,0,1
+TYPE: GPT
+CMDLINE: console=ttyFIQ0 root=/dev/mmcblk1p15 rw rootfstype=ext4 init=/sbin/init androidboot.baseband=N/A androidboot.selinux=permissive androidboot.hardware=rk30board androidboot.console=ttyFIQ0 mtdparts=rk29xxnand:0x00002000@0x00002000(uboot),0x00002000@0x00004000(trust),0x00002000@0x00006000(misc),0x00008000@0x00008000(resource),0x0000C000@0x00010000(kernel),0x00010000@0x0001C000(boot),0x00010000@0x0002C000(recovery),0x00038000@0x0003C000(backup),0x00040000@0x00074000(cache),0x00300000@0x000B4000(system),0x00008000@0x003B4000(metadata),0x00000040@0x003BC000(verity_mode),0x00002000@0x003BC040(baseparamer),0x00000400@0x003BE040(frp),-@0x003BE440(userdata)
+uuid:rootfs=614e0000-0000-4b53-8000-1d28000054a9
+
+0x00002000@0x00002000(uboot)         4M @    4M
+0x00002000@0x00004000(trust)         4M @    8M
+0x00002000@0x00006000(misc)          4M @   12M
+0x00008000@0x00008000(resource)     16M @   16M
+0x0000C000@0x00010000(kernel)       24M @   32M
+0x00010000@0x0001C000(boot)         32M @   56M
+0x00010000@0x0002C000(recovery)     32M @   88M
+0x00038000@0x0003C000(backup)      112M @  120M
+0x00040000@0x00074000(cache)       128M @  232M
+0x00300000@0x000B4000(system)      1.5G @  360M
+0x00008000@0x003B4000(metadata)     16M @ 1896M
+0x00000040@0x003BC000(verity_mode)  16K @ 1912M
+0x00002000@0x003BC040(baseparamer)   4M @ 1912M + 16K
+0x00000400@0x003BE040(frp)         0.5M @ 1916M + 16K 
+-@0x003BE440(userdata)
