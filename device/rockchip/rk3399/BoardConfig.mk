@@ -7,7 +7,7 @@ export RK_UBOOT_DEFCONFIG=rk3399
 # Kernel defconfig
 export RK_KERNEL_DEFCONFIG=firefly_linux_defconfig
 # Kernel dts
-export RK_KERNEL_DTS=rk3399-firefly-aioc
+export RK_KERNEL_DTS=rk3399-sapphire-excavator-linux
 # boot image type
 export RK_BOOT_IMG=boot.img
 # kernel image path
