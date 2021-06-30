@@ -1,1 +1,1 @@
-../device/rockchip/rk3399/parameter.txt
+../device/rockchip/rk3399/temi-parameter.txt
