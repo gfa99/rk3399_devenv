@@ -60,19 +60,6 @@ build_kernel()
 	return 0
 }
 
-build_module()
-{
-	# Compiler module
-	cd ${BS_DIR_KERNEL} || return 1
-	#make ARCH=arm64 ${BS_CONFIG_KERNEL} || return 1
-	make -j${threads} ARCH=arm64 modules || return 1
-
-	# Copy kernel to release directory
-	find . -name "*.ko" | xargs -i rsync {} ../output/modules/
-
-	return 0
-}
-
 build_update()
 {
 	cd ${BS_DIR_RELEASE} || return 1
@@ -115,7 +102,6 @@ copy_other_files()
 threads=1
 uboot=no
 kernel=no
-module=no
 update=no
 
 if [ -z $1 ]; then
@@ -131,13 +117,10 @@ while [ "$1" ]; do
 		threads=${x#-j=}
 		;;
 	-u|--uboot)
-            uboot=yes
+		uboot=yes
 	    ;;
 	-k|--kernel)
 	    kernel=yes
-	    ;;
-	-m|--module)
-	    module=yes
 	    ;;
 	-U|--update)
 		update=yes
@@ -155,7 +138,6 @@ Build script for compile the source of telechips project.
   -j=n                 using n threads when building source project (example: -j=16)
   -u, --uboot          build bootloader uboot from source
   -k, --kernel         build kernel from source
-  -m, --module         build module of kernel
   -U, --update         build update file
   -a, --all            build all, include anything
   -h, --help           display this help and exit
@@ -179,10 +161,6 @@ fi
 
 if [ "${kernel}" = yes ]; then
 	build_kernel || exit 1
-fi
-
-if [ "${module}" = yes ]; then
-	build_module || exit 1
 fi
 
 if [ "${update}" = yes ]; then

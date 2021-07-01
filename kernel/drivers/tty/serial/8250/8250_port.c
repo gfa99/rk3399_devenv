@@ -2053,7 +2053,7 @@ out:
 	if(4 == port->line) {
 		port->state->port.low_latency = 1;
 	}
-	// printk(KERN_ERR "TEMI special port handling -- %d, low_latency %d\n", port->line, port->state->port.low_latency);
+	printk(KERN_ERR "TEMI special port handling -- %d, low_latency %d\n", port->line, port->state->port.low_latency);
 	serial8250_rpm_put(up);
 	return retval;
 }
