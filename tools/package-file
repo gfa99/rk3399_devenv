@@ -2,11 +2,11 @@
 #
 #HWDEF			HWDEF
 package-file	package-file
-bootloader		rk3399_loader_v1.12.109.bin
+bootloader		rk3399_loader_v1.22.115.bin
 parameter		parameter.txt
 trust			trust.img
 uboot			uboot.img
-misc			RESERVED
+misc			misc_zero.img
 resource		resource.img
 kernel			kernel.img
 boot			boot.img

@@ -30,35 +30,32 @@ static bool gDebug =
 } while (0)
 
 
-/* trust image has TRUSTIMAGE_MAX_NUM backups */
-#define TRUSTIMAGE_MAX_NUM	2
-#define TRUSTIMAGE_MAX_SIZE	(2 * 1024 * 1024)
-
+/* trust image has g_trust_max_num backups */
+static uint32_t g_trust_max_num = 2;
+static uint32_t g_trust_max_size = 2 * 1024 * 1024;
 
 /* config sha and rsa */
-#define SHA_SEL_256		3
-#define SHA_SEL_256_RK		2
+#define SHA_SEL_256		3	/* little endian */
+#define SHA_SEL_256_RK		2	/* big endian: only rk3368 need it */
 #define SHA_SEL_160		1
 #define SHA_SEL_NONE		0
 
-#define RSA_SEL_2048		2
+#define RSA_SEL_2048_PSS	3	/* only RK3326, PX30, RK3308 */
+#define RSA_SEL_2048		2	/* most platforms except above PSS */
 #define RSA_SEL_1024		1
 #define RSA_SEL_NONE		0
 
-/* only rk3368 using rk sha256 mode for miniloader */
-#if defined(CONFIG_RKCHIP_RK3368)
-#define SHA_SEL_DEFAULT		SHA_SEL_256_RK
-#else
-#define SHA_SEL_DEFAULT		SHA_SEL_256
-#endif
-#define RSA_SEL_DEFAULT		RSA_SEL_2048
-
+#define is_digit(c)		((c) >= '0' && (c) <= '9')
 
 static char *gConfigPath;
 static OPT_T gOpts;
 #define BL3X_FILESIZE_MAX	(512 * 1024)
 static uint8_t gBuf[BL3X_FILESIZE_MAX];
 static bool gSubfix;
+static char *gLegacyPath;
+static char *gNewPath;
+static uint8_t gRSAmode = RSA_SEL_2048;
+static uint8_t gSHAmode = SHA_SEL_256;
 
 const uint8_t gBl3xID[BL_MAX_SEC][4] = {
 	{'B', 'L', '3', '0'},
@@ -91,12 +88,27 @@ static inline uint32_t getBCD(uint16_t value)
 static inline void fixPath(char *path)
 {
 	int i, len = strlen(path);
+	char tmp[MAX_LINE_LEN];
+	char *start, *end;
 
 	for (i = 0; i < len; i++) {
 		if (path[i] == '\\')
 			path[i] = '/';
 		else if (path[i] == '\r' || path[i] == '\n')
 			path[i] = '\0';
+	}
+
+	if (gLegacyPath && gNewPath) {
+		start = strstr(path, gLegacyPath);
+		if (start) {
+			end = start + strlen(gLegacyPath);
+			/* Backup, so tmp can be src for strcat()*/
+			strcpy(tmp, end);
+			/* Terminate, so path can be dest for strcat() */
+			*start = '\0';
+			strcat(path, gNewPath);
+			strcat(path, tmp);
+		}
 	}
 }
 
@@ -475,29 +487,29 @@ static bool bl3xHash256(uint8_t *pHash, uint8_t *pData, uint32_t nDataSize)
 
 	nHasHashSize = 0;
 
-#if (SHA_SEL_DEFAULT == SHA_SEL_256_RK)
-	sha256_ctx ctx;
+	if (gSHAmode == SHA_SEL_256_RK) {
+		sha256_ctx ctx;
 
-	sha256_begin(&ctx);
-	while (nDataSize > 0) {
-		nHashSize = (nDataSize >= SHA256_CHECK_SZ) ? SHA256_CHECK_SZ : nDataSize;
-		sha256_hash(&ctx, pData + nHasHashSize, nHashSize);
-		nHasHashSize += nHashSize;
-		nDataSize -= nHashSize;
-	}
-	sha256_end(&ctx, pHash);
-#else
-	sha256_context ctx;
+		sha256_begin(&ctx);
+		while (nDataSize > 0) {
+			nHashSize = (nDataSize >= SHA256_CHECK_SZ) ? SHA256_CHECK_SZ : nDataSize;
+			sha256_hash(&ctx, pData + nHasHashSize, nHashSize);
+			nHasHashSize += nHashSize;
+			nDataSize -= nHashSize;
+		}
+		sha256_end(&ctx, pHash);
+	} else {
+		sha256_context ctx;
 
-	sha256_starts(&ctx);
-	while (nDataSize > 0) {
-		nHashSize = (nDataSize >= SHA256_CHECK_SZ) ? SHA256_CHECK_SZ : nDataSize;
-		sha256_update(&ctx, pData + nHasHashSize, nHashSize);
-		nHasHashSize += nHashSize;
-		nDataSize -= nHashSize;
+		sha256_starts(&ctx);
+		while (nDataSize > 0) {
+			nHashSize = (nDataSize >= SHA256_CHECK_SZ) ? SHA256_CHECK_SZ : nDataSize;
+			sha256_update(&ctx, pData + nHasHashSize, nHashSize);
+			nHasHashSize += nHashSize;
+			nDataSize -= nHashSize;
+		}
+		sha256_finish(&ctx, pHash);
 	}
-	sha256_finish(&ctx, pHash);
-#endif
 	return true;
 }
 
@@ -564,8 +576,8 @@ static bool mergetrust(void)
 	memcpy(&pHead->tag, TRUST_HEAD_TAG, 4);
 	pHead->version = (getBCD(gOpts.major) << 8) | getBCD(gOpts.minor);
 	pHead->flags = 0;
-	pHead->flags |= (SHA_SEL_DEFAULT << 0);
-	pHead->flags |= (RSA_SEL_DEFAULT << 4);
+	pHead->flags |= (gSHAmode << 0);
+	pHead->flags |= (gRSAmode << 4);
 
 	SignOffset = sizeof(TRUST_HEADER) + nComponentNum * sizeof(COMPONENT_DATA);
 	LOGD("trust bin sign offset = %d\n", SignOffset);
@@ -605,7 +617,7 @@ static bool mergetrust(void)
 		}
 	}
 
-	/* 0 for TRUSTIMAGE_MAX_NUM backups */
+	/* 0 for g_trust_max_num backups */
 #if 0
 	/* save trust head to out file */
 	if (!fwrite(gBuf, TRUST_HEADER_SIZE, 1, outFile))
@@ -629,18 +641,18 @@ static bool mergetrust(void)
 	}
 #else
 	/* check bin size */
-	if (OutFileSize > TRUSTIMAGE_MAX_SIZE) {
+	if (OutFileSize > g_trust_max_size) {
 		LOGE("Merge trust image: trust bin size overfull.\n");
 		goto end;
 	}
 
 	/* malloc buffer */
-	pbuf = outBuf = calloc(TRUSTIMAGE_MAX_SIZE, TRUSTIMAGE_MAX_NUM);
+	pbuf = outBuf = calloc(g_trust_max_size, g_trust_max_num);
 	if (!outBuf) {
 		LOGE("Merge trust image: calloc buffer error.\n");
 		goto end;
 	}
-	memset(outBuf, 0, (TRUSTIMAGE_MAX_SIZE * TRUSTIMAGE_MAX_NUM));
+	memset(outBuf, 0, (g_trust_max_size * g_trust_max_num));
 
 	/* save trust head data */
 	memcpy(pbuf, gBuf, TRUST_HEADER_SIZE);
@@ -672,13 +684,13 @@ static bool mergetrust(void)
 		pEntry++;
 	}
 
-	/* copy other (TRUSTIMAGE_MAX_NUM - 1) backup bin */
-	for (n = 1; n < TRUSTIMAGE_MAX_NUM; n++) {
-		memcpy(outBuf + TRUSTIMAGE_MAX_SIZE * n, outBuf, TRUSTIMAGE_MAX_SIZE);
+	/* copy other (g_trust_max_num - 1) backup bin */
+	for (n = 1; n < g_trust_max_num; n++) {
+		memcpy(outBuf + g_trust_max_size * n, outBuf, g_trust_max_size);
 	}
 
 	/* save date to file */
-	if (!fwrite(outBuf, TRUSTIMAGE_MAX_SIZE * TRUSTIMAGE_MAX_NUM, 1, outFile)) {
+	if (!fwrite(outBuf, g_trust_max_size * g_trust_max_num, 1, outFile)) {
 		LOGE("Merge trust image: write file error.\n");
 		goto end;
 	}
@@ -816,8 +828,11 @@ static void printHelp(void)
 	printf("\t" OPT_HELP "\t\t\tDisplay this information.\n");
 	printf("\t" OPT_VERSION "\t\tDisplay version information.\n");
 	printf("\t" OPT_SUBFIX "\t\tSpec subfix.\n");
+	printf("\t" OPT_REPLACE "\t\tReplace some part of binary path.\n");
+	printf("\t" OPT_RSA "\t\t\tRSA mode.\"--rsa [mode]\", [mode] can be: 0(none), 1(1024), 2(2048), 3(2048 pss).\n");
+	printf("\t" OPT_SHA "\t\t\tSHA mode.\"--sha [mode]\", [mode] can be: 0(none), 1(160), 2(256 RK big endian), 3(256 little endian).\n");
+	printf("\t" OPT_SIZE "\t\t\tTrustImage size.\"--size [per image KB size] [copy count]\", per image must be 64KB aligned\n");
 }
-
 
 int main(int argc, char **argv)
 {
@@ -842,6 +857,46 @@ int main(int argc, char **argv)
 		} else if (!strcmp(OPT_SUBFIX, argv[i])) {
 			gSubfix = true;
 			printf("trust_merger: Spec subfix!\n");
+		} else if (!strcmp(OPT_REPLACE, argv[i])) {
+			i++;
+			gLegacyPath = argv[i];
+			i++;
+			gNewPath = argv[i];
+		} else if (!strcmp(OPT_RSA, argv[i])) {
+			i++;
+			if (!is_digit(*(argv[i]))) {
+				printHelp();
+				return -1;
+			}
+			gRSAmode = *(argv[i]) - '0';
+			LOGD("rsa mode:%d\n", gRSAmode);
+		} else if (!strcmp(OPT_SHA, argv[i])) {
+			i++;
+			if (!is_digit(*(argv[i]))) {
+				printHelp();
+				return -1;
+			}
+			gSHAmode = *(argv[i]) - '0';
+			LOGD("sha mode:%d\n", gSHAmode);
+		} else if (!strcmp(OPT_SIZE, argv[i])) {
+			/* Per trust image size */
+			g_trust_max_size =
+				strtoul(argv[++i], NULL, 10);
+			/*
+			 * Usually, it must be at 512kb align due to preloader
+			 * detects every 512kb. But some product has critial
+			 * flash size requirement, we have to make it small than
+			 * 512KB.
+			 */
+			if (g_trust_max_size % 64) {
+				printHelp();
+				return -1;
+			}
+			g_trust_max_size *= 1024;	/* bytes */
+
+			/* Total backup numbers */
+			g_trust_max_num =
+				strtoul(argv[++i], NULL, 10);
 		} else {
 			if (optPath) {
 				fprintf(stderr, "only need one path arg, but we have:\n%s\n%s.\n", optPath, argv[i]);

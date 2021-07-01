@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2015 ARM Limited. All rights reserved.
+ * Copyright (C) 2011-2017 ARM Limited. All rights reserved.
  * 
  * This program is free software and is provided to you under the terms of the GNU General Public License version 2
  * as published by the Free Software Foundation, and any use by you of this program is subject to the terms of such GNU licence.
@@ -73,7 +73,7 @@ struct mali_gp_job {
 	u32 bind_flag;                                     /** < flag for deferbind*/
 	u32 *varying_list;                                 /**< varying memory list need to to defer bind*/
 	struct list_head vary_todo;                        /**< list of backend list need to do defer bind*/
-	u32 required_varying_memsize;			   /** < size of varying memory to reallocate*/
+	u32 required_varying_memsize;                      /** < size of varying memory to reallocate*/
 	u32 big_job;                                       /** < if the gp job have large varying output and may take long time*/
 };
 

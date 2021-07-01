@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 ARM Limited. All rights reserved.
+ * Copyright (C) 2013-2017 ARM Limited. All rights reserved.
  * 
  * This program is free software and is provided to you under the terms of the GNU General Public License version 2
  * as published by the Free Software Foundation, and any use by you of this program is subject to the terms of such GNU licence.
@@ -7,6 +7,8 @@
  * A copy of the licence is included with the program, and can also be obtained from Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+
+#include "../platform/rk/custom_log.h"
 
 #include <linux/list.h>
 #include <linux/mm.h>
@@ -121,7 +123,7 @@ _mali_osk_errcode_t mali_mem_os_put_page(struct page *page)
 	if (1 == page_count(page)) {
 		atomic_sub(1, &mali_mem_os_allocator.allocated_pages);
 		dma_unmap_page(&mali_platform_device->dev, page_private(page),
-			       _MALI_OSK_MALI_PAGE_SIZE, DMA_TO_DEVICE);
+			       _MALI_OSK_MALI_PAGE_SIZE, DMA_BIDIRECTIONAL);
 		ClearPagePrivate(page);
 	}
 	put_page(page);
@@ -200,7 +202,7 @@ int mali_mem_os_alloc_pages(mali_mem_os_mem *os_mem, u32 size)
 	/* Allocate new pages, if needed. */
 	for (i = 0; i < remaining; i++) {
 		dma_addr_t dma_addr;
-		gfp_t flags = __GFP_ZERO | __GFP_NORETRY | __GFP_NOWARN | __GFP_COLD;
+		gfp_t flags = __GFP_ZERO | GFP_HIGHUSER;
 		int err;
 
 #if defined(CONFIG_ARM) && !defined(CONFIG_ARM_LPAE)
@@ -210,7 +212,6 @@ int mali_mem_os_alloc_pages(mali_mem_os_mem *os_mem, u32 size)
 		flags |= GFP_DMA32;
 #else
 #ifdef CONFIG_ZONE_DMA
-		flags |= GFP_DMA;
 #else
 		/* arm64 utgard only work on < 4G, but the kernel
 		 * didn't provide method to allocte memory < 4G
@@ -223,6 +224,7 @@ int mali_mem_os_alloc_pages(mali_mem_os_mem *os_mem, u32 size)
 		new_page = alloc_page(flags);
 
 		if (unlikely(NULL == new_page)) {
+			E("err.");
 			/* Calculate the number of pages actually allocated, and free them. */
 			os_mem->count = (page_count - remaining) + i;
 			atomic_add(os_mem->count, &mali_mem_os_allocator.allocated_pages);
@@ -232,7 +234,11 @@ int mali_mem_os_alloc_pages(mali_mem_os_mem *os_mem, u32 size)
 
 		/* Ensure page is flushed from CPU caches. */
 		dma_addr = dma_map_page(&mali_platform_device->dev, new_page,
-					0, _MALI_OSK_MALI_PAGE_SIZE, DMA_TO_DEVICE);
+					0, _MALI_OSK_MALI_PAGE_SIZE, DMA_BIDIRECTIONAL);
+		dma_unmap_page(&mali_platform_device->dev, dma_addr,
+			       _MALI_OSK_MALI_PAGE_SIZE, DMA_BIDIRECTIONAL);
+		dma_addr = dma_map_page(&mali_platform_device->dev, new_page,
+					0, _MALI_OSK_MALI_PAGE_SIZE, DMA_BIDIRECTIONAL);
 
 		err = dma_mapping_error(&mali_platform_device->dev, dma_addr);
 		if (unlikely(err)) {
@@ -253,7 +259,7 @@ int mali_mem_os_alloc_pages(mali_mem_os_mem *os_mem, u32 size)
 		if (unlikely(NULL == m_page)) {
 			MALI_PRINT_ERROR(("OS Mem: Can't allocate mali_page node! \n"));
 			dma_unmap_page(&mali_platform_device->dev, page_private(new_page),
-				       _MALI_OSK_MALI_PAGE_SIZE, DMA_TO_DEVICE);
+				       _MALI_OSK_MALI_PAGE_SIZE, DMA_BIDIRECTIONAL);
 			ClearPagePrivate(new_page);
 			__free_page(new_page);
 			os_mem->count = (page_count - remaining) + i;
@@ -568,7 +574,7 @@ void mali_mem_os_free_page_node(struct mali_page_node *m_page)
 
 	if (1  == page_count(page)) {
 		dma_unmap_page(&mali_platform_device->dev, page_private(page),
-			       _MALI_OSK_MALI_PAGE_SIZE, DMA_TO_DEVICE);
+			       _MALI_OSK_MALI_PAGE_SIZE, DMA_BIDIRECTIONAL);
 		ClearPagePrivate(page);
 	}
 	__free_page(page);

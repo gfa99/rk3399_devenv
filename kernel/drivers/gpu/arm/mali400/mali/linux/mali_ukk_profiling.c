@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2015 ARM Limited. All rights reserved.
+ * Copyright (C) 2010-2017 ARM Limited. All rights reserved.
  * 
  * This program is free software and is provided to you under the terms of the GNU General Public License version 2
  * as published by the Free Software Foundation, and any use by you of this program is subject to the terms of such GNU licence.
@@ -120,7 +120,7 @@ int profiling_control_set_wrapper(struct mali_session_data *session_data, _mali_
 
 	kargs.ctx = (uintptr_t)session_data;
 
-	
+
 	/* Sanity check about the size */
 	if (kargs.control_packet_size > PAGE_SIZE || kargs.response_packet_size > PAGE_SIZE)
 		return -EINVAL;

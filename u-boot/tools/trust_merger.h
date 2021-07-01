@@ -43,7 +43,10 @@
 #define OPT_MERGE           "--pack"
 #define OPT_UNPACK          "--unpack"
 #define OPT_SUBFIX          "--subfix"
-
+#define OPT_REPLACE         "--replace"
+#define OPT_RSA		    "--rsa"
+#define OPT_SHA		    "--sha"
+#define OPT_SIZE	    "--size"
 
 #define DEF_MAJOR           0
 #define DEF_MINOR           0

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2015 ARM Limited. All rights reserved.
+ * Copyright (C) 2010-2017 ARM Limited. All rights reserved.
  * 
  * This program is free software and is provided to you under the terms of the GNU General Public License version 2
  * as published by the Free Software Foundation, and any use by you of this program is subject to the terms of such GNU licence.
@@ -68,7 +68,7 @@ int get_mali_version_in_rk30_wrapper(struct mali_session_data *session_data, _ma
 	return 0;
 }
 #else
-#include "../platform/rk30/rk_ext.h"
+#include "../platform/rk/rk_ext.h"
 int get_rk_ko_version_wrapper(struct mali_session_data *session_data, _mali_rk_ko_version_s __user *uargs)
 {
 	_mali_rk_ko_version_s kargs;
