@@ -103,12 +103,12 @@ copy_other_files()
 	cp -av ${BS_DIR_TOOLS}/parameter.txt ${BS_DIR_OUTPUT} || return 1;
 	cp -av ${BS_DIR_TOOLS}/boot.img ${BS_DIR_OUTPUT} || return 1;
 	cp -av ${BS_DIR_TOOLS}/misc_zero.img ${BS_DIR_OUTPUT} || return 1;
-	# if [ ! -f ${BS_DIR_OUTPUT}/debian-rootfs.img ]; then
-	# 	tar xvf ${BS_DIR_TOOLS}/debian-rootfs.img.tar.bz2 -C ${BS_DIR_OUTPUT}/
-	# fi
-	# if [ ! -f ${BS_DIR_OUTPUT}/ubuntu-rootfs.img ]; then
-	# 	tar xvf ${BS_DIR_TOOLS}/ubuntu-rootfs.img.tar.bz2 -C ${BS_DIR_OUTPUT}/
-	# fi
+	if [ ! -f ${BS_DIR_OUTPUT}/debian-rootfs.img ]; then
+		tar xvf ${BS_DIR_TOOLS}/debian-rootfs.img.tar.bz2 -C ${BS_DIR_OUTPUT}/
+	fi
+	if [ ! -f ${BS_DIR_OUTPUT}/ubuntu-rootfs.img ]; then
+		tar xvf ${BS_DIR_TOOLS}/ubuntu-rootfs.img.tar.bz2 -C ${BS_DIR_OUTPUT}/
+	fi
 	return 0
 }
 

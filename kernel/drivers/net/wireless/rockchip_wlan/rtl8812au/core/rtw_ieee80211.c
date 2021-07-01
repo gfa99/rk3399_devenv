@@ -1400,15 +1400,15 @@ void rtw_macaddr_cfg(u8 *mac_addr)
 void dump_ht_cap_ie_content(void *sel, u8 *buf, u32 buf_len)
 {
 	if (buf_len != 26) {
-		// DBG_871X_SEL_NL(sel, "Invalid HT capability IE len:%d != %d\n", buf_len, 26);
+		DBG_871X_SEL_NL(sel, "Invalid HT capability IE len:%d != %d\n", buf_len, 26);
 		return;
 	}
 
-	// DBG_871X_SEL_NL(sel, "HT Capabilities Info:%02x%02x\n", *(buf), *(buf+1));
-	// DBG_871X_SEL_NL(sel, "A-MPDU Parameters:"HT_AMPDU_PARA_FMT"\n"
-	// 	, HT_AMPDU_PARA_ARG(HT_CAP_ELE_AMPDU_PARA(buf)));
-	// DBG_871X_SEL_NL(sel, "Supported MCS Set:"HT_SUP_MCS_SET_FMT"\n"
-	// 	, HT_SUP_MCS_SET_ARG(HT_CAP_ELE_SUP_MCS_SET(buf)));
+	DBG_871X_SEL_NL(sel, "HT Capabilities Info:%02x%02x\n", *(buf), *(buf+1));
+	DBG_871X_SEL_NL(sel, "A-MPDU Parameters:"HT_AMPDU_PARA_FMT"\n"
+		, HT_AMPDU_PARA_ARG(HT_CAP_ELE_AMPDU_PARA(buf)));
+	DBG_871X_SEL_NL(sel, "Supported MCS Set:"HT_SUP_MCS_SET_FMT"\n"
+		, HT_SUP_MCS_SET_ARG(HT_CAP_ELE_SUP_MCS_SET(buf)));
 }
 
 void dump_ht_cap_ie(void *sel, u8 *ie, u32 ie_len)
@@ -1437,7 +1437,7 @@ void dump_ies(void *sel, u8 *buf, u32 buf_len)
 		id = *pos;
 		len = *(pos+1);
 
-		// DBG_871X_SEL_NL(sel, "%s ID:%u, LEN:%u\n", __FUNCTION__, id, len);
+		DBG_871X_SEL_NL(sel, "%s ID:%u, LEN:%u\n", __FUNCTION__, id, len);
 		#ifdef CONFIG_80211N_HT
 		dump_ht_cap_ie(sel, pos, len);
 		#endif
@@ -1471,7 +1471,7 @@ void dump_wps_ie(void *sel, u8 *ie, u32 ie_len)
 		id = RTW_GET_BE16(pos);
 		len = RTW_GET_BE16(pos + 2);
 
-		// DBG_871X_SEL_NL(sel, "%s ID:0x%04x, LEN:%u\n", __FUNCTION__, id, len);
+		DBG_871X_SEL_NL(sel, "%s ID:0x%04x, LEN:%u\n", __FUNCTION__, id, len);
 
 		pos+=(4+len);
 	}
@@ -1566,7 +1566,7 @@ void dump_p2p_ie(void *sel, u8 *ie, u32 ie_len) {
 		id = *pos;
 		len = RTW_GET_LE16(pos+1);
 
-		// DBG_871X_SEL_NL(sel, "%s ID:%u, LEN:%u\n", __FUNCTION__, id, len);
+		DBG_871X_SEL_NL(sel, "%s ID:%u, LEN:%u\n", __FUNCTION__, id, len);
 
 		pos+=(3+len);
 	}	
@@ -1852,7 +1852,7 @@ void dump_wfd_ie(void *sel, u8 *ie, u32 ie_len)
 		id = *pos;
 		len = RTW_GET_BE16(pos+1);
 
-		// DBG_871X_SEL_NL(sel, "%s ID:%u, LEN:%u\n", __FUNCTION__, id, len);
+		DBG_871X_SEL_NL(sel, "%s ID:%u, LEN:%u\n", __FUNCTION__, id, len);
 
 		pos+=(3+len);
 	}
