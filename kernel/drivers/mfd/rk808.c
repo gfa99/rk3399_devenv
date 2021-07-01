@@ -59,13 +59,16 @@ static bool rk808_is_volatile_reg(struct device *dev, unsigned int reg)
 	return false;
 }
 
+extern void xic_poweroff(void);
 static int rk808_shutdown(struct regmap *regmap)
 {
 	int ret;
 
+	xic_poweroff();
 	ret = regmap_update_bits(regmap,
 				 RK808_DEVCTRL_REG,
 				 DEV_OFF, DEV_OFF);
+	while(1);
 	return ret;
 }
 

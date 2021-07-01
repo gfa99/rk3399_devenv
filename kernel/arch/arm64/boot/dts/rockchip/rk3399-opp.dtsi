@@ -217,5 +217,6 @@
 };
 
 &dmc {
+	status = "disabled";	
 	operating-points-v2 = <&dmc_opp_table>;
 };

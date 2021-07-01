@@ -171,6 +171,14 @@ static void board_init_adjust_env(void)
 extern char bootloader_ver[24];
 int board_late_init(void)
 {
+	// fix for lcd.
+	gpio_direction_output((4 << 8) | 30, 1);
+	udelay(40 * 1000);
+	gpio_direction_output((1 << 8) | 13, 1);
+	udelay(40 * 1000);
+	gpio_direction_output((4 << 8) | 29, 1);
+	udelay(40 * 1000);
+
 	debug("board_late_init\n");
 
 	board_init_adjust_env();

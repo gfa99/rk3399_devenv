@@ -122,6 +122,8 @@ int get_wifi_chip_type(void)
         type = WIFI_AP6335;
     } else if (strcmp(wifi_chip_type_string, "ap6354") == 0) {
         type = WIFI_AP6354;
+    } else if (strcmp(wifi_chip_type_string, "ap6356") == 0) {
+        type = WIFI_AP6356;
     } else if (strcmp(wifi_chip_type_string, "ap6441") == 0) {
         type = WIFI_AP6441;
     } else if (strcmp(wifi_chip_type_string, "ap6476") == 0) {

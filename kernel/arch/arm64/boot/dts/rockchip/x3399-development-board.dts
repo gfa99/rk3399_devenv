@@ -52,7 +52,7 @@
 	compatible = "rockchip,android", "9tripod,x3399-development-board", "rockchip,rk3399";
 
 /*	edp_panel: edp-panel {
-		compatible = "lg,lp079qx1-sp0v", "panel-simple";
+		compatible = "samsung,ltl101dl03", "panel-simple";
 		backlight = <&backlight>;
 		power-supply = <&vcc3v3_s0>;
 		enable-gpios = <&gpio4 30 GPIO_ACTIVE_HIGH>;
@@ -98,6 +98,12 @@
 */
 
 /*
+&edp_in_vopl {
+	status = "disabled";
+};
+*/
+
+/*
 &route_edp {
 	status = "okay";
 };
@@ -119,7 +125,7 @@
 		display-timings {
 			native-mode = <&timing0>;
 			timing0: timing0 {
-				clock-frequency = <65000000>;
+				clock-frequency = <70000000>;
 				hactive = <1024>;
 				vactive = <600>;
 				hback-porch = <80>;
@@ -137,6 +143,10 @@
 	};
 };
 
+&mipi_in_vopl {
+	status = "disabled";
+};
+
 &route_mipi {
 	status = "okay";
 };
@@ -145,10 +155,6 @@
 	status = "okay";
 	extcon = <&fusb0>;
 	phys = <&tcphy0_dp>;
-};
-
-&edp_in_vopl {
-	status = "disabled";
 };
 
 &dp_in_vopb {
@@ -174,13 +180,14 @@
 &i2c1 {
 	status = "okay";
 
-/*	gsl3673: gsl3673@40 {
-		compatible = "GSL,GSL3673";
-		reg = <0x40>;
-		screen_max_x = <1536>;
-		screen_max_y = <2048>;
-		irq_gpio_number = <&gpio1 20 IRQ_TYPE_LEVEL_LOW>;
-		rst_gpio_number = <&gpio4 22 GPIO_ACTIVE_HIGH>;
+/*	gt9xx: gt9xx@14 {
+		compatible = "goodix,gt9xx";
+		reg = <0x14>;
+		touch-gpio = <&gpio1 20 IRQ_TYPE_EDGE_RISING>;
+		reset-gpio = <&gpio1 9 GPIO_ACTIVE_LOW>;
+		max-x = <2560>;
+		max-y = <1600>;
+		tp-size = <101>;
 	};
 */
 
