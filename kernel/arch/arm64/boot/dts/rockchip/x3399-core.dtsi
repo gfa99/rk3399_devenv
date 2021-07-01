@@ -215,6 +215,16 @@
 	i2c-scl-falling-time-ns = <4>;
 	clock-frequency = <400000>;
 
+	fusb0: fusb30x@22 {
+		compatible = "fairchild,fusb302";
+		reg = <0x22>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&fusb0_int>;
+		int-n-gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
+		vbus-5v-gpios = <&gpio4 26 GPIO_ACTIVE_LOW>;
+		status = "okay";
+	};
+
 	vdd_cpu_b: syr827@40 {
 		compatible = "silergy,syr827";
 		reg = <0x40>;
@@ -433,18 +443,6 @@
 			};
 		};
 	};
-
-
-	fusb0: fusb30x@22 {
-		compatible = "fairchild,fusb302";
-		reg = <0x22>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&fusb0_int>;
-		int-n-gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
-		vbus-5v-gpios = <&gpio4 26 GPIO_ACTIVE_LOW>;
-		status = "okay";
-	};
-
 };
 
 &i2s0 {
