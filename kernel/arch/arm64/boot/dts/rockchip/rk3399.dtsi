@@ -628,10 +628,12 @@
 		clocks = <&cru SCLK_UART0>, <&cru PCLK_UART0>;
 		clock-names = "baudclk", "apb_pclk";
 		interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH 0>;
+		dmas = <&dmac_peri 0>, <&dmac_peri 1>;
+		dma-names = "!tx", "rx";
 		reg-shift = <2>;
 		reg-io-width = <4>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&uart0_xfer &uart0_cts &uart0_rts>;
+		pinctrl-0 = <&uart0_xfer>;
 		status = "disabled";
 	};
 
@@ -1145,6 +1147,7 @@
 		clocks = <&pmucru SCLK_UART4_PMU>, <&pmucru PCLK_UART4_PMU>;
 		clock-names = "baudclk", "apb_pclk";
 		interrupts = <GIC_SPI 102 IRQ_TYPE_LEVEL_HIGH 0>;
+		
 		reg-shift = <2>;
 		reg-io-width = <4>;
 		pinctrl-names = "default";
