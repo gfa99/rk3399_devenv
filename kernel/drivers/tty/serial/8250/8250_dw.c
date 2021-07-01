@@ -34,7 +34,6 @@
 
 /* Offsets for the DesignWare specific registers */
 #define DW_UART_USR	0x1f /* UART Status Register */
-#define DW_UART_RFL	0x21 /* UART Receive Fifo Level Register */
 #define DW_UART_CPR	0xf4 /* Component Parameter Register */
 #define DW_UART_UCV	0xf8 /* UART Component Version */
 
@@ -190,9 +189,10 @@ static unsigned int dw8250_serial_in32(struct uart_port *p, int offset)
 
 static int dw8250_handle_irq(struct uart_port *p)
 {
+	struct uart_8250_port *up = up_to_u8250p(p);
 	struct dw8250_data *d = p->private_data;
 	unsigned int iir = p->serial_in(p, UART_IIR);
-	unsigned int status, usr, rfl;
+	unsigned int status;
 	unsigned long flags;
 
 	/*
@@ -201,13 +201,15 @@ static int dw8250_handle_irq(struct uart_port *p)
 	 * data available.  If we see such a case then we'll do a bogus
 	 * read.  If we don't do this then the "RX TIMEOUT" interrupt will
 	 * fire forever.
+	 *
+	 * This problem has only been observed so far when not in DMA mode
+	 * so we limit the workaround only to non-DMA mode.
 	 */
-	if ((iir & 0x3f) == UART_IIR_RX_TIMEOUT) {
+	if (!up->dma && ((iir & 0x3f) == UART_IIR_RX_TIMEOUT)) {
 		spin_lock_irqsave(&p->lock, flags);
-		usr = p->serial_in(p, d->usr_reg);
 		status = p->serial_in(p, UART_LSR);
-		rfl = p->serial_in(p, DW_UART_RFL);
-		if (!(status & (UART_LSR_DR | UART_LSR_BI)) && !(usr & 0x1) && (rfl == 0))
+
+		if (!(status & (UART_LSR_DR | UART_LSR_BI)))
 			(void) p->serial_in(p, UART_RX);
 
 		spin_unlock_irqrestore(&p->lock, flags);
@@ -243,57 +245,24 @@ static void dw8250_set_termios(struct uart_port *p, struct ktermios *termios,
 	unsigned int baud = tty_termios_baud_rate(termios);
 	struct dw8250_data *d = p->private_data;
 	unsigned int rate;
-#ifdef CONFIG_ARCH_ROCKCHIP
-	unsigned int div, rate_temp, diff;
-#endif
 	int ret;
 
 	if (IS_ERR(d->clk) || !old)
 		goto out;
 
 	clk_disable_unprepare(d->clk);
-#ifdef CONFIG_ARCH_ROCKCHIP
-	if ((baud * 16) <= 4000000) {
-		/*
-		 * Make sure uart sclk is high enough
-		 */
-		div = 4000000 / baud / 16;
-		rate = baud * 16 * div;
-	} else {
-		rate = baud * 16;
-	}
-
-	ret = clk_set_rate(d->clk, rate);
-	rate_temp = clk_get_rate(d->clk);
-	diff = rate * 20 / 1000;
-	/*
-	 * If rate_temp is not equal to rate, is means fractional frequency
-	 * division is failed. Then use Integer frequency division, and
-	 * the buad rate error must be under -+2%
-	 */
-	if ((rate_temp < rate) && ((rate - rate_temp) > diff)) {
-		ret = clk_set_rate(d->clk, rate + diff);
-		rate_temp = clk_get_rate(d->clk);
-		if ((rate_temp < rate) && ((rate - rate_temp) > diff))
-			printk(" temi set rate:%d, but get rate:%d\n",
-				 rate, rate_temp);
-		else if ((rate < rate_temp) && ((rate_temp - rate) > diff))
-			printk(" temi set rate:%d, but get rate:%d\n",
-				 rate, rate_temp);
-	}
-#else
 	rate = clk_round_rate(d->clk, baud * 16);
 	ret = clk_set_rate(d->clk, rate);
-#endif
 	clk_prepare_enable(d->clk);
 
 	if (!ret)
 		p->uartclk = rate;
-out:
+
 	p->status &= ~UPSTAT_AUTOCTS;
 	if (termios->c_cflag & CRTSCTS)
 		p->status |= UPSTAT_AUTOCTS;
 
+out:
 	serial8250_do_set_termios(p, termios, old);
 }
 
@@ -339,6 +308,7 @@ static void dw8250_quirks(struct uart_port *p, struct dw8250_data *data)
 		p->iotype = UPIO_MEM32;
 		p->regshift = 2;
 		p->serial_in = dw8250_serial_in32;
+		p->set_termios = dw8250_set_termios;
 		/* So far none of there implement the Busy Functionality */
 		data->uart_16550_compatible = true;
 	}
@@ -346,6 +316,7 @@ static void dw8250_quirks(struct uart_port *p, struct dw8250_data *data)
 	/* Platforms with iDMA */
 	if (platform_get_resource_byname(to_platform_device(p->dev),
 					 IORESOURCE_MEM, "lpss_priv")) {
+		p->set_termios = dw8250_set_termios;
 		data->dma.rx_param = p->dev->parent;
 		data->dma.tx_param = p->dev->parent;
 		data->dma.fn = dw8250_idma_filter;
@@ -369,15 +340,6 @@ static void dw8250_setup_port(struct uart_port *p)
 		(reg >> 24) & 0xff, (reg >> 16) & 0xff, (reg >> 8) & 0xff);
 
 	reg = readl(p->membase + DW_UART_CPR);
-
-#ifdef CONFIG_ARCH_ROCKCHIP
-	/*
-	 * The UART CPR may be 0 of some rockchip soc,
-	 * but it supports fifo and AFC, fifo entry is 32 default.
-	 */
-	if (reg == 0)
-		reg = 0x00023ff2;
-#endif
 	if (!reg)
 		return;
 
@@ -386,9 +348,6 @@ static void dw8250_setup_port(struct uart_port *p)
 		p->type = PORT_16550A;
 		p->flags |= UPF_FIXED_TYPE;
 		p->fifosize = DW_UART_CPR_FIFO_SIZE(reg);
-#ifdef CONFIG_ARCH_ROCKCHIP
-		up->tx_loadsz = p->fifosize * 3 / 4;
-#endif
 		up->capabilities = UART_CAP_FIFO;
 	}
 
@@ -428,7 +387,6 @@ static int dw8250_probe(struct platform_device *pdev)
 	p->iotype	= UPIO_MEM;
 	p->serial_in	= dw8250_serial_in;
 	p->serial_out	= dw8250_serial_out;
-	p->set_termios = dw8250_set_termios;
 
 	p->membase = devm_ioremap(&pdev->dev, regs->start, resource_size(regs));
 	if (!p->membase)

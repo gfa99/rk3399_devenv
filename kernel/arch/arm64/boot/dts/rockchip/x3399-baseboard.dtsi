@@ -248,7 +248,7 @@
 };
 
 &i2c4 {
-	status = "disabled";
+	status = "okay";
 	i2c-scl-rising-time-ns = <600>;
 	i2c-scl-falling-time-ns = <20>;
 	clock-frequency = <400000>;
