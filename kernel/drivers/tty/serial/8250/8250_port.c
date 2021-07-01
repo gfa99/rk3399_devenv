@@ -82,7 +82,7 @@ static const struct serial8250_config uart_config[] = {
 		.name		= "16550A",
 		.fifo_size	= 16,
 		.tx_loadsz	= 16,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_00,
+		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
 		.rxtrig_bytes	= {1, 4, 8, 14},
 		.flags		= UART_CAP_FIFO,
 	},
@@ -1436,8 +1436,11 @@ serial8250_rx_chars(struct uart_8250_port *up, unsigned char lsr)
 				port->icount.parity++;
 			else if (lsr & UART_LSR_FE)
 				port->icount.frame++;
-			if (lsr & UART_LSR_OE)
+			if (lsr & UART_LSR_OE){
 				port->icount.overrun++;
+				printk_ratelimited(KERN_ERR
+				"serial8250_rx_chars: ttyS%d: overrurn=%d\n", port->line, port->icount.overrun);
+			}
 
 			/*
 			 * Mask off conditions which should be ignored.
@@ -2047,6 +2050,10 @@ dont_test_tx_en:
 	}
 	retval = 0;
 out:
+	if(4 == port->line) {
+		port->state->port.low_latency = 1;
+	}
+	printk(KERN_ERR "TEMI special port handling -- %d, low_latency %d\n", port->line, port->state->port.low_latency);
 	serial8250_rpm_put(up);
 	return retval;
 }
