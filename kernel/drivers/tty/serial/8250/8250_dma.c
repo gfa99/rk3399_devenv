@@ -154,18 +154,20 @@ int serial8250_rx_dma(struct uart_8250_port *p, unsigned int iir)
 	switch (iir & 0x3f) {
 	case UART_IIR_RLSI:
 		/* 8250_core handles errors and break interrupts */
-		return -EIO;
+		printk_ratelimited(KERN_ERR "serial8250_rx_dma: UART_IIR_RLSI, iir=%d\n", iir);
+		//return -EIO;
 	case UART_IIR_RX_TIMEOUT:
 		/*
 		 * If RCVR FIFO trigger level was not reached, complete the
 		 * transfer and let 8250_core copy the remaining data.
-		 */
+		 
 		if (dma->rx_running) {
 			dmaengine_pause(dma->rxchan);
 			__dma_rx_complete(p);
 			dmaengine_terminate_all(dma->rxchan);
 		}
-		return -ETIMEDOUT;
+		return -ETIMEDOUT;*/
+		printk_ratelimited(KERN_ERR "serial8250_rx_dma: UART_IIR_RX_TIMEOUT, iir=%d\n", iir);
 	default:
 		break;
 	}
@@ -284,6 +286,7 @@ void serial8250_release_dma(struct uart_8250_port *p)
 			  dma->rx_addr);
 	dma_release_channel(dma->rxchan);
 	dma->rxchan = NULL;
+	dma->rx_running = 0;
 
 	/* Release TX resources */
 	dmaengine_terminate_all(dma->txchan);

@@ -82,7 +82,7 @@ static const struct serial8250_config uart_config[] = {
 		.name		= "16550A",
 		.fifo_size	= 16,
 		.tx_loadsz	= 16,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_00,
+		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_11,
 		.rxtrig_bytes	= {1, 4, 8, 14},
 		.flags		= UART_CAP_FIFO,
 	},
@@ -1388,6 +1388,14 @@ static void serial8250_enable_ms(struct uart_port *port)
 	serial8250_rpm_put(up);
 }
 
+#include <linux/time.h>
+#include <linux/timex.h>
+int idx = 0;
+
+unsigned char acHead[3];
+unsigned int cnt = 0;
+struct timeval start,end;
+long start_time, end_time, __end_time;
 /*
  * serial8250_rx_chars: processes according to the passed in LSR
  * value, and returns the remaining LSR bits not handled
@@ -1400,6 +1408,8 @@ serial8250_rx_chars(struct uart_8250_port *up, unsigned char lsr)
 	unsigned char ch;
 	int max_count = 256;
 	char flag;
+	// unsigned int tmp = 0;
+	// struct uart_driver *drv = (struct uart_driver *)port->state->port.tty->driver->driver_state;
 
 	do {
 		if (likely(lsr & UART_LSR_DR))
@@ -1436,8 +1446,11 @@ serial8250_rx_chars(struct uart_8250_port *up, unsigned char lsr)
 				port->icount.parity++;
 			else if (lsr & UART_LSR_FE)
 				port->icount.frame++;
-			if (lsr & UART_LSR_OE)
+			if (lsr & UART_LSR_OE){
 				port->icount.overrun++;
+				printk_ratelimited(KERN_ERR
+				"serial8250_rx_chars: overrurn=%d\n", port->icount.overrun);
+			}
 
 			/*
 			 * Mask off conditions which should be ignored.
@@ -1456,12 +1469,85 @@ serial8250_rx_chars(struct uart_8250_port *up, unsigned char lsr)
 			goto ignore_char;
 
 		uart_insert_char(port, lsr, UART_LSR_OE, ch, flag);
+		
+	// 	if(0 == serial_index(port))
+	// 	{
+	// 		printk_ratelimited(KERN_ERR "driver_23name=%s, name=%s, num=%d,maj=%d,min=%d,b=%d, line=%d,%s,%d,%d\n", port->state->port.itty->driver->driver_name, port->state->port.itty->driver->name, 
+	// port->state->port.itty->driver->num, port->state->port.itty->driver->major, port->state->port.itty->driver->minor_start, port->state->port.itty->driver->name_base, 
+	// drv->state->uart_port->line, drv->dev_name, port->line, drv->state->uart_port->minor);
+	// 	}
+		if(4 == serial_index(port))
+		{	
+			//port->state->port.low_latency = 1;
+
+			if(0xA5 == ch && idx == 0)
+			{
+				acHead[idx++] = ch;
+			}
+			else if(0 < idx && idx < 3)
+			{
+				acHead[idx++] = ch;
+				if(idx == 3)
+				{
+					idx = 0;
+					if(acHead[0] == 0xA5
+					&& acHead[1] == 0x5A
+					&& acHead[2] == 0xA6)
+					{
+						/*
+						tmp = cnt++ % 100;
+						
+						if(tmp < 21)
+						{
+						printk(KERN_ERR
+						"****** recv Head cnt=%d<<<<<\n", tmp);
+						}
+						else if(tmp == 21)
+						{
+							printk(KERN_ERR
+						    "@@@@@@@@ recv Head @@@@@@@@@@@\n");
+						}
+						*/
+
+						do_gettimeofday(&end); //获取结束时间
+						end_time = ((long)end.tv_sec)*1000 + (long)end.tv_usec/1000;
+						if( (end_time - start_time) > 12)
+						{
+							printk(KERN_ERR
+							"@@@@@@@ OVER TIME:cnt=%d, %ld, %ld @@@@@@\n", cnt++, end_time, end_time - start_time);
+						}
+						start_time = end_time;
+/*
+						if( (cnt++ % 2) == 0)
+						{
+							do_gettimeofday(&start); //获取开始时间
+							start_time = ((long)start.tv_sec)*1000 + (long)start.tv_usec/1000;
+							//printk("Start time: %ld ms\n", start_time);//打印开始时间
+						}
+						else
+						{
+							do_gettimeofday(&end); //获取结束时间
+							end_time = ((long)end.tv_sec)*1000 + (long)end.tv_usec/1000;
+							if( (end_time - start_time) > 12000)
+							{
+								printk(KERN_ERR
+						        "@@@@@@@@ OVER TIME:%ld, %ld @@@@@@@@@@@\n", start_time, end_time);
+							}
+						}*/
+						
+					}
+				}
+			}
+		}
+		
 
 ignore_char:
 		lsr = serial_in(up, UART_LSR);
 	} while ((lsr & (UART_LSR_DR | UART_LSR_BI)) && (--max_count > 0));
 	spin_unlock(&port->lock);
+	port->state->port.low_latency = 1;
 	tty_flip_buffer_push(&port->state->port);
+
 	spin_lock(&port->lock);
 	return lsr;
 }
@@ -1574,8 +1660,9 @@ int serial8250_handle_irq(struct uart_port *port, unsigned int iir)
 
 			dma_err = up->dma->rx_dma(up, iir);
 		}
-		if (!up->dma || dma_err)
+		if (!up->dma || dma_err){
 			status = serial8250_rx_chars(up, status);
+	    }
 	}
 	serial8250_modem_status(up);
 	if ((!up->dma || (up->dma && up->dma->tx_err)) &&
@@ -2054,6 +2141,8 @@ EXPORT_SYMBOL_GPL(serial8250_do_startup);
 
 static int serial8250_startup(struct uart_port *port)
 {
+	if(4 == port->line) cnt = 0;
+
 	if (port->startup)
 		return port->startup(port);
 	return serial8250_do_startup(port);
