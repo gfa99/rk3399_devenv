@@ -369,7 +369,7 @@ EXPORT_SYMBOL(tty_insert_flip_string_flags);
  *	ldisc side of the queue. It then schedules those characters for
  *	processing by the line discipline.
  */
-static void flush_to_ldisc(struct work_struct *work);
+
 void tty_schedule_flip(struct tty_port *port)
 {
 	struct tty_bufhead *buf = &port->buf;
@@ -378,13 +378,7 @@ void tty_schedule_flip(struct tty_port *port)
 	 * flush_to_ldisc() sees buffer data.
 	 */
 	smp_store_release(&buf->tail->commit, buf->tail->used);
-
-	if (port->low_latency)
-	{
-		printk_ratelimited(KERN_ERR "tty--flip =%d\n", port->low_latency);
-		flush_to_ldisc(&buf->work);
-	}else
-		queue_work(system_unbound_wq, &buf->work);
+	queue_work(system_unbound_wq, &buf->work);
 }
 EXPORT_SYMBOL(tty_schedule_flip);
 
