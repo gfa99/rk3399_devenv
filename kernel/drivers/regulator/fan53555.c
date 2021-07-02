@@ -261,6 +261,17 @@ static const int slew_rates[] = {
 	  500,
 };
 
+static const int syr_slew_rates[] = {
+	4000,
+	2000,
+	1000,
+	500,
+	250,
+	125,
+	63,
+	32,
+};
+
 static const int tcs_slew_rates[] = {
 	18700,
 	 9300,
@@ -277,9 +288,13 @@ static int fan53555_set_ramp(struct regulator_dev *rdev, int ramp)
 
 	switch (di->vendor) {
 	case FAN53555_VENDOR_FAIRCHILD:
-	case FAN53555_VENDOR_SILERGY:
+	// case FAN53555_VENDOR_SILERGY:
 		slew_rate_t = slew_rates;
 		slew_rate_n = ARRAY_SIZE(slew_rates);
+		break;
+	case FAN53555_VENDOR_SILERGY:
+		slew_rate_t = syr_slew_rates;
+		slew_rate_n = ARRAY_SIZE(syr_slew_rates);
 		break;
 	case FAN53555_VENDOR_TCS:
 		slew_rate_t = tcs_slew_rates;
