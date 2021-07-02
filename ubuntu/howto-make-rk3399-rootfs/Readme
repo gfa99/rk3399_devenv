@@ -1,0 +1,5 @@
+1. 首先解压 ubuntu-base-16.04.6-base-arm64.tar.gz 到 rootfs 目录
+2. 然后执行 make_rk3399_rootfs.sh -m rootfs 进入模拟的rk3399根文件系统
+3. 之后参考 rk3399-arm64-base-rootfs-config.sh 进行相关配置，完成后'Ctrl+d'退出
+4. 之后执行 make_rk3399_rootfs.sh -u rootfs 卸载相关临时目录
+5. 最后执行 make_rk3399_rootfs.sh rootfs 即可完成根文件系统制作
