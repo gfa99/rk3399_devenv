@@ -1953,6 +1953,23 @@ rockchip_usb2phy_low_power_enable(struct rockchip_usb2phy *rphy,
 	return ret;
 }
 
+static int rk1808_usb2phy_tuning(struct rockchip_usb2phy *rphy)
+{
+	int ret;
+
+	/* Open pre-emphasize in non-chirp state for otg port */
+	ret = regmap_write(rphy->grf, 0x0, 0x00070004);
+	if (ret)
+		return ret;
+
+	/* Turn off differential receiver in suspend mode */
+	ret = regmap_write(rphy->grf, 0x18, 0x00040000);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
 static int rk312x_usb2phy_tuning(struct rockchip_usb2phy *rphy)
 {
 	int ret;
@@ -2248,6 +2265,7 @@ static const struct rockchip_usb2phy_cfg rk1808_phy_cfgs[] = {
 	{
 		.reg = 0x100,
 		.num_ports	= 2,
+		.phy_tuning     = rk1808_usb2phy_tuning,
 		.clkout_ctl	= { 0x108, 4, 4, 1, 0 },
 		.port_cfgs	= {
 			[USB2PHY_PORT_OTG] = {
@@ -2616,6 +2634,8 @@ static const struct rockchip_usb2phy_cfg rk3399_phy_cfgs[] = {
 				.bvalid_det_clr	= { 0xe3d0, 3, 3, 0, 1 },
 				.bypass_dm_en	= { 0xe450, 2, 2, 0, 1 },
 				.bypass_sel	= { 0xe450, 3, 3, 0, 1 },
+				.iddig_output	= { 0xe454, 10, 10, 0, 1 },
+				.iddig_en	= { 0xe454, 9, 9, 0, 1 },
 				.idfall_det_en	= { 0xe3c0, 5, 5, 0, 1 },
 				.idfall_det_st	= { 0xe3e0, 5, 5, 0, 1 },
 				.idfall_det_clr	= { 0xe3d0, 5, 5, 0, 1 },
@@ -2664,6 +2684,8 @@ static const struct rockchip_usb2phy_cfg rk3399_phy_cfgs[] = {
 				.bvalid_det_en  = { 0xe3c0, 8, 8, 0, 1 },
 				.bvalid_det_st  = { 0xe3e0, 8, 8, 0, 1 },
 				.bvalid_det_clr = { 0xe3d0, 8, 8, 0, 1 },
+				.iddig_output	= { 0xe464, 10, 10, 0, 1 },
+				.iddig_en	= { 0xe464, 9, 9, 0, 1 },
 				.idfall_det_en	= { 0xe3c0, 10, 10, 0, 1 },
 				.idfall_det_st	= { 0xe3e0, 10, 10, 0, 1 },
 				.idfall_det_clr	= { 0xe3d0, 10, 10, 0, 1 },
