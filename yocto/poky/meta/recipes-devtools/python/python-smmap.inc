@@ -4,15 +4,16 @@ help unifying memory mapped access on 32 and 64 bit systems and to help \
 managing resources more efficiently."
 HOMEPAGE = "http://github.com/gitpython-developers/GitPython"
 SECTION = "devel/python"
-LICENSE = "BSD"
+LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://PKG-INFO;beginline=8;endline=8;md5=e910b35b0ef4e1f665b9a75d6afb7709"
 
 inherit pypi
 
-SRC_URI[md5sum] = "d7932d5ace206bf4ae15198cf36fb6ab"
-SRC_URI[sha256sum] = "0e2b62b497bd5f0afebc002eda4d90df9d209c30ef257e8673c90a6b5c119d62"
+PYPI_PACKAGE = "smmap"
+
+SRC_URI[sha256sum] = "9c98bbd1f9786d22f14b3d4126894d56befb835ec90cef151af566c7e19b5d24"
 
 RDEPENDS_${PN} += "${PYTHON_PN}-codecs \
                    ${PYTHON_PN}-mmap \
 "
-BBCLASSEXTEND = "nativesdk"
+BBCLASSEXTEND = "native nativesdk"

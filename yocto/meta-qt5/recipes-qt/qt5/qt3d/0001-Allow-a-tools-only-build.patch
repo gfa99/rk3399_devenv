@@ -1,4 +1,4 @@
-From 72d96957995393312ad29920d67fa758d0e53ca5 Mon Sep 17 00:00:00 2001
+From 4cd75323c448db3dd06a0f0f70ec4d8f9ae3ad2c Mon Sep 17 00:00:00 2001
 From: Samuli Piippo <samuli.piippo@qt.io>
 Date: Fri, 17 Aug 2018 13:23:58 +0300
 Subject: [PATCH] Allow a tools-only build
@@ -6,23 +6,23 @@ Subject: [PATCH] Allow a tools-only build
 ---
  qt3d.pro                                  | 7 ++++++-
  src/3rdparty/assimp/assimp_dependency.pri | 2 +-
- tools/tools.pro                           | 2 +-
- 3 files changed, 8 insertions(+), 3 deletions(-)
+ tools/tools.pro                           | 4 ++--
+ 3 files changed, 9 insertions(+), 4 deletions(-)
 
 diff --git a/qt3d.pro b/qt3d.pro
-index 2cc347a1c..81cdeefb0 100644
+index c5232e116..cf5345352 100644
 --- a/qt3d.pro
 +++ b/qt3d.pro
 @@ -1,4 +1,4 @@
--requires(qtConfig(opengl))
-+!tools-only:requires(qtConfig(opengl))
+-qtHaveModule(gui): \
++!tools-only:qtHaveModule(gui): \
+     requires(qtConfig(opengl):!wasm)
  
  CONFIG += examples_need_tools
- load(qt_parts)
-@@ -14,3 +14,8 @@ load(qt_parts)
- 
+@@ -16,3 +16,8 @@ load(qt_parts)
  OTHER_FILES += \
-     sync.profile
+     sync.profile \
+     .qmake.conf
 +
 +tools-only {
 +    sub_tools.depends -= sub_src
@@ -40,13 +40,18 @@ index 8ba2d9a41..e973d93dd 100644
  } else {
      include(assimp.pri)
 diff --git a/tools/tools.pro b/tools/tools.pro
-index c2f692034..24c49ad5a 100644
+index 3b457ed50..9f5376a0a 100644
 --- a/tools/tools.pro
 +++ b/tools/tools.pro
-@@ -1,5 +1,5 @@
+@@ -1,9 +1,9 @@
  TEMPLATE = subdirs
+ 
+-!qtHaveModule(3dcore): \
++!tools-only:!qtHaveModule(3dcore): \
+     return()
+ 
  QT_FOR_CONFIG += 3dcore-private
--qtConfig(assimp):qtConfig(commandlineparser):!cross_compile: {
+-qtConfig(assimp):qtConfig(commandlineparser): {
 +tools-only|qtConfig(assimp):qtConfig(commandlineparser): {
      SUBDIRS += qgltf
  }

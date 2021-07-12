@@ -1,6 +1,5 @@
 require qt5.inc
 require qt5-git.inc
-require qt5-ptest.inc
 
 HOMEPAGE = "http://www.qt.io"
 LICENSE = "GFDL-1.3 & BSD & ( GPL-3.0 & The-Qt-Company-GPL-Exception-1.0 | The-Qt-Company-Commercial ) & ( GPL-2.0+ | LGPL-3.0 | The-Qt-Company-Commercial )"
@@ -13,32 +12,33 @@ LIC_FILES_CHKSUM = " \
 "
 
 DEPENDS += "qtbase qtdeclarative qtxmlpatterns"
-
-# Patches from https://github.com/meta-qt5/qttools/commits/b5.11
-# 5.11.meta-qt5.6
+# Patches from https://github.com/meta-qt5/qttools/commits/b5.15
+# 5.15.meta-qt5.1
 SRC_URI += " \
     file://0001-add-noqtwebkit-configuration.patch \
     file://0002-linguist-tools-cmake-allow-overriding-the-location-f.patch \
+    file://0003-src.pro-Add-option-noqdoc-to-disable-qdoc-builds.patch \
 "
+SRC_URI_append_class-native = " ${@bb.utils.contains('PACKAGECONFIG', 'clang', 'file://0004-Force-native-build-of-qt-help-tools-as-qhelpgenerato.patch', '', d)}"
 
 FILES_${PN}-tools += "${datadir}${QT_DIR_NAME}/phrasebooks"
 FILES_${PN}-examples = "${datadir}${QT_DIR_NAME}/examples"
 
 PACKAGECONFIG ??= ""
+PACKAGECONFIG_append_toolchain-clang = " clang"
+
 PACKAGECONFIG[qtwebkit] = ",,qtwebkit"
+PACKAGECONFIG[clang] = ",,clang"
+
+COMPATIBLE_HOST_toolchain-clang_riscv32 = "null"
+COMPATIBLE_HOST_toolchain-clang_riscv64 = "null"
+
+export YOCTO_ALTERNATE_EXE_PATH = "${STAGING_BINDIR}/llvm-config"
 
 EXTRA_QMAKEVARS_PRE += " \
-    CONFIG-=config_clang \
     ${@bb.utils.contains('PACKAGECONFIG', 'qtwebkit', '', 'CONFIG+=noqtwebkit', d)} \
+    ${@bb.utils.contains('PACKAGECONFIG', 'clang', 'CONFIG+=disable_external_rpath CONFIG+=assistant', 'CONFIG+=noqdoc', d)} \
 "
-
-SRCREV = "ddc4fba789c21bd0ebca180fa9d7cde399a49e37"
+SRCREV = "6a85b6150554111f7d473d56addfe5a8b5da4400"
 
 BBCLASSEXTEND = "native nativesdk"
-
-do_install_ptest() {
-    mkdir -p ${D}${PTEST_PATH}
-    t=${D}${PTEST_PATH}
-    cp ${B}/tests/auto/qtdiag/tst_tdiag $t
-    cp ${B}/tests/auto/qtattributionsscanner/tst_qtattributionsscanner $t
-}

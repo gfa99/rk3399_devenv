@@ -1,6 +1,6 @@
 DUMMYARCH = "sdk-provides-dummy-target"
 
-DUMMYPROVIDES = "\
+DUMMYPROVIDES_PACKAGES = "\
     busybox \
     busybox-dev \
     busybox-src \
@@ -20,6 +20,7 @@ DUMMYPROVIDES = "\
     libxml-parser-perl \
     perl-module-bytes \
     perl-module-carp \
+    perl-module-config \
     perl-module-constant \
     perl-module-data-dumper \
     perl-module-errno \
@@ -35,18 +36,26 @@ DUMMYPROVIDES = "\
     perl-module-getopt-long \
     perl-module-io-file \
     perl-module-overload \
+    perl-module-overloading \
     perl-module-posix \
-    perl-module-overload \
     perl-module-thread-queue \
     perl-module-threads \
     perl-module-warnings \
-    /bin/sh \
-    /bin/bash \
-    /usr/bin/env \
-    /usr/bin/perl \
+    perl-module-warnings-register \
     pkgconfig \
     pkgconfig-dev \
     pkgconfig-src \
 "
 
+DUMMYPROVIDES = "\
+    /bin/sh \
+    /bin/bash \
+    /usr/bin/env \
+    /usr/bin/perl \
+    libperl.so.5 \
+    libperl.so.5()(64bit) \
+"
+
 require dummy-sdk-package.inc
+
+SSTATE_DUPWHITELIST += "${PKGDATA_DIR}/${PN} ${PKGDATA_DIR}/runtime/${PN}"

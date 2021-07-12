@@ -8,7 +8,11 @@ SECTION = "libs"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=d749e86a105281d7a44c2328acebc4b0"
 
-SRCREV = "${AUTOREV}"
+PV_append = "+git${SRCPV}"
+
+inherit freeze-rev
+
+SRCREV = "361b6b5b222b1832078387a4f2db073d7814712d"
 SRC_URI = "git://github.com/JeffyCN/libv4l-rkmpp.git;branch=master"
 
 S = "${WORKDIR}/git"

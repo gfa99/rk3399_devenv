@@ -4,18 +4,23 @@ LLVM_DIR = "llvm${LLVM_RELEASE}"
 LLVM_GIT ?= "git://github.com/llvm"
 LLVM_GIT_PROTOCOL ?= "https"
 
-MAJOR_VER = "7"
-MINOR_VER = "1"
-PATCH_VER = "0"
+MAJOR_VER = "11"
+MINOR_VER = "0"
+PATCH_VER = "1"
 
-SRCREV ?= "4856a9330ee01d30e9e11b6c2f991662b4c04b07"
+SRCREV ?= "0874e7ef66cc82a795fb19e8662e09a10eabaa01"
 
 PV = "${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}"
 BRANCH = "release/${MAJOR_VER}.x"
 
-LLVMMD5SUM = "c520ed40e11887bb1d24d86f7f5b1f05"
-CLANGMD5SUM = "444af0e124949f07f791f12c928e5994"
-LLDMD5SUM = "f4941ace8ddb3d6cf177fff94966319a"
-LLDBMD5SUM = "b6320ed0b0d00ae661dd94f277bbf024"
+LLVMMD5SUM = "8a15a0759ef07f2682d2ba4b893c9afe"
+CLANGMD5SUM = "ff42885ed2ab98f1ecb8c1fc41205343"
+LLDMD5SUM = "ae7dc7c027b1fa89b5b013d391d3ee2b"
+LLDBMD5SUM = "2e0d44968471fcde980034dbb826bea9"
+
+LLVM_LIBDIR_SUFFIX="${@d.getVar('baselib').replace('lib', '')}"
+
+# set the default pigz thread
+export PIGZ = "-p ${@oe.utils.cpu_count(at_least=2)}"
 
 require common.inc

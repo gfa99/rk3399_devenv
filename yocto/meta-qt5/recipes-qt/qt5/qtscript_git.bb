@@ -11,12 +11,10 @@ LIC_FILES_CHKSUM = " \
     file://LICENSE.LGPL3;md5=e6a600fd5e1d9cbde2d983680233ad02 \
 "
 
-# Patches from https://github.com/meta-qt5/qtscript/commits/b5.11
-# 5.11.meta-qt5.3
+# Patches from https://github.com/meta-qt5/qtscript/commits/b5.15
+# 5.15.meta-qt5.1
 SRC_URI += " \
-    file://0001-3rdparty-javascriptcore-Add-RISC-V-support.patch \
-    file://0002-Include-asm-sgidefs.h-on-non-glibc-systems.patch \
-    file://0002-Fix-build-with-GCC-8.3.patch \
+    file://0001-Include-asm-sgidefs.h-on-non-glibc-systems.patch \
 "
 
 # qemuarm build fails with:
@@ -38,4 +36,4 @@ DEPENDS += "qtbase"
 # http://errors.yoctoproject.org/Errors/Build/44915/
 LDFLAGS_append_x86 = "${@bb.utils.contains('DISTRO_FEATURES', 'ld-is-gold', ' -fuse-ld=bfd ', '', d)}"
 
-SRCREV = "cf09bc7285793d81a9755bf7e807c9d51d47d980"
+SRCREV = "20aefbbae19be42e894f1bc2ecf951c5c32fca70"

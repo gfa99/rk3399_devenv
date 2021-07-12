@@ -252,7 +252,7 @@ def canonical_license(d, license):
     """
     Return the canonical (SPDX) form of the license if available (so GPLv3
     becomes GPL-3.0), for the license named 'X+', return canonical form of
-    'X' if availabel and the tailing '+' (so GPLv3+ becomes GPL-3.0+), 
+    'X' if available and the tailing '+' (so GPLv3+ becomes GPL-3.0+),
     or the passed license if there is no canonical form.
     """
     lic = d.getVarFlag('SPDXLICENSEMAP', license) or ""
@@ -262,19 +262,38 @@ def canonical_license(d, license):
             lic += '+'
     return lic or license
 
+def available_licenses(d):
+    """
+    Return the available licenses by searching the directories specified by
+    COMMON_LICENSE_DIR and LICENSE_PATH.
+    """
+    lic_dirs = ((d.getVar('COMMON_LICENSE_DIR') or '') + ' ' +
+                (d.getVar('LICENSE_PATH') or '')).split()
+
+    licenses = []
+    for lic_dir in lic_dirs:
+        licenses += os.listdir(lic_dir)
+
+    licenses = sorted(licenses)
+    return licenses
+
+# Only determine the list of all available licenses once. This assumes that any
+# additions to LICENSE_PATH have been done before this file is parsed.
+AVAILABLE_LICENSES := "${@' '.join(available_licenses(d))}"
+
 def expand_wildcard_licenses(d, wildcard_licenses):
     """
-    Return actual spdx format license names if wildcard used. We expand
-    wildcards from SPDXLICENSEMAP flags and SRC_DISTRIBUTE_LICENSES values.
+    Return actual spdx format license names if wildcards are used. We expand
+    wildcards from SPDXLICENSEMAP flags and AVAILABLE_LICENSES.
     """
     import fnmatch
-    licenses = []
+    licenses = wildcard_licenses[:]
     spdxmapkeys = d.getVarFlags('SPDXLICENSEMAP').keys()
     for wld_lic in wildcard_licenses:
         spdxflags = fnmatch.filter(spdxmapkeys, wld_lic)
         licenses += [d.getVarFlag('SPDXLICENSEMAP', flag) for flag in spdxflags]
 
-    spdx_lics = (d.getVar('SRC_DISTRIBUTE_LICENSES', False) or '').split()
+    spdx_lics = d.getVar('AVAILABLE_LICENSES').split()
     for wld_lic in wildcard_licenses:
         licenses += fnmatch.filter(spdx_lics, wld_lic)
 
@@ -287,6 +306,26 @@ def incompatible_license_contains(license, truevalue, falsevalue, d):
     bad_licenses = expand_wildcard_licenses(d, bad_licenses)
     return truevalue if license in bad_licenses else falsevalue
 
+def incompatible_pkg_license(d, dont_want_licenses, license):
+    # Handles an "or" or two license sets provided by
+    # flattened_licenses(), pick one that works if possible.
+    def choose_lic_set(a, b):
+        return a if all(oe.license.license_ok(canonical_license(d, lic),
+                            dont_want_licenses) for lic in a) else b
+
+    try:
+        licenses = oe.license.flattened_licenses(license, choose_lic_set)
+    except oe.license.LicenseError as exc:
+        bb.fatal('%s: %s' % (d.getVar('P'), exc))
+
+    incompatible_lic = []
+    for l in licenses:
+        license = canonical_license(d, l)
+        if not oe.license.license_ok(license, dont_want_licenses):
+            incompatible_lic.append(license)
+
+    return sorted(incompatible_lic)
+
 def incompatible_license(d, dont_want_licenses, package=None):
     """
     This function checks if a recipe has only incompatible licenses. It also
@@ -298,26 +337,15 @@ def incompatible_license(d, dont_want_licenses, package=None):
     if not license:
         license = d.getVar('LICENSE')
 
-    # Handles an "or" or two license sets provided by
-    # flattened_licenses(), pick one that works if possible.
-    def choose_lic_set(a, b):
-        return a if all(oe.license.license_ok(canonical_license(d, lic), 
-                            dont_want_licenses) for lic in a) else b
-
-    try:
-        licenses = oe.license.flattened_licenses(license, choose_lic_set)
-    except oe.license.LicenseError as exc:
-        bb.fatal('%s: %s' % (d.getVar('P'), exc))
-    return any(not oe.license.license_ok(canonical_license(d, l), \
-               dont_want_licenses) for l in licenses)
+    return incompatible_pkg_license(d, dont_want_licenses, license)
 
 def check_license_flags(d):
     """
     This function checks if a recipe has any LICENSE_FLAGS that
     aren't whitelisted.
 
-    If it does, it returns the first LICENSE_FLAGS item missing from the
-    whitelist, or all of the LICENSE_FLAGS if there is no whitelist.
+    If it does, it returns the all LICENSE_FLAGS missing from the whitelist, or
+    all of the LICENSE_FLAGS if there is no whitelist.
 
     If everything is is properly whitelisted, it returns None.
     """
@@ -354,22 +382,23 @@ def check_license_flags(d):
         return False
 
     def all_license_flags_match(license_flags, whitelist):
-        """ Return first unmatched flag, None if all flags match """
+        """ Return all unmatched flags, None if all flags match """
         pn = d.getVar('PN')
         split_whitelist = whitelist.split()
+        flags = []
         for flag in license_flags.split():
             if not license_flag_matches(flag, split_whitelist, pn):
-                return flag
-        return None
+                flags.append(flag)
+        return flags if flags else None
 
     license_flags = d.getVar('LICENSE_FLAGS')
     if license_flags:
         whitelist = d.getVar('LICENSE_FLAGS_WHITELIST')
         if not whitelist:
-            return license_flags
-        unmatched_flag = all_license_flags_match(license_flags, whitelist)
-        if unmatched_flag:
-            return unmatched_flag
+            return license_flags.split()
+        unmatched_flags = all_license_flags_match(license_flags, whitelist)
+        if unmatched_flags:
+            return unmatched_flags
     return None
 
 def check_license_format(d):

@@ -5,10 +5,14 @@ SUMMARY = "Rockchip WIFI/BT firmware files"
 SECTION = "kernel"
 
 LICENSE = "LICENSE.rockchip"
-LIC_FILES_CHKSUM = "file://${RK_BINARY_LICENSE};md5=5fd70190c5ed39734baceada8ecced26"
+LIC_FILES_CHKSUM = "file://${RKBASE}/licenses/LICENSE.rockchip;md5=d63890e209bf038f44e708bbb13e4ed9"
 
-SRCREV = "${AUTOREV}"
-SRC_URI = "git://github.com/rockchip-linux/rkwifibt.git"
+PV_append = "+git${SRCPV}"
+
+inherit freeze-rev
+
+SRCREV = "a389710ca130405a0e6e4f22bc0335c976a5c4b0"
+SRC_URI = "git://github.com/JeffyCN/mirrors.git;branch=rkwifibt;"
 
 S = "${WORKDIR}/git"
 
@@ -32,6 +36,10 @@ PACKAGES =+ " \
 	${PN}-ap6255-bt \
 	${PN}-ap6354-wifi \
 	${PN}-ap6354-bt \
+	${PN}-ap6356-wifi \
+	${PN}-ap6356-bt \
+	${PN}-ap6398s-wifi \
+	${PN}-ap6398s-bt \
 	${PN}-rtl8723ds-bt \
 "
 
@@ -47,7 +55,7 @@ FILES_${PN}-ap6212a1-wifi = " \
 	system/etc/firmware/nvram_ap6212a.txt \
 "
 FILES_${PN}-ap6212a1-bt = " \
-	system/etc/firmware/bcm43438a1.hcd \
+	system/etc/firmware/BCM43430A1.hcd \
 "
 
 FILES_${PN}-ap6236-wifi = " \
@@ -56,7 +64,7 @@ FILES_${PN}-ap6236-wifi = " \
 	system/etc/firmware/nvram_ap6236.txt \
 "
 FILES_${PN}-ap6236-bt = " \
-	system/etc/firmware/BCM4343B0.hcd \
+	system/etc/firmware/BCM43430B0.hcd \
 "
 
 FILES_${PN}-ap6255-wifi = " \
@@ -73,7 +81,25 @@ FILES_${PN}-ap6354-wifi = " \
 	system/etc/firmware/nvram_ap6354.txt \
 "
 FILES_${PN}-ap6354-bt = " \
-	system/etc/firmware/bcm4354a1.hcd \
+	system/etc/firmware/BCM4350C0.hcd \
+"
+
+FILES_${PN}-ap6356-wifi = " \
+	system/etc/firmware/fw_bcm4356a2_ag.bin \
+	system/etc/firmware/nvram_ap6356.txt \
+	system/etc/firmware/nvram_ap6356s.txt \
+"
+FILES_${PN}-ap6356-bt = " \
+	system/etc/firmware/BCM4354A2.hcd \
+"
+
+FILES_${PN}-ap6398s-wifi = " \
+	system/etc/firmware/fw_bcm4359c0_ag.bin \
+	system/etc/firmware/fw_bcm4359c0_ag_mfg.bin \
+	system/etc/firmware/nvram_ap6398s.txt \
+"
+FILES_${PN}-ap6398s-bt = " \
+	system/etc/firmware/BCM4359C0.hcd \
 "
 
 FILES_${PN}-rtl8723ds-bt = " \

@@ -10,6 +10,9 @@ SRC_URI = "git://github.com/maliit/framework.git;branch=master \
            file://0001-Fix-MALIIT_INSTALL_PRF-to-allow-the-build-with-opene.patch \
            file://maliit-server.desktop \
            file://0001-config.pri-Use-O1-optimization-in-DEBUG-flags.patch \
+           file://0001-Drop-tr1-namespace-its-not-there-in-c-11-and-newer.patch \
+           file://0001-examples-plugins-Replace-obsolete-screenGeometry.patch \
+           file://0001-Fix-test-installations.patch \
            "
 
 SRCREV = "60b1b10de14f932420313c547ab801daf522d539"
@@ -72,12 +75,9 @@ do_install_append() {
     install -m 644 ${WORKDIR}/maliit-server.desktop ${D}${datadir}/applications
 }
 
-pkg_postinst_${PN} () {
+pkg_postinst_ontarget_${PN} () {
 #!/bin/sh
 # should run online
-if [ "x$D" != "x" ]; then
-    exit 1
-fi
 echo "export QT_IM_MODULE=Maliit" >> /etc/xprofile
 ln -s /usr/share/applications/maliit-server.desktop /etc/xdg/autostart/maliit-server.desktop
 }
@@ -86,12 +86,11 @@ pkg_postrm_${PN} () {
 #!/bin/sh
 # should run online
 if [ "x$D" = "x" ]; then
-    exit 1
+    if [ -e "/etc/xprofile" ]; then
+        sed -i -e "g|export QT_IM_MODULE=Maliit|d" /etc/xprofile
+    fi
+    rm -f /etc/xdg/autostart/maliit-server.desktop
 fi
-if [ -e "/etc/xprofile" ]; then
-    sed -i -e "g|export QT_IM_MODULE=Maliit|d" /etc/xprofile
-fi
-rm -f /etc/xdg/autostart/maliit-server.desktop
 }
 
 S = "${WORKDIR}/git"

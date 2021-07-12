@@ -2,26 +2,28 @@
 #
 # Copyright (c) 2019 Garmin International
 #
-# This program is free software; you can redistribute it and/or modify it
-# under the terms and conditions of the GNU General Public License,
-# version 2, as published by the Free Software Foundation.
-#
-# This program is distributed in the hope it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-# more details.
+# SPDX-License-Identifier: GPL-2.0-only
 #
 import os
 import resulttool.resultutils as resultutils
 
 def show_ptest(result, ptest, logger):
-    if 'ptestresult.sections' in result:
-        if ptest in result['ptestresult.sections'] and 'log' in result['ptestresult.sections'][ptest]:
-            print(result['ptestresult.sections'][ptest]['log'])
-            return 0
+    logdata = resultutils.ptestresult_get_log(result, ptest)
+    if logdata is not None:
+        print(logdata)
+        return 0
 
-    print("ptest '%s' not found" % ptest)
+    print("ptest '%s' log not found" % ptest)
     return 1
+
+def show_reproducible(result, reproducible, logger):
+    try:
+        print(result['reproducible'][reproducible]['diffoscope.text'])
+        return 0
+
+    except KeyError:
+        print("reproducible '%s' not found" % reproducible)
+        return 1
 
 def log(args, logger):
     results = resultutils.load_resultsdata(args.source)
@@ -33,29 +35,47 @@ def log(args, logger):
 
     for _, run_name, _, r in resultutils.test_run_results(results):
         if args.dump_ptest:
-            if 'ptestresult.sections' in r:
-                for name, ptest in r['ptestresult.sections'].items():
-                    if 'log' in ptest:
-                        dest_dir = args.dump_ptest
-                        if args.prepend_run:
-                            dest_dir = os.path.join(dest_dir, run_name)
+            for sectname in ['ptestresult.sections', 'ltpposixresult.sections', 'ltpresult.sections']:
+             if sectname in r:
+              for name, ptest in r[sectname].items():
+                logdata = resultutils.generic_get_log(sectname, r, name)
+                if logdata is not None:
+                    dest_dir = args.dump_ptest
+                    if args.prepend_run:
+                        dest_dir = os.path.join(dest_dir, run_name)
+                    if not sectname.startswith("ptest"):
+                        dest_dir = os.path.join(dest_dir, sectname.split(".")[0])
 
-                        os.makedirs(dest_dir, exist_ok=True)
+                    os.makedirs(dest_dir, exist_ok=True)
+                    dest = os.path.join(dest_dir, '%s.log' % name)
+                    print(dest)
+                    with open(dest, 'w') as f:
+                        f.write(logdata)
 
-                        dest = os.path.join(dest_dir, '%s.log' % name)
-                        print(dest)
-                        with open(dest, 'w') as f:
-                            f.write(ptest['log'])
+        if args.raw_ptest:
+            found = False
+            for sectname in ['ptestresult.rawlogs', 'ltpposixresult.rawlogs', 'ltpresult.rawlogs']:
+                rawlog = resultutils.generic_get_rawlogs(sectname, r)
+                if rawlog is not None:
+                    print(rawlog)
+                    found = True
+            if not found:
+                print('Raw ptest logs not found')
+                return 1
 
-        if args.raw:
-            if 'ptestresult.rawlogs' in r:
-                print(r['ptestresult.rawlogs']['log'])
+        if args.raw_reproducible:
+            if 'reproducible.rawlogs' in r:
+                print(r['reproducible.rawlogs']['log'])
             else:
-                print('Raw logs not found')
+                print('Raw reproducible logs not found')
                 return 1
 
         for ptest in args.ptest:
             if not show_ptest(r, ptest, logger):
+                return 1
+
+        for reproducible in args.reproducible:
+            if not show_reproducible(r, reproducible, logger):
                 return 1
 
 def register_commands(subparsers):
@@ -70,9 +90,15 @@ def register_commands(subparsers):
             help='show logs for a ptest')
     parser.add_argument('--dump-ptest', metavar='DIR',
             help='Dump all ptest log files to the specified directory.')
+    parser.add_argument('--reproducible', action='append', default=[],
+            help='show logs for a reproducible test')
     parser.add_argument('--prepend-run', action='store_true',
             help='''Dump ptest results to a subdirectory named after the test run when using --dump-ptest.
                     Required if more than one test run is present in the result file''')
     parser.add_argument('--raw', action='store_true',
-            help='show raw logs')
+            help='show raw (ptest) logs. Deprecated. Alias for "--raw-ptest"', dest='raw_ptest')
+    parser.add_argument('--raw-ptest', action='store_true',
+            help='show raw ptest log')
+    parser.add_argument('--raw-reproducible', action='store_true',
+            help='show raw reproducible build logs')
 

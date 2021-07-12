@@ -1,5 +1,3 @@
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 """
 BitBake Smart Dictionary Implementation
 
@@ -14,18 +12,8 @@ BitBake build tools.
 # Copyright (C) 2005        Uli Luckas
 # Copyright (C) 2005        ROAD GmbH
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 # Based on functions from the base bb module, Copyright 2003 Holger Schurig
 
 import copy, re, sys, traceback
@@ -39,10 +27,11 @@ from bb.COW  import COWDictBase
 logger = logging.getLogger("BitBake.Data")
 
 __setvar_keyword__ = ["_append", "_prepend", "_remove"]
-__setvar_regexp__ = re.compile('(?P<base>.*?)(?P<keyword>_append|_prepend|_remove)(_(?P<add>[^A-Z]*))?$')
-__expand_var_regexp__ = re.compile(r"\${[^{}@\n\t :]+}")
+__setvar_regexp__ = re.compile(r'(?P<base>.*?)(?P<keyword>_append|_prepend|_remove)(_(?P<add>[^A-Z]*))?$')
+__expand_var_regexp__ = re.compile(r"\${[a-zA-Z0-9\-_+./~]+?}")
 __expand_python_regexp__ = re.compile(r"\${@.+?}")
-__whitespace_split__ = re.compile('(\s)')
+__whitespace_split__ = re.compile(r'(\s)')
+__override_regexp__ = re.compile(r'[a-z0-9]+')
 
 def infer_caller_details(loginfo, parent = False, varval = True):
     """Save the caller the trouble of specifying everything."""
@@ -118,11 +107,11 @@ class VariableParse:
             else:
                 code = match.group()[3:-1]
 
-            if "_remote_data" in self.d:
-                connector = self.d["_remote_data"]
-                return connector.expandPythonRef(self.varname, code, self.d)
-
-            codeobj = compile(code.strip(), self.varname or "<expansion>", "eval")
+            if self.varname:
+                varname = 'Var <%s>' % self.varname
+            else:
+                varname = '<expansion>'
+            codeobj = compile(code.strip(), varname, "eval")
 
             parser = bb.codeparser.PythonParser(self.varname, logger)
             parser.parse_python(code)
@@ -200,7 +189,7 @@ class IncludeHistory(object):
         if self.current.parent:
             self.current = self.current.parent
         else:
-            bb.warn("Include log: Tried to finish '%s' at top level." % filename)
+            bb.warn("Include log: Tried to finish '%s' at top level." % self.filename)
         return False
 
     def emit(self, o, level = 0):
@@ -275,12 +264,7 @@ class VariableHistory(object):
             self.variables[newvar].append(i.copy())
 
     def variable(self, var):
-        remote_connector = self.dataroot.getVar('_remote_data', False)
-        if remote_connector:
-            varhistory = remote_connector.getVarHistory(var)
-        else:
-            varhistory = []
-
+        varhistory = []
         if var in self.variables:
             varhistory.extend(self.variables[var])
         return varhistory
@@ -345,11 +329,12 @@ class VariableHistory(object):
                 lines.append(line)
         return lines
 
-    def get_variable_items_files(self, var, d):
+    def get_variable_items_files(self, var):
         """
         Use variable history to map items added to a list variable and
         the files in which they were added.
         """
+        d = self.dataroot
         history = self.variable(var)
         finalitems = (d.getVar(var) or '').split()
         filemap = {}
@@ -427,7 +412,8 @@ class DataSmart(MutableMapping):
             except bb.parse.SkipRecipe:
                 raise
             except Exception as exc:
-                raise ExpansionError(varname, s, exc) from exc
+                tb = sys.exc_info()[2]
+                raise ExpansionError(varname, s, exc).with_traceback(tb) from exc
 
         varparse.value = s
 
@@ -476,10 +462,6 @@ class DataSmart(MutableMapping):
             if var in dest:
                 return dest[var], self.overridedata.get(var, None)
 
-            if "_remote_data" in dest:
-                connector = dest["_remote_data"]["_content"]
-                return connector.getVar(var)
-
             if "_data" not in dest:
                 break
             dest = dest["_data"]
@@ -503,12 +485,6 @@ class DataSmart(MutableMapping):
         parsing=False
         if 'parsing' in loginfo:
             parsing=True
-
-        if '_remote_data' in self.dict:
-            connector = self.dict["_remote_data"]["_content"]
-            res = connector.setVar(var, value)
-            if not res:
-                return
 
         if 'op' not in loginfo:
             loginfo['op'] = "set"
@@ -592,7 +568,7 @@ class DataSmart(MutableMapping):
         # aka pay the cookie monster
         override = var[var.rfind('_')+1:]
         shortvar = var[:var.rfind('_')]
-        while override and override.islower():
+        while override and __override_regexp__.match(override):
             if shortvar not in self.overridedata:
                 self.overridedata[shortvar] = []
             if [var, override] not in self.overridedata[shortvar]:
@@ -613,11 +589,9 @@ class DataSmart(MutableMapping):
         """
         Rename the variable key to newkey
         """
-        if '_remote_data' in self.dict:
-            connector = self.dict["_remote_data"]["_content"]
-            res = connector.renameVar(key, newkey)
-            if not res:
-                return
+        if key == newkey:
+            bb.warn("Calling renameVar with equivalent keys (%s) is invalid" % key)
+            return
 
         val = self.getVar(key, 0, parsing=True)
         if val is not None:
@@ -664,11 +638,6 @@ class DataSmart(MutableMapping):
 
     def delVar(self, var, **loginfo):
         self.expand_cache = {}
-        if '_remote_data' in self.dict:
-            connector = self.dict["_remote_data"]["_content"]
-            res = connector.delVar(var)
-            if not res:
-                return
 
         loginfo['detail'] = ""
         loginfo['op'] = 'del'
@@ -696,11 +665,6 @@ class DataSmart(MutableMapping):
 
     def setVarFlag(self, var, flag, value, **loginfo):
         self.expand_cache = {}
-        if '_remote_data' in self.dict:
-            connector = self.dict["_remote_data"]["_content"]
-            res = connector.setVarFlag(var, flag, value)
-            if not res:
-                return
 
         if 'op' not in loginfo:
             loginfo['op'] = "set"
@@ -851,11 +815,6 @@ class DataSmart(MutableMapping):
 
     def delVarFlag(self, var, flag, **loginfo):
         self.expand_cache = {}
-        if '_remote_data' in self.dict:
-            connector = self.dict["_remote_data"]["_content"]
-            res = connector.delVarFlag(var, flag)
-            if not res:
-                return
 
         local_var, _ = self._findVar(var)
         if not local_var:
@@ -973,7 +932,7 @@ class DataSmart(MutableMapping):
 
     def localkeys(self):
         for key in self.dict:
-            if key not in ['_data', '_remote_data']:
+            if key not in ['_data']:
                 yield key
 
     def __iter__(self):
@@ -982,7 +941,7 @@ class DataSmart(MutableMapping):
         def keylist(d):        
             klist = set()
             for key in d:
-                if key in ["_data", "_remote_data"]:
+                if key in ["_data"]:
                     continue
                 if key in deleted:
                     continue
@@ -995,13 +954,6 @@ class DataSmart(MutableMapping):
 
             if "_data" in d:
                 klist |= keylist(d["_data"])
-
-            if "_remote_data" in d:
-                connector = d["_remote_data"]["_content"]
-                for key in connector.getKeys():
-                    if key in deleted:
-                        continue
-                    klist.add(key)
 
             return klist
 
@@ -1048,7 +1000,10 @@ class DataSmart(MutableMapping):
                 continue
 
             value = d.getVar(key, False) or ""
-            data.update({key:value})
+            if type(value) is type(self):
+                data.update({key:value.get_hash()})
+            else:
+                data.update({key:value})
 
             varflags = d.getVarFlags(key, internalflags = True)
             if not varflags:
@@ -1068,4 +1023,4 @@ class DataSmart(MutableMapping):
                     data.update({i:value})
 
         data_str = str([(k, data[k]) for k in sorted(data.keys())])
-        return hashlib.md5(data_str.encode("utf-8")).hexdigest()
+        return hashlib.sha256(data_str.encode("utf-8")).hexdigest()

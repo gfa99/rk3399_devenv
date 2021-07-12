@@ -6,4 +6,7 @@ require conf/machine/include/rockchip-arm64-common.inc
 
 KBUILD_DEFCONFIG = "px30_linux_defconfig"
 
-RK_MALI_LIB := "libmali-bifrost-g31-rxp0${@bb.utils.contains('DISTRO_FEATURES', 'wayland', '-wayland', bb.utils.contains('DISTRO_FEATURES', 'x11', '', '-gbm', d), d)}.so"
+MALI_GPU := "bifrost-g31"
+MALI_VERSION := "rxp0"
+
+RK_ISP_VERSION := "1"

@@ -13,7 +13,12 @@ inherit ptest
 SRC_URI += " \
             file://run-ptest \
             file://rt_bmark.py \
+            file://0001-gzip-with-n-for-build-reproducibilty.patch \
            "
+
+# rt-tests needs PI mutex support in libc
+COMPATIBLE_HOST_libc-musl = 'null'
+
 # Do not install hwlatdetect
 EXTRA_OEMAKE += "PYLIB=''"
 
@@ -26,6 +31,6 @@ do_install_ptest() {
         cp ${WORKDIR}/rt_bmark.py ${D}${PTEST_PATH}
 }
 
-RDEPENDS_${PN}-ptest += " stress python3 python3-multiprocessing python3-datetime python3-misc"
+RDEPENDS_${PN}-ptest += " stress-ng python3 python3-multiprocessing python3-datetime python3-misc"
 
 FILES_${PN} += "${prefix}/src/backfire"

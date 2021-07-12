@@ -1,23 +1,26 @@
 # Copyright (C) 2019, Fuzhou Rockchip Electronics Co., Ltd
 # Released under the MIT license (see COPYING.MIT for the terms)
 
-inherit native deploy
+inherit freeze-rev deploy native
 
 DESCRIPTION = "Rockchip binary tools"
 
 LICENSE = "LICENSE.rockchip"
-LIC_FILES_CHKSUM = "file://${RK_BINARY_LICENSE};md5=5fd70190c5ed39734baceada8ecced26"
-
+LIC_FILES_CHKSUM = "file://${RKBASE}/licenses/LICENSE.rockchip;md5=d63890e209bf038f44e708bbb13e4ed9"
 SRC_URI = " \
-	git://github.com/rockchip-linux/rkbin.git;branch=master;name=rkbin \
-	git://github.com/rockchip-linux/tools.git;branch=master;name=tools;destsuffix=git/extra \
+	git://github.com/JeffyCN/mirrors.git;nobranch=1;branch=rkbin-2021_05_18;name=rkbin \
+	git://github.com/JeffyCN/mirrors.git;branch=tools;name=tools;destsuffix=git/extra \
 "
 
-SRCREV_rkbin = "${AUTOREV}"
-SRCREV_tools = "${AUTOREV}"
+PV_append = "+git${SRCPV}"
+
+SRCREV_rkbin = "efeaf88021e869fd641bf7b4e0b98ca7f8d513f0"
+SRCREV_tools = "edc8dc686de9b8d967e1a95ab2da252592a16008"
 SRCREV_FORMAT ?= "rkbin_tools"
 
 S = "${WORKDIR}/git"
+
+INSANE_SKIP_${PN} = "already-stripped"
 
 # The pre-built tools have different link loader, don't change them.
 UNINATIVE_LOADER := ""

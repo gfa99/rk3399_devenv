@@ -2,18 +2,7 @@
 #
 # Copyright (C) 2014-2017 Intel Corporation
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+# SPDX-License-Identifier: GPL-2.0-only
 #
 """Devtool upgrade plugin"""
 
@@ -43,7 +32,7 @@ def _run(cmd, cwd=''):
 
 def _get_srctree(tmpdir):
     srctree = tmpdir
-    dirs = os.listdir(tmpdir)
+    dirs = scriptutils.filter_src_subdirs(tmpdir)
     if len(dirs) == 1:
         srctree = os.path.join(tmpdir, dirs[0])
     return srctree
@@ -133,18 +122,22 @@ def _cleanup_on_error(rf, srctree):
     rfp = os.path.split(rf)[0] # recipe folder
     rfpp = os.path.split(rfp)[0] # recipes folder
     if os.path.exists(rfp):
-        shutil.rmtree(b)
+        shutil.rmtree(rfp)
     if not len(os.listdir(rfpp)):
         os.rmdir(rfpp)
     srctree = os.path.abspath(srctree)
     if os.path.exists(srctree):
         shutil.rmtree(srctree)
 
-def _upgrade_error(e, rf, srctree):
-    if rf:
-        cleanup_on_error(rf, srctree)
+def _upgrade_error(e, rf, srctree, keep_failure=False, extramsg=None):
+    if rf and not keep_failure:
+        _cleanup_on_error(rf, srctree)
     logger.error(e)
-    raise DevtoolError(e)
+    if extramsg:
+        logger.error(extramsg)
+    if keep_failure:
+        logger.info('Preserving failed upgrade files (--keep-failure)')
+    sys.exit(1)
 
 def _get_uri(rd):
     srcuris = rd.getVar('SRC_URI').split()
@@ -242,14 +235,14 @@ def _extract_new_source(newpv, srctree, no_patch, srcrev, srcbranch, branch, kee
         # Copy in new ones
         _copy_source_code(tmpsrctree, srctree)
 
-        (stdout,_) = __run('git ls-files --modified --others --exclude-standard')
+        (stdout,_) = __run('git ls-files --modified --others')
         filelist = stdout.splitlines()
         pbar = bb.ui.knotty.BBProgress('Adding changed files', len(filelist))
         pbar.start()
         batchsize = 100
         for i in range(0, len(filelist), batchsize):
             batch = filelist[i:i+batchsize]
-            __run('git add -A %s' % ' '.join(['"%s"' % item for item in batch]))
+            __run('git add -f -A %s' % ' '.join(['"%s"' % item for item in batch]))
             pbar.update(i)
         pbar.finish()
 
@@ -288,6 +281,8 @@ def _extract_new_source(newpv, srctree, no_patch, srcrev, srcbranch, branch, kee
             logger.info('Preserving temporary directory %s' % tmpsrctree)
         else:
             shutil.rmtree(tmpsrctree)
+            if tmpdir != tmpsrctree:
+                shutil.rmtree(tmpdir)
 
     return (rev, md5, sha256, srcbranch, srcsubdir_rel)
 
@@ -310,7 +305,7 @@ def _add_license_diff_to_recipe(path, diff):
         f.write("\n#\n\n".encode())
         f.write(orig_content)
 
-def _create_new_recipe(newpv, md5, sha256, srcrev, srcbranch, srcsubdir_old, srcsubdir_new, workspace, tinfoil, rd, license_diff, new_licenses):
+def _create_new_recipe(newpv, md5, sha256, srcrev, srcbranch, srcsubdir_old, srcsubdir_new, workspace, tinfoil, rd, license_diff, new_licenses, srctree, keep_failure):
     """Creates the new recipe under workspace"""
 
     bpn = rd.getVar('BPN')
@@ -396,12 +391,12 @@ def _create_new_recipe(newpv, md5, sha256, srcrev, srcbranch, srcsubdir_old, src
             newvalues['SRC_URI[%s.md5sum]' % name] = None
             newvalues['SRC_URI[%s.sha256sum]' % name] = None
 
-    if md5 and sha256:
+    if sha256:
         if addnames:
             nameprefix = '%s.' % addnames[0]
         else:
             nameprefix = ''
-        newvalues['SRC_URI[%smd5sum]' % nameprefix] = md5
+        newvalues['SRC_URI[%smd5sum]' % nameprefix] = None
         newvalues['SRC_URI[%ssha256sum]' % nameprefix] = sha256
 
     if srcsubdir_new != srcsubdir_old:
@@ -427,7 +422,10 @@ def _create_new_recipe(newpv, md5, sha256, srcrev, srcbranch, srcsubdir_old, src
         newvalues["LIC_FILES_CHKSUM"] = newlicchksum
         _add_license_diff_to_recipe(fullpath, license_diff)
 
-    rd = tinfoil.parse_recipe_file(fullpath, False)
+    try:
+        rd = tinfoil.parse_recipe_file(fullpath, False)
+    except bb.tinfoil.TinfoilCommandFailed as e:
+        _upgrade_error(e, fullpath, srctree, keep_failure, 'Parsing of upgraded recipe failed')
     oe.recipeutils.patch_recipe(rd, fullpath, newvalues)
 
     return fullpath, copied
@@ -552,18 +550,18 @@ def upgrade(args, config, basepath, workspace):
         try:
             logger.info('Extracting current version source...')
             rev1, srcsubdir1 = standard._extract_source(srctree, False, 'devtool-orig', False, config, basepath, workspace, args.fixed_setup, rd, tinfoil, no_overrides=args.no_overrides)
-            old_licenses = _extract_licenses(srctree, rd.getVar('LIC_FILES_CHKSUM'))
+            old_licenses = _extract_licenses(srctree, (rd.getVar('LIC_FILES_CHKSUM') or ""))
             logger.info('Extracting upgraded version source...')
             rev2, md5, sha256, srcbranch, srcsubdir2 = _extract_new_source(args.version, srctree, args.no_patch,
                                                     args.srcrev, args.srcbranch, args.branch, args.keep_temp,
                                                     tinfoil, rd)
-            new_licenses = _extract_licenses(srctree, rd.getVar('LIC_FILES_CHKSUM'))
+            new_licenses = _extract_licenses(srctree, (rd.getVar('LIC_FILES_CHKSUM') or ""))
             license_diff = _generate_license_diff(old_licenses, new_licenses)
-            rf, copied = _create_new_recipe(args.version, md5, sha256, args.srcrev, srcbranch, srcsubdir1, srcsubdir2, config.workspace_path, tinfoil, rd, license_diff, new_licenses)
+            rf, copied = _create_new_recipe(args.version, md5, sha256, args.srcrev, srcbranch, srcsubdir1, srcsubdir2, config.workspace_path, tinfoil, rd, license_diff, new_licenses, srctree, args.keep_failure)
         except bb.process.CmdError as e:
-            _upgrade_error(e, rf, srctree)
+            _upgrade_error(e, rf, srctree, args.keep_failure)
         except DevtoolError as e:
-            _upgrade_error(e, rf, srctree)
+            _upgrade_error(e, rf, srctree, args.keep_failure)
         standard._add_md5(config, pn, os.path.dirname(rf))
 
         af = _write_append(rf, srctree, args.same_dir, args.no_same_dir, rev2,
@@ -600,6 +598,20 @@ def latest_version(args, config, basepath, workspace):
         tinfoil.shutdown()
     return 0
 
+def check_upgrade_status(args, config, basepath, workspace):
+    if not args.recipe:
+        logger.info("Checking the upstream status for all recipes may take a few minutes")
+    results = oe.recipeutils.get_recipe_upgrade_status(args.recipe)
+    for result in results:
+        # pn, update_status, current, latest, maintainer, latest_commit, no_update_reason
+        if args.all or result[1] != 'MATCH':
+            logger.info("{:25} {:15} {:15} {} {} {}".format(   result[0],
+                                                               result[2],
+                                                               result[1] if result[1] != 'UPDATE' else (result[3] if not result[3].endswith("new-commits-available") else "new commits"),
+                                                               result[4],
+                                                               result[5] if result[5] != 'N/A' else "",
+                                                               "cannot be updated due to: %s" %(result[6]) if result[6] else ""))
+
 def register_commands(subparsers, context):
     """Register devtool subcommands from this plugin"""
 
@@ -620,6 +632,7 @@ def register_commands(subparsers, context):
     group.add_argument('--same-dir', '-s', help='Build in same directory as source', action="store_true")
     group.add_argument('--no-same-dir', help='Force build in a separate build directory', action="store_true")
     parser_upgrade.add_argument('--keep-temp', action="store_true", help='Keep temporary directory (for debugging)')
+    parser_upgrade.add_argument('--keep-failure', action="store_true", help='Keep failed upgrade recipe and associated files  (for debugging)')
     parser_upgrade.set_defaults(func=upgrade, fixed_setup=context.fixed_setup)
 
     parser_latest_version = subparsers.add_parser('latest-version', help='Report the latest version of an existing recipe',
@@ -627,3 +640,10 @@ def register_commands(subparsers, context):
                                                   group='info')
     parser_latest_version.add_argument('recipename', help='Name of recipe to query (just name - no version, path or extension)')
     parser_latest_version.set_defaults(func=latest_version)
+
+    parser_check_upgrade_status = subparsers.add_parser('check-upgrade-status', help="Report upgradability for multiple (or all) recipes",
+                                                        description="Prints a table of recipes together with versions currently provided by recipes, and latest upstream versions, when there is a later version available",
+                                                        group='info')
+    parser_check_upgrade_status.add_argument('recipe', help='Name of the recipe to report (omit to report upgrade info for all recipes)', nargs='*')
+    parser_check_upgrade_status.add_argument('--all', '-a', help='Show all recipes, not just recipes needing upgrade', action="store_true")
+    parser_check_upgrade_status.set_defaults(func=check_upgrade_status)

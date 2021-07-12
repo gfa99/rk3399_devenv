@@ -1,5 +1,8 @@
+#
 # Copyright (C) 2016 Intel Corporation
-# Released under the MIT license (see COPYING.MIT)
+#
+# SPDX-License-Identifier: MIT
+#
 
 import os
 import time
@@ -40,6 +43,7 @@ class OETestResult(_TestResult):
         self.starttime = {}
         self.endtime = {}
         self.progressinfo = {}
+        self.extraresults = {}
 
         # Inject into tc so that TestDepends decorator can see results
         tc.results = self
@@ -126,41 +130,85 @@ class OETestResult(_TestResult):
 
         return 'UNKNOWN', None
 
-    def addSuccess(self, test):
+    def extractExtraResults(self, test, details = None):
+        extraresults = None
+        if details is not None and "extraresults" in details:
+            extraresults = details.get("extraresults", {})
+        elif hasattr(test, "extraresults"):
+            extraresults = test.extraresults
+
+        if extraresults is not None:
+            for k, v in extraresults.items():
+                # handle updating already existing entries (e.g. ptestresults.sections)
+                if k in self.extraresults:
+                    self.extraresults[k].update(v)
+                else:
+                    self.extraresults[k] = v
+
+    def addError(self, test, *args, details = None):
+        self.extractExtraResults(test, details = details)
+        return super(OETestResult, self).addError(test, *args)
+
+    def addFailure(self, test, *args, details = None):
+        self.extractExtraResults(test, details = details)
+        return super(OETestResult, self).addFailure(test, *args)
+
+    def addSuccess(self, test, details = None):
         #Added so we can keep track of successes too
         self.successes.append((test, None))
-        super(OETestResult, self).addSuccess(test)
+        self.extractExtraResults(test, details = details)
+        return super(OETestResult, self).addSuccess(test)
+
+    def addExpectedFailure(self, test, *args, details = None):
+        self.extractExtraResults(test, details = details)
+        return super(OETestResult, self).addExpectedFailure(test, *args)
+
+    def addUnexpectedSuccess(self, test, details = None):
+        self.extractExtraResults(test, details = details)
+        return super(OETestResult, self).addUnexpectedSuccess(test)
 
     def logDetails(self, json_file_dir=None, configuration=None, result_id=None,
             dump_streams=False):
         self.tc.logger.info("RESULTS:")
 
-        result = {}
+        result = self.extraresults
         logs = {}
         if hasattr(self.tc, "extraresults"):
-            result = self.tc.extraresults
+            result.update(self.tc.extraresults)
 
         for case_name in self.tc._registry['cases']:
             case = self.tc._registry['cases'][case_name]
 
             (status, log) = self._getTestResultDetails(case)
 
-            oeid = -1
-            if hasattr(case, 'decorators'):
-                for d in case.decorators:
-                    if hasattr(d, 'oeid'):
-                        oeid = d.oeid
-
             t = ""
+            duration = 0
             if case.id() in self.starttime and case.id() in self.endtime:
-                t = " (" + "{0:.2f}".format(self.endtime[case.id()] - self.starttime[case.id()]) + "s)"
+                duration = self.endtime[case.id()] - self.starttime[case.id()]
+                t = " (" + "{0:.2f}".format(duration) + "s)"
 
             if status not in logs:
                 logs[status] = []
-            logs[status].append("RESULTS - %s - Testcase %s: %s%s" % (case.id(), oeid, status, t))
+            logs[status].append("RESULTS - %s: %s%s" % (case.id(), status, t))
             report = {'status': status}
             if log:
                 report['log'] = log
+            if duration:
+                report['duration'] = duration
+
+            alltags = []
+            # pull tags from the case class
+            if hasattr(case, "__oeqa_testtags"):
+                alltags.extend(getattr(case, "__oeqa_testtags"))
+            # pull tags from the method itself
+            test_name = case._testMethodName
+            if hasattr(case, test_name):
+                method = getattr(case, test_name)
+                if hasattr(method, "__oeqa_testtags"):
+                    alltags.extend(getattr(method, "__oeqa_testtags"))
+            if alltags:
+                report['oetags'] = alltags
+
             if dump_streams and case.id() in self.logged_output:
                 (stdout, stderr) = self.logged_output[case.id()]
                 report['stdout'] = stdout
@@ -208,42 +256,20 @@ class OETestRunner(_TestRunner):
                 self._walked_cases = self._walked_cases + 1
 
     def _list_tests_name(self, suite):
-        from oeqa.core.decorator.oeid import OETestID
-        from oeqa.core.decorator.oetag import OETestTag
-
         self._walked_cases = 0
 
-        def _list_cases_without_id(logger, case):
-
-            found_id = False
-            if hasattr(case, 'decorators'):
-                for d in case.decorators:
-                    if isinstance(d, OETestID):
-                        found_id = True
-
-            if not found_id:
-                logger.info('oeid missing for %s' % case.id())
-
         def _list_cases(logger, case):
-            oeid = None
-            oetag = None
-
-            if hasattr(case, 'decorators'):
-                for d in case.decorators:
-                    if isinstance(d, OETestID):
-                        oeid = d.oeid
-                    elif isinstance(d, OETestTag):
-                        oetag = d.oetag
-
-            logger.info("%s\t%s\t\t%s" % (oeid, oetag, case.id()))
-
-        self.tc.logger.info("Listing test cases that don't have oeid ...")
-        self._walk_suite(suite, _list_cases_without_id)
-        self.tc.logger.info("-" * 80)
+            oetags = []
+            if hasattr(case, '__oeqa_testtags'):
+                oetags = getattr(case, '__oeqa_testtags')
+            if oetags:
+                logger.info("%s (%s)" % (case.id(), ",".join(oetags)))
+            else:
+                logger.info("%s" % (case.id()))
 
         self.tc.logger.info("Listing all available tests:")
         self._walked_cases = 0
-        self.tc.logger.info("id\ttag\t\ttest")
+        self.tc.logger.info("test (tags)")
         self.tc.logger.info("-" * 80)
         self._walk_suite(suite, _list_cases)
         self.tc.logger.info("-" * 80)
@@ -311,10 +337,17 @@ class OETestResultJSONHelper(object):
             the_file.write(file_content)
 
     def dump_testresult_file(self, write_dir, configuration, result_id, test_result):
-        bb.utils.mkdirhier(write_dir)
-        lf = bb.utils.lockfile(os.path.join(write_dir, 'jsontestresult.lock'))
+        try:
+            import bb
+            has_bb = True
+            bb.utils.mkdirhier(write_dir)
+            lf = bb.utils.lockfile(os.path.join(write_dir, 'jsontestresult.lock'))
+        except ImportError:
+            has_bb = False
+            os.makedirs(write_dir, exist_ok=True)
         test_results = self._get_existing_testresults_if_available(write_dir)
         test_results[result_id] = {'configuration': configuration, 'result': test_result}
         json_testresults = json.dumps(test_results, sort_keys=True, indent=4)
         self._write_file(write_dir, self.testresult_filename, json_testresults)
-        bb.utils.unlockfile(lf)
+        if has_bb:
+            bb.utils.unlockfile(lf)

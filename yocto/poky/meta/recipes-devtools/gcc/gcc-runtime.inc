@@ -15,6 +15,20 @@ EXTRA_OECONF_PATHS = "\
 "
 
 EXTRA_OECONF_append_linuxstdbase = " --enable-clocale=gnu"
+EXTRA_OECONF_append = " --cache-file=${B}/config.cache"
+EXTRA_OECONF_append_libc-newlib = " --with-newlib"
+
+# Disable ifuncs for libatomic on arm conflicts -march/-mcpu
+EXTRA_OECONF_append_arm = " libat_cv_have_ifunc=no "
+EXTRA_OECONF_append_armeb = " libat_cv_have_ifunc=no "
+
+DISABLE_STATIC_class-nativesdk ?= ""
+
+# Newlib does not support symbol versioning on libsdtcc++
+SYMVERS_CONF_libc-newlib = ""
+
+# Building with thumb enabled on armv6t fails
+ARM_INSTRUCTION_SET_armv6 = "arm"
 
 RUNTIMELIBITM = "libitm"
 RUNTIMELIBITM_arc = ""
@@ -29,12 +43,10 @@ RUNTIMELIBSSP_mingw32 ?= "libssp"
 RUNTIMETARGET = "${RUNTIMELIBSSP} libstdc++-v3 libgomp libatomic ${RUNTIMELIBITM} \
     ${@bb.utils.contains_any('FORTRAN', [',fortran',',f77'], 'libquadmath', '', d)} \
 "
-RUNTIMETARGET_append_x86 = " libmpx"
-RUNTIMETARGET_append_x86-64 = " libmpx"
-RUNTIMETARGET_remove_libc-musl = "libmpx"
+# Only build libstdc++ for newlib
+RUNTIMETARGET_libc-newlib = "libstdc++-v3"
 
 # libiberty
-# libmudflap
 # libgfortran needs separate recipe due to libquadmath dependency
 
 SLIB = "${TMPDIR}/work-shared/gcc-${PV}-${PR}/gcc-${PV}"
@@ -79,6 +91,11 @@ do_install () {
 		cd ${B}/${TARGET_SYS}/$d/
 		oe_runmake 'DESTDIR=${D}' MULTIBUILDTOP=${B}/${TARGET_SYS}/$d/ install
 	done
+	if [ -d ${D}${libdir}/gcc/${TARGET_SYS}/${BINV}/include ]; then
+		install -d ${D}${libdir}/${TARGET_SYS}/${BINV}/include 
+		mv ${D}${libdir}/gcc/${TARGET_SYS}/${BINV}/include/* ${D}${libdir}/${TARGET_SYS}/${BINV}/include
+		rmdir --ignore-fail-on-non-empty -p ${D}${libdir}/gcc/${TARGET_SYS}/${BINV}/include
+	fi
 	rm -rf ${D}${infodir}/libgomp.info ${D}${infodir}/dir
 	rm -rf ${D}${infodir}/libitm.info ${D}${infodir}/dir
 	rm -rf ${D}${infodir}/libquadmath.info ${D}${infodir}/dir
@@ -88,10 +105,6 @@ do_install () {
 	if [ -d ${D}${infodir} ]; then
 		rmdir --ignore-fail-on-non-empty -p ${D}${infodir}
 	fi
-	if [ "${TARGET_VENDOR_MULTILIB_ORIGINAL}" != "" -a "${TARGET_VENDOR}" != "${TARGET_VENDOR_MULTILIB_ORIGINAL}" ]; then
-		ln -s ${TARGET_SYS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR_MULTILIB_ORIGINAL}-${TARGET_OS}
-	fi
-
 }
 
 do_install_append_class-target () {
@@ -100,20 +113,33 @@ do_install_append_class-target () {
 	fi
 
 	if [ "${TARGET_OS}" = "linux-gnun32" ]; then
-		if [ "${MULTILIBS}" != "" ]; then
-			mkdir ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}-pokymllib64-linux
-			ln -s ../${TARGET_SYS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}-pokymllib64-linux/32
+		if [ "${TARGET_VENDOR_MULTILIB_ORIGINAL}" != "" -a "${TARGET_VENDOR}" != "${TARGET_VENDOR_MULTILIB_ORIGINAL}" ]; then
+			mkdir ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR_MULTILIB_ORIGINAL}-linux
+			ln -s ../${TARGET_SYS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR_MULTILIB_ORIGINAL}-linux/32
+		elif [ "${MULTILIB_VARIANTS}" != "" ]; then
+			mkdir ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR}-linux
+			ln -s ../${TARGET_SYS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR}-linux/32
 		else
 			ln -s ${TARGET_SYS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR}-linux
 		fi
+	elif [ "${TARGET_OS}" = "linux-gnux32" ]; then
+		if [ "${TARGET_VENDOR_MULTILIB_ORIGINAL}" != "" -a "${TARGET_VENDOR}" != "${TARGET_VENDOR_MULTILIB_ORIGINAL}" ]; then
+			mkdir ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR_MULTILIB_ORIGINAL}-linux
+			ln -s ../${TARGET_SYS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR_MULTILIB_ORIGINAL}-linux/x32
+		elif [ "${MULTILIB_VARIANTS}" != "" ]; then
+			mkdir ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR}-linux
+			ln -s ../${TARGET_SYS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR}-linux/32
+		else
+			ln -s ${TARGET_SYS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR}-linux
+		fi
+	elif [ "${TARGET_VENDOR_MULTILIB_ORIGINAL}" != "" -a "${TARGET_VENDOR}" != "${TARGET_VENDOR_MULTILIB_ORIGINAL}" ]; then
+		mkdir ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR_MULTILIB_ORIGINAL}-${TARGET_OS}
+		ln -s ../${TARGET_SYS}/bits ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR_MULTILIB_ORIGINAL}-${TARGET_OS}/bits
+		ln -s ../${TARGET_SYS}/ext ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR_MULTILIB_ORIGINAL}-${TARGET_OS}/ext
 	fi
-	if [ "${TARGET_OS}" = "linux-gnux32" ]; then
-		if [ "${MULTILIBS}" != "" ]; then
-			mkdir ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}-poky-linux
-			ln -s ../${TARGET_SYS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}-poky-linux/x32
-		else
-			ln -s ${TARGET_SYS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR}-linux
-		fi
+
+	if [ "${TARGET_ARCH}" == "x86_64" -a "${MULTILIB_VARIANTS}" != "" ];then
+		ln -sf ../${X86ARCH32}${TARGET_VENDOR}-${TARGET_OS} ${D}${includedir}/c++/${BINV}/${TARGET_ARCH}${TARGET_VENDOR}-${TARGET_OS}/32
 	fi
 
 	if [ "${TCLIBC}" != "glibc" ]; then
@@ -128,7 +154,7 @@ do_install_append_class-target () {
 }
 
 INHIBIT_DEFAULT_DEPS = "1"
-DEPENDS = "virtual/${TARGET_PREFIX}gcc virtual/${TARGET_PREFIX}g++ libgcc"
+DEPENDS = "virtual/${TARGET_PREFIX}gcc virtual/${TARGET_PREFIX}g++ libgcc virtual/${MLPREFIX}libc"
 PROVIDES = "virtual/${TARGET_PREFIX}compilerlibs"
 
 BBCLASSEXTEND = "nativesdk"
@@ -144,9 +170,6 @@ PACKAGES = "\
     libssp \
     libssp-dev \
     libssp-staticdev \
-    libmudflap \
-    libmudflap-dev \
-    libmudflap-staticdev \
     libquadmath \
     libquadmath-dev \
     libquadmath-staticdev \
@@ -160,24 +183,12 @@ PACKAGES = "\
     libitm-dev \
     libitm-staticdev \
 "
-PACKAGES_append_x86 = "\
-    libmpx \
-    libmpx-dev \
-    libmpx-staticdev \
-"
-
-PACKAGES_append_x86-64 = "\
-    libmpx \
-    libmpx-dev \
-    libmpx-staticdev \
-"
-
 # The base package doesn't exist, so we clear the recommends.
 RRECOMMENDS_${PN}-dbg = ""
 
 # include python debugging scripts
 FILES_${PN}-dbg += "\
-    ${libdir}/libstdc++.so.*-gdb.py \
+    ${libdir}/libstdc++.*-gdb.py \
     ${datadir}/gcc-${BINV}/python/libstdcxx \
 "
 
@@ -214,7 +225,7 @@ FILES_libssp-dev = "\
     ${libdir}/libssp*.so \
     ${libdir}/libssp*_nonshared.a \
     ${libdir}/libssp*.la \
-    ${libdir}/gcc/${TARGET_SYS}/${BINV}/include/ssp \
+    ${libdir}/${TARGET_SYS}/${BINV}/include/ssp \
 "
 SUMMARY_libssp-dev = "GNU stack smashing protection library - development files"
 FILES_libssp-staticdev = "${libdir}/libssp*.a"
@@ -223,7 +234,7 @@ SUMMARY_libssp-staticdev = "GNU stack smashing protection library - static devel
 FILES_libquadmath = "${libdir}/libquadmath*.so.*"
 SUMMARY_libquadmath = "GNU quad-precision math library"
 FILES_libquadmath-dev = "\
-    ${libdir}/gcc/${TARGET_SYS}/${BINV}/include/quadmath* \
+    ${libdir}/${TARGET_SYS}/${BINV}/include/quadmath* \
     ${libdir}/libquadmath*.so \
     ${libdir}/libquadmath.la \
 "
@@ -231,24 +242,15 @@ SUMMARY_libquadmath-dev = "GNU quad-precision math library - development files"
 FILES_libquadmath-staticdev = "${libdir}/libquadmath.a"
 SUMMARY_libquadmath-staticdev = "GNU quad-precision math library - static development files"
 
-# NOTE: mudflap has been removed as of gcc 4.9 and has been superseded by the address sanitiser
-FILES_libmudflap = "${libdir}/libmudflap*.so.*"
-SUMMARY_libmudflap = "Pointer debugging library for gcc"
-FILES_libmudflap-dev = "\
-    ${libdir}/libmudflap*.so \
-    ${libdir}/libmudflap.la \
-"
-SUMMARY_libmudflap-dev = "Pointer debugging library for gcc - development files"
-FILES_libmudflap-staticdev = "${libdir}/libmudflap.a"
-SUMMARY_libmudflap-staticdev = "Pointer debugging library for gcc - static development files"
-
 FILES_libgomp = "${libdir}/libgomp*${SOLIBS}"
 SUMMARY_libgomp = "GNU OpenMP parallel programming library"
 FILES_libgomp-dev = "\
     ${libdir}/libgomp*${SOLIBSDEV} \
     ${libdir}/libgomp*.la \
     ${libdir}/libgomp.spec \
-    ${libdir}/gcc/${TARGET_SYS}/${BINV}/include/omp.h \
+    ${libdir}/${TARGET_SYS}/${BINV}/include/acc_prof.h \
+    ${libdir}/${TARGET_SYS}/${BINV}/include/omp.h \
+    ${libdir}/${TARGET_SYS}/${BINV}/include/openacc.h \
 "
 SUMMARY_libgomp-dev = "GNU OpenMP parallel programming library - development files"
 FILES_libgomp-staticdev = "${libdir}/libgomp*.a"
@@ -275,20 +277,40 @@ SUMMARY_libitm-dev = "GNU transactional memory support library - development fil
 FILES_libitm-staticdev = "${libdir}/libitm.a"
 SUMMARY_libitm-staticdev = "GNU transactional memory support library - static development files"
 
+require gcc-testsuite.inc
 
-FILES_libmpx = "${libdir}/libmpx.so.* ${libdir}/libmpxwrappers.so.*"
-SUMMARY_libmpx = "Intel Memory Protection Extension library"
-FILES_libmpx-dev = "\
-    ${libdir}/libmpxwrappers.so \
-    ${libdir}/libmpxwrappers.la \
-    ${libdir}/libmpx.so \
-    ${libdir}/libmpx.la \
-    ${libdir}/libmpx.spec \
-"
-SUMMARY_libmpx-dev = "Intel Memory Protection Extension library - development files"
-FILES_libmpx-staticdev = "${libdir}/libmpx.a ${libdir}/libmpxwrappers.a"
-SUMMARY_libmpx-staticdev = "Intel Memory Protection Extension library - static development files"
+EXTRA_OEMAKE_prepend_task-check = "${PARALLEL_MAKE} "
 
-do_package_write_ipk[depends] += "virtual/${MLPREFIX}libc:do_packagedata"
-do_package_write_deb[depends] += "virtual/${MLPREFIX}libc:do_packagedata"
-do_package_write_rpm[depends] += "virtual/${MLPREFIX}libc:do_packagedata"
+MAKE_CHECK_TARGETS ??= "check-gcc ${@" ".join("check-target-" + i for i in d.getVar("RUNTIMETARGET").split())}"
+# prettyprinters and xmethods require gdb tooling
+MAKE_CHECK_IGNORE ??= "prettyprinters.exp xmethods.exp"
+MAKE_CHECK_RUNTESTFLAGS ??= "${MAKE_CHECK_BOARDARGS} --ignore '${MAKE_CHECK_IGNORE}'"
+
+# specific host and target dependencies required for test suite running
+do_check[depends] += "dejagnu-native:do_populate_sysroot expect-native:do_populate_sysroot"
+do_check[depends] += "virtual/libc:do_populate_sysroot"
+# only depend on qemu if targeting linux user execution
+do_check[depends] += "${@'qemu-native:do_populate_sysroot' if "user" in d.getVar('TOOLCHAIN_TEST_TARGET') else ''}"
+# extend the recipe sysroot to include the built libraries (for qemu usermode)
+do_check[prefuncs] += "extend_recipe_sysroot"
+do_check[prefuncs] += "check_prepare"
+do_check[dirs] = "${WORKDIR}/dejagnu ${B}"
+do_check[nostamp] = "1"
+do_check() {
+    export DEJAGNU="${WORKDIR}/dejagnu/site.exp"
+
+    # HACK: this works around the configure setting CXX with -nostd* args
+    sed -i 's/-nostdinc++ -nostdlib++//g' $(find ${B} -name testsuite_flags | head -1)
+
+    if [ "${TOOLCHAIN_TEST_TARGET}" = "user" ]; then
+        # qemu user has issues allocating large amounts of memory
+        export G_SLICE=always-malloc
+        # no test should need more that 10G of memory, this prevents tests like pthread7-rope from leaking memory
+        ulimit -m 4194304
+        ulimit -v 10485760
+    fi
+
+    oe_runmake -i ${MAKE_CHECK_TARGETS} RUNTESTFLAGS="${MAKE_CHECK_RUNTESTFLAGS}"
+}
+addtask check after do_compile do_populate_sysroot
+

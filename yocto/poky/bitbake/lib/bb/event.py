@@ -1,5 +1,3 @@
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 """
 BitBake 'Event' implementation
 
@@ -9,31 +7,20 @@ BitBake build tools.
 
 # Copyright (C) 2003, 2004  Chris Larson
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import os, sys
-import warnings
-import pickle
-import logging
-import atexit
-import traceback
 import ast
+import atexit
+import collections
+import logging
+import pickle
+import sys
 import threading
+import traceback
 
-import bb.utils
-import bb.compat
 import bb.exceptions
+import bb.utils
 
 # This is the pid for which we should generate the event. This is set when
 # the runqueue forks off.
@@ -69,7 +56,7 @@ def set_class_handlers(h):
     _handlers = h
 
 def clean_class_handlers():
-    return bb.compat.OrderedDict()
+    return collections.OrderedDict()
 
 # Internal
 _handlers = clean_class_handlers()
@@ -136,6 +123,7 @@ def fire_class_handlers(event, d):
 ui_queue = []
 @atexit.register
 def print_ui_queue():
+    global ui_queue
     """If we're exiting before a UI has been spawned, display any queued
     LogRecords to the console."""
     logger = logging.getLogger("BitBake")
@@ -180,6 +168,7 @@ def print_ui_queue():
             logger.removeHandler(stderr)
         else:
             logger.removeHandler(stdout)
+        ui_queue = []
 
 def fire_ui_handlers(event, d):
     global _thread_lock
@@ -357,7 +346,7 @@ def set_UIHmask(handlerNum, level, debug_domains, mask):
 
 def getName(e):
     """Returns the name of a class or class instance"""
-    if getattr(e, "__name__", None) == None:
+    if getattr(e, "__name__", None) is None:
         return e.__class__.__name__
     else:
         return e.__name__
@@ -400,6 +389,10 @@ class RecipeEvent(Event):
 class RecipePreFinalise(RecipeEvent):
     """ Recipe Parsing Complete but not yet finalised"""
 
+class RecipePostKeyExpansion(RecipeEvent):
+    """ Recipe Parsing Complete but not yet finalised"""
+
+
 class RecipeTaskPreProcess(RecipeEvent):
     """
     Recipe Tasks about to be finalised
@@ -413,23 +406,6 @@ class RecipeTaskPreProcess(RecipeEvent):
 
 class RecipeParsed(RecipeEvent):
     """ Recipe Parsing Complete """
-
-class StampUpdate(Event):
-    """Trigger for any adjustment of the stamp files to happen"""
-
-    def __init__(self, targets, stampfns):
-        self._targets = targets
-        self._stampfns = stampfns
-        Event.__init__(self)
-
-    def getStampPrefix(self):
-        return self._stampfns
-
-    def getTargets(self):
-        return self._targets
-
-    stampPrefix = property(getStampPrefix)
-    targets = property(getTargets)
 
 class BuildBase(Event):
     """Base class for bitbake build events"""
@@ -536,7 +512,7 @@ class NoProvider(Event):
         extra = ''
         if not self._reasons:
             if self._close_matches:
-                extra = ". Close matches:\n  %s" % '\n  '.join(self._close_matches)
+                extra = ". Close matches:\n  %s" % '\n  '.join(sorted(set(self._close_matches)))
 
         if self._dependees:
             msg = "Nothing %sPROVIDES '%s' (but %s %sDEPENDS on or otherwise requires it)%s" % (r, self._item, ", ".join(self._dependees), r, extra)

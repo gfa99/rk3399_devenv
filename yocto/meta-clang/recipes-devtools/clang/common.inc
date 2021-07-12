@@ -3,64 +3,41 @@ FILESEXTRAPATHS =. "${FILE_DIRNAME}/clang:"
 LIC_FILES_CHKSUM = "file://llvm/LICENSE.TXT;md5=${LLVMMD5SUM} \
                     file://clang/LICENSE.TXT;md5=${CLANGMD5SUM} \
 "
-LICENSE = "NCSA"
+LICENSE = "Apache-2.0-with-LLVM-exception"
 
 BASEURI ??= "${LLVM_GIT}/llvm-project;protocol=${LLVM_GIT_PROTOCOL};branch=${BRANCH}"
 SRC_URI = "\
     ${BASEURI} \
-    ${LLVMPATCHES} \
-    ${CLANGPATCHES} \
-    ${COMPILERRTPATCHES} \
-    ${LIBCXXABIPATCHES} \
-    ${LIBCXXPATCHES} \
-    ${LLDBPATCHES} \
+    file://0001-lldb-Add-lxml2-to-linker-cmdline-of-xml-is-found.patch \
+    file://0002-libcxxabi-Find-libunwind-headers-when-LIBCXXABI_LIBU.patch \
+    file://0003-compiler-rt-support-a-new-embedded-linux-target.patch \
+    file://0004-compiler-rt-Simplify-cross-compilation.-Don-t-use-na.patch \
+    file://0005-compiler-rt-Disable-tsan-on-OE-glibc.patch \
+    file://0006-llvm-TargetLibraryInfo-Undefine-libc-functions-if-th.patch \
+    file://0007-llvm-allow-env-override-of-exe-path.patch \
+    file://0008-clang-driver-Check-sysroot-for-ldso-path.patch \
+    file://0009-clang-Driver-tools.cpp-Add-lssp_nonshared-on-musl.patch \
+    file://0010-clang-musl-ppc-does-not-support-128-bit-long-double.patch \
+    file://0011-clang-Prepend-trailing-to-sysroot.patch \
+    file://0012-clang-Look-inside-the-target-sysroot-for-compiler-ru.patch \
+    file://0013-clang-Define-releative-gcc-installation-dir.patch \
+    file://0014-clang-Fix-ldso-for-musl-on-x86-and-x32-architectures.patch \
+    file://0015-clang-scan-view-needs-python-2.x.patch \
+    file://0016-clang-Add-lpthread-and-ldl-along-with-lunwind-for-st.patch \
+    file://0017-Pass-PYTHON_EXECUTABLE-when-cross-compiling-for-nati.patch \
+    file://0018-Check-for-atomic-double-intrinsics.patch \
+    file://0019-clang-Enable-SSP-and-PIE-by-default.patch \
+    file://0020-libcxx-Add-compiler-runtime-library-to-link-step-for.patch \
+    file://0021-clang-llvm-cmake-Fix-configure-for-packages-using-fi.patch \
+    file://0022-clang-Fix-resource-dir-location-for-cross-toolchains.patch \
+    file://0023-fix-path-to-libffi.patch \
+    file://0024-clang-driver-Add-dyld-prefix-when-checking-sysroot-f.patch \
+    file://0025-libcxx-Define-__NR_futex-to-be-__NR_futex_time64-on-.patch \
+    file://0026-clang-Use-python3-in-python-scripts.patch \
 "
 
-# llvm patches
-#
-LLVMPATCHES = "\
-    file://0001-llvm-TargetLibraryInfo-Undefine-libc-functions-if-th.patch;patchdir=llvm \
-    file://0002-llvm-allow-env-override-of-exe-path.patch;patchdir=llvm \
-    file://0003-llvm-Disable-calls-to-_finite-and-other-glibc-only-f.patch;patchdir=llvm \
-"
 # Fallback to no-PIE if not set
 GCCPIE ??= ""
-
-# Clang patches
-CLANGPATCHES = "\
-    file://0001-clang-driver-Use-lib-for-ldso-on-OE.patch;patchdir=clang \
-    file://0002-clang-Driver-tools.cpp-Add-lssp_nonshared-on-musl.patch;patchdir=clang \
-    file://0003-clang-musl-ppc-does-not-support-128-bit-long-double.patch;patchdir=clang \
-    file://0004-clang-Prepend-trailing-to-sysroot.patch;patchdir=clang \
-    file://0005-clang-Look-inside-the-target-sysroot-for-compiler-ru.patch;patchdir=clang \
-    file://0006-clang-Define-releative-gcc-installation-dir.patch;patchdir=clang \
-    file://0007-clang-Fix-ldso-for-musl-on-x86-and-x32-architectures.patch;patchdir=clang \
-    file://0008-clang-scan-view-needs-python-2.x.patch;patchdir=clang \
-    file://0020-clang-link-libgcc_eh-when-using-compiler-rt.patch \
-"
-CLANGPATCHES += "${@'file://0009-clang-Enable-SSP-and-PIE-by-default.patch;patchdir=clang' if '${GCCPIE}' else ''}"
-
-# compiler-rt patches
-COMPILERRTPATCHES = "\
-    file://0001-compiler-rt-support-a-new-embedded-linux-target.patch;patchdir=compiler-rt \
-    file://0002-compiler-rt-Simplify-cross-compilation.-Don-t-use-na.patch;patchdir=compiler-rt \
-    file://0003-compiler-rt-Disable-tsan-on-OE-glibc.patch;patchdir=compiler-rt \
-    file://0004-compiler-rt-cmake-mips-Do-not-specify-target-with-OE.patch;patchdir=compiler-rt \
-"
-# libcxxabi patches
-LIBCXXABIPATCHES ="\
-    file://0001-libcxxabi-Find-libunwind-headers-when-LIBCXXABI_LIBU.patch;patchdir=libcxxabi \
-"
-
-# libc++ patches
-LIBCXXPATCHES = "\
-"
-
-# lldb patches
-LLDBPATCHES = "\
-    file://0001-lldb-Include-limits.h-for-PATH_MAX-definition.patch;patchdir=lldb \
-    file://0002-lldb-Add-lxml2-to-linker-cmdline-of-xml-is-found.patch;patchdir=lldb \
-"
 
 S = "${TMPDIR}/work-shared/llvm-project-source-${PV}-${PR}/git"
 B = "${WORKDIR}/llvm-project-source-${PV}/build.${HOST_SYS}.${TARGET_SYS}"

@@ -3,8 +3,7 @@
 
 DESCRIPTION = "Clang/LLVM based C/C++ compiler (cross-canadian for ${TARGET_ARCH} target)"
 HOMEPAGE = "http://clang.llvm.org/"
-LICENSE = "NCSA"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/NCSA;md5=1b5fdec70ee13ad8a91667f16c1959d7"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0-with-LLVM-exception;md5=0bcd48c3bdfef0c9d9fd17726e4b7dab"
 SECTION = "devel"
 
 PN = "clang-cross-canadian-${TRANSLATED_TARGET_ARCH}"
@@ -21,13 +20,13 @@ TARGET_ARCH[vardepsexclude] = "TUNE_ARCH"
 
 do_install() {
         install -d ${D}${bindir}
-	for tool in clang clang++ llvm-profdata llvm-ar llvm-ranlib llvm-nm
+	for tool in clang clang++ clang-tidy lld ld.lld llvm-profdata llvm-ar llvm-ranlib llvm-nm
 	do
 		ln -sf ../$tool ${D}${bindir}/${TARGET_PREFIX}$tool
 	done
 }
 SSTATE_SCAN_FILES += "*-clang *-clang++ *-llvm-profdata *-llvm-ar \
-                      *-llvm-ranlib *-llvm-nm"
+                      *-llvm-ranlib *-llvm-nm *-lld *-ld.lld"
 do_install_append() {
         cross_canadian_bindirlinks
 }

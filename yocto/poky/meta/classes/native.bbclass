@@ -89,6 +89,7 @@ export lt_cv_sys_lib_dlsearch_path_spec = "${libdir} ${base_libdir} /lib /lib64 
 
 NATIVE_PACKAGE_PATH_SUFFIX ?= ""
 bindir .= "${NATIVE_PACKAGE_PATH_SUFFIX}"
+sbindir .= "${NATIVE_PACKAGE_PATH_SUFFIX}"
 base_libdir .= "${NATIVE_PACKAGE_PATH_SUFFIX}"
 libdir .= "${NATIVE_PACKAGE_PATH_SUFFIX}"
 libexecdir .= "${NATIVE_PACKAGE_PATH_SUFFIX}"
@@ -118,6 +119,9 @@ PATH_prepend = "${COREBASE}/scripts/native-intercept:"
 # This class encodes staging paths into its scripts data so can only be
 # reused if we manipulate the paths.
 SSTATE_SCAN_CMD ?= "${SSTATE_SCAN_CMD_NATIVE}"
+
+# No strip sysroot when DEBUG_BUILD is enabled
+INHIBIT_SYSROOT_STRIP ?= "${@oe.utils.vartrue('DEBUG_BUILD', '1', '', d)}"
 
 python native_virtclass_handler () {
     pn = e.data.getVar("PN")
@@ -182,10 +186,13 @@ python do_addto_recipe_sysroot () {
     bb.build.exec_func("extend_recipe_sysroot", d)
 }
 addtask addto_recipe_sysroot after do_populate_sysroot
+do_addto_recipe_sysroot[deptask] = "do_populate_sysroot"
 
 inherit nopackages
 
 do_packagedata[stamp-extra-info] = ""
-do_populate_sysroot[stamp-extra-info] = ""
 
 USE_NLS = "no"
+
+RECIPERDEPTASK = "do_populate_sysroot"
+do_populate_sysroot[rdeptask] = "${RECIPERDEPTASK}"

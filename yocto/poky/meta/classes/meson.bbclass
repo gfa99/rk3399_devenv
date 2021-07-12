@@ -12,8 +12,9 @@ MESON_SOURCEPATH = "${S}"
 def noprefix(var, d):
     return d.getVar(var).replace(d.getVar('prefix') + '/', '', 1)
 
+MESON_BUILDTYPE ?= "plain"
 MESONOPTS = " --prefix ${prefix} \
-              --buildtype plain \
+              --buildtype ${MESON_BUILDTYPE} \
               --bindir ${@noprefix('bindir', d)} \
               --sbindir ${@noprefix('sbindir', d)} \
               --datadir ${@noprefix('datadir', d)} \
@@ -25,15 +26,7 @@ MESONOPTS = " --prefix ${prefix} \
               --sysconfdir ${sysconfdir} \
               --localstatedir ${localstatedir} \
               --sharedstatedir ${sharedstatedir} \
-              -Dc_args='${BUILD_CPPFLAGS} ${BUILD_CFLAGS}' \
-              -Dc_link_args='${BUILD_LDFLAGS}' \
-              -Dcpp_args='${BUILD_CPPFLAGS} ${BUILD_CXXFLAGS}' \
-              -Dcpp_link_args='${BUILD_LDFLAGS}'"
-
-MESON_TOOLCHAIN_ARGS = "${HOST_CC_ARCH}${TOOLCHAIN_OPTIONS}"
-MESON_C_ARGS = "${MESON_TOOLCHAIN_ARGS} ${CFLAGS}"
-MESON_CPP_ARGS = "${MESON_TOOLCHAIN_ARGS} ${CXXFLAGS}"
-MESON_LINK_ARGS = "${MESON_TOOLCHAIN_ARGS} ${LDFLAGS}"
+              --wrap-mode nodownload"
 
 EXTRA_OEMESON_append = " ${PACKAGECONFIG_CONFARGS}"
 
@@ -52,14 +45,34 @@ def meson_cpu_family(var, d):
     arch = d.getVar(var)
     if arch == 'powerpc':
         return 'ppc'
-    elif arch == 'powerpc64':
+    elif arch == 'powerpc64' or arch == 'powerpc64le':
         return 'ppc64'
+    elif arch == 'armeb':
+        return 'arm'
+    elif arch == 'aarch64_be':
+        return 'aarch64'
     elif arch == 'mipsel':
         return 'mips'
+    elif arch == 'mips64el':
+        return 'mips64'
     elif re.match(r"i[3-6]86", arch):
         return "x86"
+    elif arch == "microblazeel":
+        return "microblaze"
     else:
         return arch
+
+# Map our OS values to what Meson expects:
+# https://mesonbuild.com/Reference-tables.html#operating-system-names
+def meson_operating_system(var, d):
+    os = d.getVar(var)
+    if "mingw" in os:
+        return "windows"
+    # avoid e.g 'linux-gnueabi'
+    elif "linux" in os:
+        return "linux"
+    else:
+        return os
 
 def meson_endian(prefix, d):
     arch, os = d.getVar(prefix + "_ARCH"), d.getVar(prefix + "_OS")
@@ -72,7 +85,7 @@ def meson_endian(prefix, d):
         bb.fatal("Cannot determine endianism for %s-%s" % (arch, os))
 
 addtask write_config before do_configure
-do_write_config[vardeps] += "MESON_C_ARGS MESON_CPP_ARGS MESON_LINK_ARGS CC CXX LD AR NM STRIP READELF"
+do_write_config[vardeps] += "CC CXX LD AR NM STRIP READELF CFLAGS CXXFLAGS LDFLAGS"
 do_write_config() {
     # This needs to be Py to split the args into single-element lists
     cat >${WORKDIR}/meson.cross <<EOF
@@ -81,27 +94,28 @@ c = ${@meson_array('CC', d)}
 cpp = ${@meson_array('CXX', d)}
 ar = ${@meson_array('AR', d)}
 nm = ${@meson_array('NM', d)}
-ld = ${@meson_array('LD', d)}
 strip = ${@meson_array('STRIP', d)}
 readelf = ${@meson_array('READELF', d)}
 pkgconfig = 'pkg-config'
+llvm-config = 'llvm-config${LLVMVERSION}'
+cups-config = 'cups-config'
 
 [properties]
 needs_exe_wrapper = true
-c_args = ${@meson_array('MESON_C_ARGS', d)}
-c_link_args = ${@meson_array('MESON_LINK_ARGS', d)}
-cpp_args = ${@meson_array('MESON_CPP_ARGS', d)}
-cpp_link_args = ${@meson_array('MESON_LINK_ARGS', d)}
+c_args = ${@meson_array('CFLAGS', d)}
+c_link_args = ${@meson_array('LDFLAGS', d)}
+cpp_args = ${@meson_array('CXXFLAGS', d)}
+cpp_link_args = ${@meson_array('LDFLAGS', d)}
 gtkdoc_exe_wrapper = '${B}/gtkdoc-qemuwrapper'
 
 [host_machine]
-system = '${HOST_OS}'
+system = '${@meson_operating_system('HOST_OS', d)}'
 cpu_family = '${@meson_cpu_family('HOST_ARCH', d)}'
 cpu = '${HOST_ARCH}'
 endian = '${@meson_endian('HOST', d)}'
 
 [target_machine]
-system = '${TARGET_OS}'
+system = '${@meson_operating_system('TARGET_OS', d)}'
 cpu_family = '${@meson_cpu_family('TARGET_ARCH', d)}'
 cpu = '${TARGET_ARCH}'
 endian = '${@meson_endian('TARGET', d)}'
@@ -111,6 +125,10 @@ EOF
 CONFIGURE_FILES = "meson.build"
 
 meson_do_configure() {
+    # Meson requires this to be 'bfd, 'lld' or 'gold' from 0.53 onwards
+    # https://github.com/mesonbuild/meson/commit/ef9aeb188ea2bc7353e59916c18901cde90fa2b3
+    unset LD
+
     # Work around "Meson fails if /tmp is mounted with noexec #2972"
     mkdir -p "${B}/meson-private/tmp"
     export TMPDIR="${B}/meson-private/tmp"
@@ -128,6 +146,7 @@ override_native_tools() {
     export CXX="${BUILD_CXX}"
     export LD="${BUILD_LD}"
     export AR="${BUILD_AR}"
+    export STRIP="${BUILD_STRIP}"
     # These contain *target* flags but will be used as *native* flags.  The
     # correct native flags will be passed via -Dc_args and so on, unset them so
     # they don't interfere with tools invoked by Meson (such as g-ir-scanner)
@@ -145,6 +164,16 @@ meson_do_configure_prepend_class-nativesdk() {
 meson_do_configure_prepend_class-native() {
     export PKG_CONFIG="pkg-config-native"
 }
+
+python meson_do_qa_configure() {
+    import re
+    warn_re = re.compile(r"^WARNING: Cross property (.+) is using default value (.+)$", re.MULTILINE)
+    with open(d.expand("${B}/meson-logs/meson-log.txt")) as logfile:
+        log = logfile.read()
+    for (prop, value) in warn_re.findall(log):
+        bb.warn("Meson cross property %s used without explicit assignment, defaulting to %s" % (prop, value))
+}
+do_configure[postfuncs] += "meson_do_qa_configure"
 
 do_compile[progress] = "outof:^\[(\d+)/(\d+)\]\s+"
 meson_do_compile() {

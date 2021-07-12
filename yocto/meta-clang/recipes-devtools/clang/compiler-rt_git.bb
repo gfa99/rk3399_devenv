@@ -3,79 +3,74 @@
 
 DESCRIPTION = "LLVM based C/C++ compiler Runtime"
 HOMEPAGE = "http://compiler-rt.llvm.org/"
-LICENSE = "MIT | NCSA"
 SECTION = "base"
 
 require clang.inc
 require common-source.inc
 
-inherit cmake pkgconfig pythonnative
+inherit cmake pkgconfig python3native
 
 
-LIC_FILES_CHKSUM = "file://compiler-rt/LICENSE.TXT;md5=92bfbe70fc44c6e5efc6403a31180ed7; \
-"
+LIC_FILES_CHKSUM = "file://compiler-rt/LICENSE.TXT;md5=d846d1d65baf322d4c485d6ee54e877a"
 
-BASEDEPENDS_remove_toolchain-clang_class-target = "compiler-rt"
-BASEDEPENDS_remove_toolchain-clang_class-target = "libcxx"
-TARGET_CXXFLAGS_remove_toolchain-clang = " -stdlib=libc++ "
-TUNE_CCARGS_remove = "-no-integrated-as --rtlib=compiler-rt"
-DEPENDS += "ninja-native"
+LIBCPLUSPLUS = ""
+COMPILER_RT = ""
+TUNE_CCARGS_remove = "-no-integrated-as"
+
+INHIBIT_DEFAULT_DEPS = "1"
+
+DEPENDS += "ninja-native clang-cross-${TARGET_ARCH} virtual/${MLPREFIX}libc virtual/${TARGET_PREFIX}compilerlibs virtual/crypt"
 DEPENDS_append_class-nativesdk = " clang-native"
 
-THUMB_TUNE_CCARGS = ""
-#TUNE_CCARGS += "-nostdlib"
+PACKAGECONFIG ??= ""
+PACKAGECONFIG[crt] = "-DCOMPILER_RT_BUILD_CRT:BOOL=ON,-DCOMPILER_RT_BUILD_CRT:BOOL=OFF"
 
 HF = "${@ bb.utils.contains('TUNE_CCARGS_MFLOAT', 'hard', 'hf', '', d)}"
 HF[vardepvalue] = "${HF}"
-EXTRA_OECMAKE += "-DCOMPILER_RT_STANDALONE_BUILD=ON \
+
+OECMAKE_TARGET_COMPILE = "compiler-rt"
+OECMAKE_TARGET_INSTALL = "install-compiler-rt install-compiler-rt-headers"
+OECMAKE_SOURCEPATH = "${S}/llvm"
+EXTRA_OECMAKE += "-DCOMPILER_RT_STANDALONE_BUILD=OFF \
                   -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=${HOST_ARCH}${HF}${HOST_VENDOR}-${HOST_OS} \
                   -DCOMPILER_RT_BUILD_XRAY=OFF \
-                  -G Ninja ${S}/compiler-rt \
-"
-EXTRA_OECMAKE_append_class-target = "\
+                  -DLLVM_ENABLE_PROJECTS='compiler-rt' \
+                  -DCMAKE_RANLIB=${STAGING_BINDIR_TOOLCHAIN}/${TARGET_PREFIX}llvm-ranlib \
                   -DCMAKE_AR=${STAGING_BINDIR_TOOLCHAIN}/${TARGET_PREFIX}llvm-ar \
                   -DCMAKE_NM=${STAGING_BINDIR_TOOLCHAIN}/${TARGET_PREFIX}llvm-nm \
-                  -DCMAKE_RANLIB=${STAGING_BINDIR_TOOLCHAIN}/${TARGET_PREFIX}llvm-ranlib \
+                  -DLLVM_LIBDIR_SUFFIX=${LLVM_LIBDIR_SUFFIX} \
 "
+
 EXTRA_OECMAKE_append_class-nativesdk = "\
                -DLLVM_TABLEGEN=${STAGING_BINDIR_NATIVE}/llvm-tblgen \
                -DCLANG_TABLEGEN=${STAGING_BINDIR_NATIVE}/clang-tblgen \
 "
 
-EXTRA_OECMAKE_append_libc-musl = " -DCOMPILER_RT_BUILD_SANITIZERS=OFF -DCOMPILER_RT_BUILD_XRAY=OFF "
-EXTRA_OECMAKE_append_mipsarch = "-DCOMPILER_RT_BUILD_SANITIZERS=OFF -DCOMPILER_RT_BUILD_XRAY=OFF "
-
-do_compile() {
-	ninja ${PARALLEL_MAKE}
-}
-
-do_install() {
-	DESTDIR=${D} ninja ${PARALLEL_MAKE} install
-}
-
+EXTRA_OECMAKE_append_libc-musl = " -DCOMPILER_RT_BUILD_SANITIZERS=OFF "
+CXXFLAGS_append_libc-musl = " -D_LIBCPP_HAS_MUSL_LIBC=ON "
+EXTRA_OECMAKE_append_mipsarch = " -DCOMPILER_RT_BUILD_SANITIZERS=OFF "
+EXTRA_OECMAKE_append_powerpc = " -DCOMPILER_RT_DEFAULT_TARGET_ARCH=powerpc "
 
 do_install_append () {
-	if [ -d ${D}${libdir}/linux ]; then
-		for f in `find ${D}${libdir}/linux -maxdepth 1 -type f`
-		do
-			install -D -m 0644 $f ${D}${libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/lib/linux/`basename $f`
-			rm $f
-		done
-		rmdir ${D}${libdir}/linux
-	fi
-	for f in `find ${D}${exec_prefix} -maxdepth 1 -name '*.txt' -type f`
-	do
-		install -D -m 0644  $f ${D}${libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/`basename $f`
-		rm $f
-	done
+    if [ -n "${LLVM_LIBDIR_SUFFIX}" ]; then
+        mkdir -p ${D}${nonarch_libdir}
+        mv ${D}${libdir}/clang ${D}${nonarch_libdir}/clang
+        rmdir --ignore-fail-on-non-empty ${D}${libdir}
+    fi
 }
 
 FILES_SOLIBSDEV = ""
-FILES_${PN} += "${libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/lib/linux/lib*${SOLIBSDEV} \
-                ${libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/*.txt"
-FILES_${PN}-staticdev += "${libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/lib/linux/*.a"
-FILES_${PN}-dev += "${datadir} ${libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/lib/linux/*.syms"
-INSANE_SKIP_${PN} = "dev-so"
+FILES_${PN} += "${nonarch_libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/lib/linux/lib*${SOLIBSDEV} \
+                ${nonarch_libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/*.txt \
+                ${nonarch_libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/share/*.txt"
+FILES_${PN}-staticdev += "${nonarch_libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/lib/linux/*.a"
+FILES_${PN}-dev += "${datadir} ${nonarch_libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/lib/linux/*.syms \
+                    ${nonarch_libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/include \
+                    ${nonarch_libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/lib/linux/clang_rt.crt*.o \
+                    ${nonarch_libdir}/clang/${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}/lib/linux/libclang_rt.asan-preinit*.a \
+                   "
+INSANE_SKIP_${PN} = "dev-so libdir"
+INSANE_SKIP_${PN}-dbg = "libdir"
 
 #PROVIDES_append_class-target = "\
 #        virtual/${TARGET_PREFIX}compilerlibs \
@@ -93,4 +88,5 @@ BBCLASSEXTEND = "native nativesdk"
 ALLOW_EMPTY_${PN} = "1"
 ALLOW_EMPTY_${PN}-dev = "1"
 
-TOOLCHAIN = "clang"
+TOOLCHAIN_forcevariable = "clang"
+SYSROOT_DIRS_append_class-target = " ${nonarch_libdir}"

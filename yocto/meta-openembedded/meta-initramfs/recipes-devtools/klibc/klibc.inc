@@ -5,12 +5,9 @@ SECTION = "libs"
 LICENSE = "BSD-3-Clause & GPL-2.0 & MIT & Zlib"
 LIC_FILES_CHKSUM = "file://usr/klibc/LICENSE;md5=d75181f10e998c21eb147f6d2e43ce8b"
 DEPENDS = "linux-libc-headers perl-native"
-SRCREV = "4d19974d7020488f63651244e1f9f51727c3f66c"
 
-SRC_URI = "git://git.kernel.org/pub/scm/libs/klibc/klibc.git \
+SRC_URI = "${KERNELORG_MIRROR}/linux/libs/klibc/2.0/klibc-${PV}.tar.xz \
            ${ARMPATCHES} \
-           file://klibc-linux-libc-dev.patch \
-           file://staging.patch \
            file://klcc-consider-sysroot.patch \
            file://klcc-cross-accept-clang-options.patch \
            file://0001-dash-Specify-format-string-in-fmtstr.patch \
@@ -29,11 +26,18 @@ SRC_URI = "git://git.kernel.org/pub/scm/libs/klibc/klibc.git \
 
 ARMPATCHES ?= ""
 
-ARMPATCHES_arm = "file://klibc-config-eabi.patch \
+ARMPATCHES_arm = " \
                   file://armv4-fix-v4bx.patch \
                  "
 
-S = "${WORKDIR}/git"
+SRC_URI[md5sum] = "712f8bc1a069e03d92584b7f5380c521"
+SRC_URI[sha256sum] = "abef2637ca823485d9c90ce9512e2b08a65047ec4da204635eeaef95a41a9122"
+
+S = "${WORKDIR}/klibc-${PV}"
+
+OPTFLAGS = "${TUNE_CCARGS} -Os -fcommon"
+OPTFLAGS_append_toolchain-clang = " -fno-builtin-bcmp"
+OPTFLAGS_append_toolchain-clang_mipsarch = " -no-integrated-as"
 
 PARALLEL_MAKE = ""
 EXTRA_OEMAKE = "'KLIBCARCH=${KLIBC_ARCH}' \
@@ -45,11 +49,9 @@ EXTRA_OEMAKE = "'KLIBCARCH=${KLIBC_ARCH}' \
                 'INSTALLDIR=${libdir}/klibc' \
                 'SHLIBDIR=${libdir}' \
                 '${KLIBCTHUMB}' \
-                'KLIBCOPTFLAGS=${TUNE_CCARGS} -Os' \
+                'KLIBCOPTFLAGS=${OPTFLAGS}' \
                  V=1 \
                 "
-EXTRA_OEMAKE += "'EXTRA_KLIBCAFLAGS=${SECURITY_CFLAGS} -Wa,--noexecstack' \
-                 'EXTRA_KLIBCLDFLAGS=${SECURITY_LDFLAGS} -z noexecstack'"
 
 export FIX_ARMV4_EABI_BX = "${FIX_V4BX}"
 KLIBCTHUMB = "${@['CONFIG_KLIBC_THUMB=n', 'CONFIG_KLIBC_THUMB=y'][(d.getVar('ARM_INSTRUCTION_SET') == 'thumb')]}"
@@ -75,11 +77,5 @@ KLIBC_ARCH_x86 = "i386"
 KLIBC_ARCH_x86-64 = "x86_64"
 KLIBC_ARCH_powerpc = "ppc"
 KLIBC_ARCH_powerpc64 = "ppc64"
+KLIBC_ARCH_powerpc64le = "ppc64"
 THIS_LIBKLIBC = "libklibc (= ${PV}-${PR})"
-
-GCCPIE ?= ""
-SECURITY_LDFLAGS = "${@'-z relro -z now -pie' if '${GCCPIE}' else ''}"
-SECURITY_LDFLAGS_mips = ""
-SECURITY_LDFLAGS_mipsel = ""
-SECURITY_LDFLAGS_mips64 = ""
-SECURITY_LDFLAGS_mips64el = ""

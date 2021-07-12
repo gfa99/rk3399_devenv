@@ -8,7 +8,7 @@ PACKAGES = "${PN}"
 
 # By default, packagegroup packages do not depend on a certain architecture.
 # Only if dependencies are modified by MACHINE_FEATURES, packages
-# need to be set to MACHINE_ARCH after inheriting packagegroup.bbclass
+# need to be set to MACHINE_ARCH before inheriting packagegroup.bbclass
 PACKAGE_ARCH ?= "all"
 
 # Fully expanded - so it applies the overrides as well
@@ -47,6 +47,8 @@ deltask do_configure
 deltask do_compile
 deltask do_install
 deltask do_populate_sysroot
+
+INHIBIT_DEFAULT_DEPS = "1"
 
 python () {
     if bb.data.inherits_class('nativesdk', d):

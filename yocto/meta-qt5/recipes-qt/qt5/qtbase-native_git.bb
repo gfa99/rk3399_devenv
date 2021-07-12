@@ -10,15 +10,15 @@ LIC_FILES_CHKSUM = " \
     file://LICENSE.GPL3;md5=d32239bcb673463ab874e80d47fae504 \
     file://LICENSE.GPL3-EXCEPT;md5=763d8c535a234d9a3fb682c7ecb6c073 \
     file://LICENSE.FDL;md5=6d9f2a9af4c8b8c3c769f6cc1b6aaf7e \
-    file://LICENSE.QT-LICENSE-AGREEMENT-4.0;md5=948f8877345cd66106f11031977a4625 \
+    file://LICENSE.QT-LICENSE-AGREEMENT;md5=c8b6dd132d52c6e5a545df07a4e3e283 \
 "
 
 require qt5-native.inc
 require qt5-git.inc
 
 # common for qtbase-native, qtbase-nativesdk and qtbase
-# Patches from https://github.com/meta-qt5/qtbase/commits/b5.11-shared
-# 5.11.meta-qt5-shared.14
+# Patches from https://github.com/meta-qt5/qtbase/commits/b5.15-shared
+# 5.15.meta-qt5-shared.2
 SRC_URI += "\
     file://0001-Add-linux-oe-g-platform.patch \
     file://0002-cmake-Use-OE_QMAKE_PATH_EXTERNAL_HOST_BINS.patch \
@@ -32,26 +32,25 @@ SRC_URI += "\
     file://0010-linux-clang-Invert-conditional-for-defining-QT_SOCKL.patch \
     file://0011-tst_qlocale-Enable-QT_USE_FENV-only-on-glibc.patch \
     file://0012-mkspecs-common-gcc-base.conf-Use-I-instead-of-isyste.patch \
-    file://0013-Upgrade-double-conversion-to-v3.0.0.patch \
-    file://0014-double-conversion-support-AARCH64EB-and-arm-BE.patch \
-    file://0015-Disable-ltcg-for-host_build.patch \
-    file://0016-Qt5GuiConfigExtras.cmake.in-cope-with-variable-path-.patch \
-    file://0017-corelib-Include-sys-types.h-for-uint32_t.patch \
-    file://0018-Define-QMAKE_CXX.COMPILER_MACROS-for-clang-on-linux.patch \
-    file://0019-Fix-compile-issue-with-gcc-9.patch \
+    file://0013-Disable-ltcg-for-host_build.patch \
+    file://0014-Qt5GuiConfigExtras.cmake.in-cope-with-variable-path-.patch \
+    file://0015-corelib-Include-sys-types.h-for-uint32_t.patch \
+    file://0016-Define-QMAKE_CXX.COMPILER_MACROS-for-clang-on-linux.patch \
+    file://0017-input-Make-use-of-timeval-portable-for-64bit-time_t.patch \
+    file://0018-tst_qpainter-FE_-macros-are-not-defined-for-every-pl.patch \
 "
 
 # common for qtbase-native and nativesdk-qtbase
-# Patches from https://github.com/meta-qt5/qtbase/commits/b5.11-native
-# 5.11.meta-qt5-native.14
+# Patches from https://github.com/meta-qt5/qtbase/commits/b5.15-native
+# 5.15.meta-qt5-native.2
 SRC_URI += " \
-    file://0020-Always-build-uic-and-qvkgen.patch \
-    file://0021-Avoid-renameeat2-for-native-sdk-builds.patch \
+    file://0019-Always-build-uic-and-qvkgen.patch \
+    file://0020-Avoid-renameeat2-for-native-sdk-builds.patch \
 "
 
 # only for qtbase-native
 SRC_URI += " \
-    file://0022-Bootstrap-without-linkat-feature.patch \
+    file://0021-Bootstrap-without-linkat-feature.patch \
 "
 
 CLEANBROKEN = "1"
@@ -59,22 +58,25 @@ CLEANBROKEN = "1"
 XPLATFORM_toolchain-clang = "linux-oe-clang"
 XPLATFORM ?= "linux-oe-g++"
 
-PACKAGECONFIG_CONFARGS = " \
+PACKAGECONFIG ?= ""
+PACKAGECONFIG[gui] = "-gui -qpa offscreen,-no-gui,"
+PACKAGECONFIG[imageformats] = "-qt-libpng -qt-libjpeg -gif -ico, -no-libpng -no-libjpeg -no-ico -no-gif,"
+PACKAGECONFIG[openssl] = "-openssl,-no-openssl,openssl"
+
+QT_CONFIG_FLAGS = " \
     -sysroot ${STAGING_DIR_NATIVE} \
+    -L${STAGING_LIBDIR_NATIVE} \
     -no-gcc-sysroot \
     -system-zlib \
     -qt-pcre \
-    -no-libjpeg \
-    -no-libpng \
-    -no-gif \
+    -qt-doubleconversion \
     -no-accessibility \
     -no-cups \
-    -no-gui \
     -no-sql-mysql \
     -no-sql-sqlite \
     -no-sql-psql \
     -no-opengl \
-    -no-openssl \
+    -no-vulkan \
     -no-xcb \
     -no-icu \
     -verbose \
@@ -99,6 +101,7 @@ PACKAGECONFIG_CONFARGS = " \
     -no-rpath \
     -no-feature-linkat \
     -platform ${XPLATFORM} \
+    ${PACKAGECONFIG_CONFARGS} \
 "
 
 # for qtbase configuration we need default settings
@@ -114,7 +117,7 @@ do_configure_prepend() {
     # Avoid qmake error "Cannot read [...]/usr/lib/qt5/mkspecs/oe-device-extra.pri: No such file or directory"
     touch ${S}/mkspecs/oe-device-extra.pri
 
-    MAKEFLAGS="${PARALLEL_MAKE}" ${S}/configure -${QT_EDITION} -confirm-license ${PACKAGECONFIG_CONFARGS} || die "Configuring qt failed. PACKAGECONFIG_CONFARGS was ${PACKAGECONFIG_CONFARGS}"
+    MAKEFLAGS="${PARALLEL_MAKE}" ${S}/configure -${QT_EDITION} -confirm-license ${QT_CONFIG_FLAGS} || die "Configuring qt failed. QT_CONFIG_FLAGS was ${QT_CONFIG_FLAGS}"
 }
 
 do_install() {
@@ -135,11 +138,9 @@ do_install() {
         done
     fi
 
-    install -m 755 ${B}/bin/qfloat16-tables ${D}${OE_QMAKE_PATH_BINS}
-
     # since 5.9.2 something sets a very strange path to mkspec ("${_qt5Core_install_prefix}/../../../../../../../../../../usr/lib/qt5//mkspecs/linux-oe-g++")
     # override this until somebody finds a better way
     echo 'set(_qt5_corelib_extra_includes "${_qt5Core_install_prefix}/lib${QT_DIR_NAME}/mkspecs/linux-oe-g++")' > ${D}${libdir}/cmake/Qt5Core/Qt5CoreConfigExtrasMkspecDir.cmake
 }
 
-SRCREV = "08de243eaa007597c2bfbc97d3d14e2f821ac4be"
+SRCREV = "f6fe4bbab7c0a390b96098b1ccf2373547a4baf9"

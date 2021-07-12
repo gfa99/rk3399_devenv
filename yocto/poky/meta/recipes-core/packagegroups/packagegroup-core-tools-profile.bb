@@ -10,7 +10,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit packagegroup
 
-PROFILE_TOOLS_X = "${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'sysprof', '', d)}"
+PROFILE_TOOLS_X = ""
 # sysprof doesn't support aarch64 and nios2
 PROFILE_TOOLS_X_aarch64 = ""
 PROFILE_TOOLS_X_nios2 = ""
@@ -28,6 +28,8 @@ PROFILETOOLS = "\
     "
 PERF = "perf"
 PERF_libc-musl = ""
+PERF_libc-musl_arm = "perf"
+PERF_riscv32 = ""
 
 # systemtap needs elfutils which is not fully buildable on some arches/libcs
 SYSTEMTAP = "systemtap"
@@ -35,19 +37,12 @@ SYSTEMTAP_libc-musl = ""
 SYSTEMTAP_nios2 = ""
 SYSTEMTAP_riscv64 = ""
 
-# lttng-ust uses sched_getcpu() which is not there on for some platforms.
-LTTNGUST = "lttng-ust"
-LTTNGUST_libc-musl = ""
-LTTNGUST_riscv64 = ""
-
 LTTNGTOOLS = "lttng-tools"
-LTTNGTOOLS_libc-musl = ""
-LTTNGTOOLS_riscv64 = ""
-
-LTTNGMODULES = "lttng-modules"
-LTTNGMODULES_riscv64 = ""
+LTTNGTOOLS_arc = ""
+LTTNGTOOLS_riscv32 = ""
 
 BABELTRACE = "babeltrace"
+BABELTRACE2 = "babeltrace2"
 
 # valgrind does not work on the following configurations/architectures
 
@@ -62,15 +57,15 @@ VALGRIND_armv6 = ""
 VALGRIND_armeb = ""
 VALGRIND_aarch64 = ""
 VALGRIND_riscv64 = ""
+VALGRIND_powerpc = "${@bb.utils.contains('TARGET_FPU', 'soft', '', 'valgrind', d)}"
 VALGRIND_linux-gnux32 = ""
 VALGRIND_linux-gnun32 = ""
 
 RDEPENDS_${PN} = "\
     ${PROFILETOOLS} \
-    ${LTTNGUST} \
     ${LTTNGTOOLS} \
-    ${LTTNGMODULES} \
     ${BABELTRACE} \
+    ${BABELTRACE2} \
     ${SYSTEMTAP} \
     ${VALGRIND} \
     "

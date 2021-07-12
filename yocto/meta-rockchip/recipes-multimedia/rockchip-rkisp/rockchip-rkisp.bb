@@ -12,36 +12,40 @@ DEPENDS = "coreutils-native chrpath-replacement-native libdrm"
 RDEPENDS_${PN}-tests = "${PN}"
 RDEPENDS_${PN}-server = "${PN}"
 
-SRCREV = "861f69c45bcc4f659307191368e6c11bdd4ac47b"
+PV_append = "+git${SRCPV}"
+
+inherit freeze-rev
+
+SRCREV = "66874dce46531ccaa3534fcddc5f89415f6349d3"
 SRC_URI = " \
-	git://github.com/rockchip-linux/camera_engine_rkisp.git;branch=master \
+	git://github.com/JeffyCN/mirrors.git;branch=camera_engine_rkisp; \
 	file://rkisp_daemons.sh \
 "
 
 S = "${WORKDIR}/git"
 
 do_configure() {
-        if echo ${TUNE_FEATURES} | grep -wq arm; then
+	if echo ${TUNE_FEATURES} | grep -wq arm; then
 		ln -sf glib-2.0-32 ext/rkisp/usr/include/glib-2.0
 		ln -sf lib32 ext/rkisp/usr/lib
 		ln -sf lib32 plugins/3a/rkiq/aec/lib
 		ln -sf lib32 plugins/3a/rkiq/af/lib
 		ln -sf lib32 plugins/3a/rkiq/awb/lib
-        else
+	else
 		ln -sf glib-2.0-64 ext/rkisp/usr/include/glib-2.0
 		ln -sf lib64 ext/rkisp/usr/lib
 		ln -sf lib64 plugins/3a/rkiq/aec/lib
 		ln -sf lib64 plugins/3a/rkiq/af/lib
 		ln -sf lib64 plugins/3a/rkiq/awb/lib
-        fi
+	fi
 }
 
 do_compile() {
-        if echo ${TUNE_FEATURES} | grep -wq arm; then
+	if echo ${TUNE_FEATURES} | grep -wq arm; then
 		ARCH=arm
-        else
+	else
 		ARCH=aarch64
-        fi
+	fi
 
 	oe_runmake ARCH="${ARCH}" \
 		TARGET_GCC="${CC} ${CFLAGS} ${LDFLAGS}" \
@@ -52,28 +56,28 @@ do_compile() {
 do_install() {
 	chrpath -d build/bin/*
 
-        install -d ${D}${bindir}
-        install -m 0755 build/bin/rkisp_demo ${D}${bindir}
-        install -m 0755 build/bin/rkisp_3A_server ${D}${bindir}
+	install -d ${D}${bindir}
+	install -m 0755 build/bin/rkisp_demo ${D}${bindir}
+	install -m 0755 build/bin/rkisp_3A_server ${D}${bindir}
 
-        install -d ${D}${sysconfdir}/iqfiles
-        install -m 0644 iqfiles/*.xml ${D}${sysconfdir}/iqfiles/
+	install -d ${D}${sysconfdir}/iqfiles
+	install -m 0644 iqfiles/*.xml ${D}${sysconfdir}/iqfiles/
 
-        install -d ${D}${libdir}
-        install -m 0644 build/lib/librkisp.so ${D}${libdir}
+	install -d ${D}${libdir}
+	install -m 0644 build/lib/librkisp.so ${D}${libdir}
 
 	chrpath -d ${D}${libdir}/librkisp.so
 
-        install -d ${D}${libdir}/rkisp/ae
-        install -m 0644 plugins/3a/rkiq/aec/lib/librkisp_aec.so \
+	install -d ${D}${libdir}/rkisp/ae
+	install -m 0644 plugins/3a/rkiq/aec/lib/librkisp_aec.so \
 		${D}${libdir}/rkisp/ae/
 
-        install -d ${D}${libdir}/rkisp/af
-        install -m 0644 plugins/3a/rkiq/af/lib/librkisp_af.so \
+	install -d ${D}${libdir}/rkisp/af
+	install -m 0644 plugins/3a/rkiq/af/lib/librkisp_af.so \
 		${D}${libdir}/rkisp/af/
 
-        install -d ${D}${libdir}/rkisp/awb
-        install -m 0644 plugins/3a/rkiq/awb/lib/librkisp_awb.so \
+	install -d ${D}${libdir}/rkisp/awb
+	install -m 0644 plugins/3a/rkiq/awb/lib/librkisp_awb.so \
 		${D}${libdir}/rkisp/awb/
 
 	chrpath -d ${D}${libdir}/rkisp/*/*.so

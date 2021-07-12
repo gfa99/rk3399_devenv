@@ -1,3 +1,1 @@
-NATIVESDKCLANG ?= "nativesdk-clang"
-
-RDEPENDS_${PN} += "${NATIVESDKCLANG}"
+RDEPENDS_${PN} += "${@bb.utils.contains('CLANGSDK', '1', 'nativesdk-clang', '', d)}"

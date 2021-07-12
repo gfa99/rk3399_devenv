@@ -3,79 +3,71 @@
 
 DESCRIPTION = "libc++ is a new implementation of the C++ standard library, targeting C++11"
 HOMEPAGE = "http://libcxx.llvm.org/"
-LICENSE = "MIT | NCSA"
 SECTION = "base"
 
 require clang.inc
 require common-source.inc
 
-inherit cmake pythonnative
+inherit cmake python3native
+
+PACKAGECONFIG ??= "compiler-rt exceptions ${@bb.utils.contains("RUNTIME", "llvm", "unwind", "", d)}"
+PACKAGECONFIG_append_armv5 = " no-atomics"
+
+PACKAGECONFIG[unwind] = "-DLIBCXXABI_USE_LLVM_UNWINDER=ON -DLIBCXXABI_ENABLE_STATIC_UNWINDER=ON -DLIBCXXABI_STATICALLY_LINK_UNWINDER_IN_SHARED_LIBRARY=ON -DLIBCXXABI_STATICALLY_LINK_UNWINDER_IN_STATIC_LIBRARY=ON,-DLIBCXXABI_USE_LLVM_UNWINDER=OFF,,"
+PACKAGECONFIG[exceptions] = "-DLIBCXXABI_ENABLE_EXCEPTIONS=ON -DDLIBCXX_ENABLE_EXCEPTIONS=ON,-DLIBCXXABI_ENABLE_EXCEPTIONS=OFF -DLIBCXX_ENABLE_EXCEPTIONS=OFF -DCMAKE_REQUIRED_FLAGS='-fno-exceptions',"
+PACKAGECONFIG[no-atomics] = "-D_LIBCXXABI_HAS_ATOMIC_BUILTINS=OFF -DCMAKE_SHARED_LINKER_FLAGS='-latomic',,"
+PACKAGECONFIG[compiler-rt] = ",,compiler-rt"
 
 DEPENDS += "ninja-native"
-BASEDEPENDS_remove_toolchain-clang = "libcxx"
-TARGET_CXXFLAGS_remove_toolchain-clang = " -stdlib=libc++ "
+DEPENDS_append_class-target = " clang-cross-${TARGET_ARCH} virtual/${MLPREFIX}libc virtual/${TARGET_PREFIX}compilerlibs"
 
-PACKAGECONFIG ??= "unwind"
-PACKAGECONFIG_powerpc = ""
-PACKAGECONFIG_mipsarch = ""
-PACKAGECONFIG_riscv64 = ""
-PACKAGECONFIG[unwind] = "-DLIBCXXABI_USE_LLVM_UNWINDER=ON -DLIBCXXABI_LIBUNWIND_INCLUDES=${S}/projects/libunwind/include, -DLIBCXXABI_USE_LLVM_UNWINDER=OFF,"
+LIBCPLUSPLUS = ""
+COMPILER_RT ?= "${@bb.utils.contains("PACKAGECONFIG", "compiler-rt", "-rtlib=compiler-rt", "", d)} ${UNWINDLIB}"
+UNWINDLIB ?= "${@bb.utils.contains("RUNTIME", "gnu", "--unwindlib=libgcc", "", d)}"
 
-PROVIDES += "${@bb.utils.contains('PACKAGECONFIG', 'unwind', 'libunwind', '', d)}"
+INHIBIT_DEFAULT_DEPS = "1"
 
-LIC_FILES_CHKSUM = "file://libcxx/LICENSE.TXT;md5=7b3a0e1b99822669d630011defe9bfd9; \
-                    file://libcxxabi/LICENSE.TXT;md5=3600117b7c18121ab04c53e4615dc36e \
-                    file://libunwind/LICENSE.TXT;md5=7ea986af7f70eaea5a297dd2744c79a5 \
+LIC_FILES_CHKSUM = "file://libcxx/LICENSE.TXT;md5=55d89dd7eec8d3b4204b680e27da3953 \
+                    file://libcxxabi/LICENSE.TXT;md5=7b9334635b542c56868400a46b272b1e \
+                    file://libunwind/LICENSE.TXT;md5=f66970035d12f196030658b11725e1a1 \
 "
-THUMB_TUNE_CCARGS = ""
-#TUNE_CCARGS += "-nostdlib"
 
+LLVM_LIBDIR_SUFFIX_powerpc64 = "64"
+
+OECMAKE_TARGET_COMPILE = "cxxabi cxx"
+OECMAKE_TARGET_INSTALL = "install-cxx install-cxxabi"
+OECMAKE_SOURCEPATH = "${S}/llvm"
 EXTRA_OECMAKE += "\
-                  -DLIBCXX_CXX_ABI=libcxxabi \
-                  -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON \
-                  -DCXX_SUPPORTS_CXX11=ON \
+                  -DCMAKE_CROSSCOMPILING=ON \
+                  -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON \
+                  -DLLVM_ENABLE_RTTI=ON \
+                  -DLIBUNWIND_ENABLE_SHARED=OFF \
+                  -DLIBUNWIND_ENABLE_THREADS=OFF \
+                  -DLIBUNWIND_WEAK_PTHREAD_LIB=ON \
+                  -DLIBUNWIND_ENABLE_CROSS_UNWINDING=ON \
+                  -DLIBCXXABI_INCLUDE_TESTS=OFF \
+                  -DLIBCXXABI_ENABLE_SHARED=ON \
                   -DLIBCXXABI_LIBCXX_INCLUDES=${S}/libcxx/include \
+                  -DLIBCXX_CXX_ABI=libcxxabi \
                   -DLIBCXX_CXX_ABI_INCLUDE_PATHS=${S}/libcxxabi/include \
-                  -DLIBCXX_CXX_ABI_LIBRARY_PATH=${B}/lib \
+                  -DLIBCXX_CXX_ABI_LIBRARY_PATH=${B}/lib${LLVM_LIBDIR_SUFFIX} \
+                  -DCMAKE_AR=${STAGING_BINDIR_TOOLCHAIN}/${AR} \
+                  -DCMAKE_NM=${STAGING_BINDIR_TOOLCHAIN}/${NM} \
+                  -DCMAKE_RANLIB=${STAGING_BINDIR_TOOLCHAIN}/${RANLIB} \
                   -DLLVM_ENABLE_PROJECTS='libcxx;libcxxabi;libunwind' \
-                  -G Ninja \
-                  ${S}/llvm \
-"
-
-EXTRA_OECMAKE_append_class-target = "\
-                  -DCMAKE_AR=${STAGING_BINDIR_TOOLCHAIN}/${TARGET_PREFIX}llvm-ar \
-                  -DCMAKE_NM=${STAGING_BINDIR_TOOLCHAIN}/${TARGET_PREFIX}llvm-nm \
-                  -DCMAKE_RANLIB=${STAGING_BINDIR_TOOLCHAIN}/${TARGET_PREFIX}llvm-ranlib \
+                  -DLLVM_LIBDIR_SUFFIX=${LLVM_LIBDIR_SUFFIX} \
 "
 
 EXTRA_OECMAKE_append_class-native = " -DLIBCXX_ENABLE_ABI_LINKER_SCRIPT=OFF"
+
 EXTRA_OECMAKE_append_class-nativesdk = " -DLIBCXX_ENABLE_ABI_LINKER_SCRIPT=OFF"
+
 EXTRA_OECMAKE_append_libc-musl = " -DLIBCXX_HAS_MUSL_LIBC=ON "
 
-do_compile() {
-
-	ninja -v ${PARALLEL_MAKE} cxxabi
-	ninja -v ${PARALLEL_MAKE} cxx
-	if ${@bb.utils.contains('PACKAGECONFIG', 'unwind', 'true', 'false', d)}; then
-		ninja -v ${PARALLEL_MAKE} unwind
-	fi
-
-}
-
-do_install() {
-	DESTDIR=${D} ninja ${PARALLEL_MAKE} install-cxxabi
-	DESTDIR=${D} ninja ${PARALLEL_MAKE} install-cxx
-	if ${@bb.utils.contains('PACKAGECONFIG', 'unwind', 'true', 'false', d)}; then
-		DESTDIR=${D} ninja ${PARALLEL_MAKE} install-unwind
-	fi
-}
-
-PACKAGES += "${@bb.utils.contains('PACKAGECONFIG', 'unwind', 'libunwind', '', d)}"
-FILES_libunwind += "${libdir}/libunwind.so.*"
+CXXFLAGS_append_armv5 = " -mfpu=vfp2"
 
 ALLOW_EMPTY_${PN} = "1"
 
-RDEPENDS_${PN}-dev += "${PN}-staticdev"
-
 BBCLASSEXTEND = "native nativesdk"
 TOOLCHAIN = "clang"
+

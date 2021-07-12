@@ -1,8 +1,12 @@
 SUMMARY = "Modern 3D graphics API with associated utility APIs"
-HOMEPAGE = "http://wiki.clutter-project.org/wiki/Cogl"
+DESCRIPTION = "Cogl is a small open source library for using 3D graphics \
+hardware for rendering. The API departs from the flat state machine style of \
+OpenGL and is designed to make it easy to write orthogonal components that \
+can render without stepping on each others toes."
+HOMEPAGE = "https://gitlab.gnome.org/GNOME/cogl"
 LICENSE = "MIT"
 
-inherit clutter distro_features_check upstream-version-is-even gobject-introspection
+inherit clutter features_check upstream-version-is-even gobject-introspection
 # cogl-1.0 needs opengl to build
 REQUIRED_DISTRO_FEATURES ?= "opengl"
 
@@ -17,8 +21,8 @@ EDEPENDS_GL = "virtual/libgl libdrm"
 EDEPENDS_GLES2 = "virtual/libgles2"
 EDEPENDS_KMS = "libdrm virtual/egl"
 EDEPENDS_EGL = "virtual/egl"
-EDEPENDS_X11 = "virtual/libx11 libxcomposite libxfixes libxi libxrandr"
-EDEPENDS_WAYLAND = "virtual/mesa wayland"
+EDEPENDS_X11 = "virtual/libx11 libxcomposite libxdamage libxfixes libxrandr"
+EDEPENDS_WAYLAND = "virtual/egl virtual/libgles2 wayland"
 
 # Extra RDEPENDS for PACKAGECONFIG
 # This has to be explictly listed, because cogl dlopens the backends
@@ -31,6 +35,7 @@ EXTRA_OECONF += "--enable-examples-install	\
 	       	 --disable-gles1		\
 	         --disable-cairo                \
 	    	"
+DEBUG_OPTIMIZATION_append = " -Wno-error=maybe-uninitialized"
 
 # OpenGL/GLX
 PACKAGECONFIG[glx] = "--enable-gl --enable-glx,--disable-gl --disable-glx,${EDEPENDS_GL} ${EDEPENDS_X11},${ERDEPENDS_GL}"
@@ -73,5 +78,7 @@ FILES_libcogl-path = "${libdir}/libcogl-path${SOLIBS}"
 RPROVIDES_libcogl = "cogl-1.0"
 RCONFLICTS_libcogl = "cogl-1.0"
 RREPLACES_libcogl = "cogl-1.0"
+
+RDEPENDS_${PN}-dev = "libcogl"
 
 COMPATIBLE_HOST_armv4 = 'null'

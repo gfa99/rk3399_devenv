@@ -1,13 +1,13 @@
 SUMMARY = "LLVM compiler framework (packaged with rust)"
-LICENSE = "NCSA"
+LICENSE ?= "Apache-2.0-with-LLVM-exception"
 
 SRC_URI += "file://0002-llvm-allow-env-override-of-exe-path.patch"
 
 S = "${RUSTSRC}/src/llvm-project/llvm"
 
-LIC_FILES_CHKSUM = "file://LICENSE.TXT;md5=4c0bc17c954e99fd547528d938832bfa"
+LIC_FILES_CHKSUM ?= "file://LICENSE.TXT;md5=4c0bc17c954e99fd547528d938832bfa"
 
-inherit cmake pythonnative
+inherit cmake python3native
 
 DEPENDS += "ninja-native rust-llvm-native"
 
@@ -43,6 +43,8 @@ EXTRA_OECMAKE_append_class-target = "\
 # The debug symbols are huge here (>2GB) so suppress them since they
 # provide almost no value. If you really need them then override this
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
+
+export YOCTO_ALTERNATE_EXE_PATH = "${STAGING_LIBDIR}/llvm-rust/bin/llvm-config"
 
 do_install_append_class-target() {
     # Disable checks on the native tools, since these should came from the native recipe

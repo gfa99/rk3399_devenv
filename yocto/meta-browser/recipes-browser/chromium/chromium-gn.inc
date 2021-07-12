@@ -2,7 +2,7 @@ require chromium.inc
 require chromium-unbundle.inc
 require gn-utils.inc
 
-inherit distro_features_check gtk-icon-cache qemu
+inherit features_check gtk-icon-cache qemu
 
 # The actual directory name in out/ is irrelevant for GN.
 OUTPUT_DIR = "out/Release"
@@ -14,21 +14,22 @@ SRC_URI += " \
         file://wrapper-extra-flags.patch \
         file://do-not-specify-march-on-arm.patch \
         file://add_internal_define_armv7ve.patch \
-        file://0001-Enforce-host-toolchain-for-cddl-and-protoc-tools.patch \
-        file://0001-Fix-build-failure-due-to-missing-include-for-std-num.patch \
-        file://0001-include-memory-in-one-euro-filter.patch \
-        file://0001-WTF-Make-LinkedHashSet-understand-values-for-which-m.patch \
+        file://delete_not_yet_released_clang_warnings.patch \
+        file://chromium-Move-CharAllocator-definition-to-a-header-f.patch \
+        file://0003-Fix-sandbox-Aw-snap-for-syscalls-403-and-407.patch \
+        file://0001-Revert-ui-gfx-linux-Remove-2-unnecessary-preprocesso.patch \
+        file://0001-Turn-TouchMove-to-async-after-the-first-GestureScrol.patch \
+        file://0001-Remove-dead-reloc-in-nonalloc-LD-flags.patch \
+        file://0001-add-missing-cstring-include.patch \
 "
 
 SRC_URI_append_libc-musl = "\
-        file://musl/musl-include-fcntl.h-for-loff_t.patch \
         file://musl/musl_no_mallinfo.patch \
         file://musl/musl_no_execinfo.patch \
         file://musl/musl_TEMP_FAILURE_RETRY.patch \
         file://musl/musl_fix-stack.patch \
         file://musl/musl_breakpad.patch \
         file://musl/musl_fontconfig.patch \
-        file://musl/musl_secure_getenv.patch \
         file://musl/musl_libc_malloc.patch \
         file://musl/musl_gnu_libc-version.patch \
         file://musl/musl_resolver.patch \
@@ -38,6 +39,10 @@ SRC_URI_append_libc-musl = "\
         file://musl/musl_replace_libc_fpstate.patch \
         file://musl/musl_fix_stack_trace.patch \
         file://musl/musl_portable_msghdr.patch \
+        file://musl/musl_no__environ.patch \
+        file://musl/musl_no_mallopt.patch \
+        file://musl/musl_undef_mmap64.patch \
+        file://musl/musl_no_sbrk.patch \
 "
 
 # Append instead of assigning; the gtk-icon-cache class inherited above also
@@ -59,7 +64,6 @@ DEPENDS += " \
     jpeg \
     libdrm \
     libwebp \
-    libxml2 \
     libxslt \
     ninja-native \
     nodejs-native \
@@ -74,8 +78,6 @@ DEPENDS += " \
     qemu-native \
     virtual/libgl \
 "
-DEPENDS_append_x86 = " yasm-native"
-DEPENDS_append_x86-64 = " yasm-native"
 
 # The wrapper script we use from upstream requires bash.
 RDEPENDS_${PN} = "bash"
@@ -128,7 +130,8 @@ GN_ARGS = " \
 
 # Closure_compile needs to be disabled to avoid pulling in java dependencies,
 # which are typicaly not wanted. It started to happen after https://crrev.com/c/1278470
-GN_ARGS += "closure_compile=false"
+# This argument was renamed to enable_js_type_check after https://crrev.com/c/2248564
+GN_ARGS += "enable_js_type_check=false"
 
 # Make sure pkg-config, when used with the host's toolchain to build the
 # binaries we need to run on the host, uses the right pkg-config to avoid

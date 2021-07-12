@@ -1,6 +1,8 @@
+#
 # Copyright (C) 2013 Intel Corporation
 #
-# Released under the MIT license (see COPYING.MIT)
+# SPDX-License-Identifier: MIT
+#
 
 # This module is used by testimage.bbclass for setting up and controlling a target machine.
 
@@ -115,9 +117,9 @@ class QemuTarget(BaseTarget):
         import oe.path
         bb.utils.mkdirhier(self.testdir)
         self.qemurunnerlog = os.path.join(self.testdir, 'qemurunner_log.%s' % self.datetime)
-        loggerhandler = logging.FileHandler(self.qemurunnerlog)
-        loggerhandler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
-        self.logger.addHandler(loggerhandler)
+        self.loggerhandler = logging.FileHandler(self.qemurunnerlog)
+        self.loggerhandler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+        self.logger.addHandler(self.loggerhandler)
         oe.path.symlink(os.path.basename(self.qemurunnerlog), os.path.join(self.testdir, 'qemurunner_log'), force=True)
 
         if d.getVar("DISTRO") == "poky-tiny":
@@ -141,7 +143,8 @@ class QemuTarget(BaseTarget):
                             use_kvm = use_kvm,
                             dump_dir = dump_dir,
                             dump_host_cmds = d.getVar("testimage_dump_host"),
-                            logger = logger)
+                            logger = logger,
+                            serial_ports = len(d.getVar("SERIAL_CONSOLES").split()))
 
         self.target_dumper = TargetDumper(dump_target_cmds, dump_dir, self.runner)
 
@@ -173,13 +176,18 @@ class QemuTarget(BaseTarget):
             if os.path.exists(self.qemulog):
                 with open(self.qemulog, 'r') as f:
                     bb.error("Qemu log output from %s:\n%s" % (self.qemulog, f.read()))
-            raise bb.build.FuncFailed("%s - FAILED to start qemu - check the task log and the boot log" % self.pn)
+            raise RuntimeError("%s - FAILED to start qemu - check the task log and the boot log" % self.pn)
 
     def check(self):
         return self.runner.is_alive()
 
     def stop(self):
-        self.runner.stop()
+        try:
+            self.runner.stop()
+        except:
+            pass
+        self.logger.removeHandler(self.loggerhandler)
+        self.loggerhandler.close()
         self.connection = None
         self.ip = None
         self.server_ip = None
@@ -190,7 +198,7 @@ class QemuTarget(BaseTarget):
             self.server_ip = self.runner.server_ip
             self.connection = SSHControl(ip=self.ip, logfile=self.sshlog)
         else:
-            raise bb.build.FuncFailed("%s - FAILED to re-start qemu - check the task log and the boot log" % self.pn)
+            raise RuntimError("%s - FAILED to re-start qemu - check the task log and the boot log" % self.pn)
 
     def run_serial(self, command, timeout=60):
         return self.runner.run_serial(command, timeout=timeout)

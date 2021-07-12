@@ -5,23 +5,23 @@ DEPENDS = "zlib"
 LIC_FILES_CHKSUM = "file://LICENSE.md;md5=dcf473723faabf17baa9b5f2207599d0 \
                     file://examples/triangle/triangle.cpp;endline=12;md5=bccd1bf9cadd9e10086cf7872157e4fa"
 
-SRCREV_glm = "01f9ab5b6d21e5062ac0f6e0f205c7fa2ca9d769"
-SRCREV_gli = "8e43030b3e12bb58a4663d85adc5c752f89099c0"
+SRCREV_glm = "1ad55c5016339b83b7eec98c31007e0aee57d2bf"
+SRCREV_ktx = "726d14d02c95bb21ec9e43807751b491d295dd3c"
 
 SRC_URI = "git://github.com/SaschaWillems/Vulkan.git \
            git://github.com/g-truc/glm;destsuffix=git/external/glm;name=glm \
-           git://github.com/g-truc/gli;destsuffix=git/external/gli;name=gli \
+           git://github.com/KhronosGroup/KTX-Software;destsuffix=git/external/ktx;name=ktx;lfs=0 \
            file://0001-Don-t-build-demos-with-questionably-licensed-data.patch \
-"
+           "
 UPSTREAM_CHECK_COMMITS = "1"
-SRCREV = "ae0b59c6e2e8630a2ae26f4a0b7a72cbe7547948"
+SRCREV = "4818f85916bf88c1ca8c2ed1a46e0e758651489e"
 UPSTREAM_CHECK_GITTAGREGEX = "These are not the releases you're looking for"
 S = "${WORKDIR}/git"
 
 REQUIRED_DISTRO_FEATURES = 'vulkan'
 
-inherit cmake distro_features_check
-DEPENDS = "vulkan assimp"
+inherit cmake features_check
+DEPENDS = "vulkan-loader assimp wayland-protocols wayland-native"
 
 do_install_append () {
     # Remove assets that have uncertain licenses
@@ -39,6 +39,6 @@ EXTRA_OECMAKE = "-DRESOURCE_INSTALL_DIR=${datadir}/vulkan-demos"
 ANY_OF_DISTRO_FEATURES = "x11 wayland"
 
 # Can only pick one of [wayland,xcb]
-PACKAGECONFIG = "${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'wayland', 'xcb' ,d)}"
+PACKAGECONFIG = "${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'wayland', 'xcb', d)}"
 PACKAGECONFIG[wayland] = "-DUSE_WAYLAND_WSI=ON, -DUSE_WAYLAND_WSI=OFF, wayland"
 PACKAGECONFIG[xcb] = ",,libxcb"

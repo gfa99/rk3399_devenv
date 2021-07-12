@@ -5,13 +5,12 @@ SECTION = "console/devel"
 LICENSE = "GPL-2.0"
 LIC_FILES_CHKSUM = "file://COPYING;md5=ac6c26e52aea428ee7f56dc2c56424c6"
 
-SRCREV = "1df9af4d6cd0f4af4b1b19254bcf056aed4ae395"
-PV = "3.14+git${SRCPV}"
+SRCREV = "cfa93aa19f81d85b63cd64da30c7499890d4c07d"
+PV = "3.20.2.2"
 
 SRC_URI = "git://github.com/rvoicilas/${BPN} \
-           file://inotifywait-fix-compile-error-with-GCC-6.patch \
-           file://inotify-nosys-fix-system-call-number.patch \
-          "
+           file://0001-Makefile.am-add-build-rule-for-README.patch \
+           "
 
 S = "${WORKDIR}/git"
 

@@ -2,15 +2,9 @@
 #
 # Copyright (c) 2018, Intel Corporation.
 #
-# This program is free software; you can redistribute it and/or modify it
-# under the terms and conditions of the GNU General Public License,
-# version 2, as published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-# more details.
-#
+
 import argparse
 import json
 import os
@@ -187,10 +181,37 @@ class ManualTestRunner(object):
         write_json_file(config_options_file, config_options)
         logger.info('Configuration option file created at %s' % config_options_file)
 
+    def make_testcase_config_file(self, logger, case_file, testcase_config_file):
+        if  testcase_config_file:
+            if os.path.exists(testcase_config_file):
+                print('\nTest configuration file with name %s already exists. Please provide a unique file name' % (testcase_config_file))
+                return 0
+
+        if not testcase_config_file:
+            testcase_config_file = os.path.join(self._get_write_dir(), "testconfig_new.json")
+
+        testcase_config = {}
+        cases = load_json_file(case_file)
+        new_test_module = self._get_test_module(case_file)
+        new_testcase_config = {}
+        new_testcase_config['testcases'] = []
+
+        print('\nAdd testcases for this configuration file:')
+        for case in cases:
+            print('\n' + case['test']['@alias'])
+            add_tc_config = self._get_true_false_input('\nDo you want to add this test case to test configuration : (Y)es/(N)o\n')
+            if add_tc_config:
+                new_testcase_config['testcases'].append(case['test']['@alias'])
+        write_json_file(testcase_config_file, new_testcase_config)
+        logger.info('Testcase Configuration file created at %s' % testcase_config_file)
+
 def manualexecution(args, logger):
     testrunner = ManualTestRunner()
     if args.make_config_options_file:
         testrunner.make_config_option_file(logger, args.file, args.config_options_file)
+        return 0
+    if args.make_testcase_config_file:
+        testrunner.make_testcase_config_file(logger, args.file, args.testcase_config_file)
         return 0
     configurations, result_id, write_dir, test_results = testrunner.run_test(args.file, args.config_options_file, args.testcase_config_file)
     resultjsonhelper = OETestResultJSONHelper()
@@ -209,4 +230,6 @@ def register_commands(subparsers):
     parser_build.add_argument('-m', '--make-config-options-file', action='store_true',
                               help='make the configuration options file based on provided inputs')
     parser_build.add_argument('-t', '--testcase-config-file', default='',
-                              help='the testcase configuration file to enable user to run a selected set of test case')
+                              help='the testcase configuration file to enable user to run a selected set of test case or make a testcase configuration file')
+    parser_build.add_argument('-d', '--make-testcase-config-file', action='store_true',
+                    help='make the testcase configuration file to run a set of test cases based on user selection')

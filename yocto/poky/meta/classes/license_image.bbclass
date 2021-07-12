@@ -32,20 +32,28 @@ python license_create_manifest() {
 
     rootfs_license_manifest = os.path.join(d.getVar('LICENSE_DIRECTORY'),
                         d.getVar('IMAGE_NAME'), 'license.manifest')
-    write_license_files(d, rootfs_license_manifest, pkg_dic)
+    write_license_files(d, rootfs_license_manifest, pkg_dic, rootfs=True)
 }
 
-def write_license_files(d, license_manifest, pkg_dic):
+def write_license_files(d, license_manifest, pkg_dic, rootfs=True):
     import re
+    import stat
 
     bad_licenses = (d.getVar("INCOMPATIBLE_LICENSE") or "").split()
-    bad_licenses = map(lambda l: canonical_license(d, l), bad_licenses)
+    bad_licenses = [canonical_license(d, l) for l in bad_licenses]
     bad_licenses = expand_wildcard_licenses(d, bad_licenses)
+
+    whitelist = []
+    for lic in bad_licenses:
+        whitelist.extend((d.getVar("WHITELIST_" + lic) or "").split())
 
     with open(license_manifest, "w") as license_file:
         for pkg in sorted(pkg_dic):
-            if bad_licenses:
+            if bad_licenses and pkg not in whitelist:
                 try:
+                    licenses = incompatible_pkg_license(d, bad_licenses, pkg_dic[pkg]["LICENSE"])
+                    if licenses:
+                        bb.fatal("Package %s cannot be installed into the image because it has incompatible license(s): %s" %(pkg, ' '.join(licenses)))
                     (pkg_dic[pkg]["LICENSE"], pkg_dic[pkg]["LICENSES"]) = \
                         oe.license.manifest_licenses(pkg_dic[pkg]["LICENSE"],
                         bad_licenses, canonical_license, d)
@@ -55,6 +63,8 @@ def write_license_files(d, license_manifest, pkg_dic):
                 pkg_dic[pkg]["LICENSES"] = re.sub(r'[|&()*]', ' ', pkg_dic[pkg]["LICENSE"])
                 pkg_dic[pkg]["LICENSES"] = re.sub(r'  *', ' ', pkg_dic[pkg]["LICENSES"])
                 pkg_dic[pkg]["LICENSES"] = pkg_dic[pkg]["LICENSES"].split()
+                if pkg in whitelist:
+                    bb.warn("Including %s with an incompatible license %s into the image, because it has been whitelisted." %(pkg, pkg_dic[pkg]["LICENSE"]))
 
             if not "IMAGE_MANIFEST" in pkg_dic[pkg]:
                 # Rootfs manifest
@@ -94,14 +104,14 @@ def write_license_files(d, license_manifest, pkg_dic):
     # With both options set we see a .5 M increase in core-image-minimal
     copy_lic_manifest = d.getVar('COPY_LIC_MANIFEST')
     copy_lic_dirs = d.getVar('COPY_LIC_DIRS')
-    if copy_lic_manifest == "1":
+    if rootfs and copy_lic_manifest == "1":
         rootfs_license_dir = os.path.join(d.getVar('IMAGE_ROOTFS'), 
                                 'usr', 'share', 'common-licenses')
         bb.utils.mkdirhier(rootfs_license_dir)
         rootfs_license_manifest = os.path.join(rootfs_license_dir,
                 os.path.split(license_manifest)[1])
         if not os.path.exists(rootfs_license_manifest):
-            os.link(license_manifest, rootfs_license_manifest)
+            oe.path.copyhardlink(license_manifest, rootfs_license_manifest)
 
         if copy_lic_dirs == "1":
             for pkg in sorted(pkg_dic):
@@ -135,7 +145,7 @@ def write_license_files(d, license_manifest, pkg_dic):
                             continue
 
                         if not os.path.exists(rootfs_license):
-                            os.link(pkg_license, rootfs_license)
+                            oe.path.copyhardlink(pkg_license, rootfs_license)
 
                         if not os.path.exists(pkg_rootfs_license):
                             os.symlink(os.path.join('..', lic), pkg_rootfs_license)
@@ -145,7 +155,19 @@ def write_license_files(d, license_manifest, pkg_dic):
                                 os.path.exists(pkg_rootfs_license)):
                             continue
 
-                        os.link(pkg_license, pkg_rootfs_license)
+                        oe.path.copyhardlink(pkg_license, pkg_rootfs_license)
+            # Fixup file ownership and permissions
+            for walkroot, dirs, files in os.walk(rootfs_license_dir):
+                for f in files:
+                    p = os.path.join(walkroot, f)
+                    os.lchown(p, 0, 0)
+                    if not os.path.islink(p):
+                        os.chmod(p, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                for dir in dirs:
+                    p = os.path.join(walkroot, dir)
+                    os.lchown(p, 0, 0)
+                    os.chmod(p, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
+
 
 
 def license_deployed_manifest(d):
@@ -176,7 +198,18 @@ def license_deployed_manifest(d):
                                     d.getVar('IMAGE_NAME'))
     bb.utils.mkdirhier(lic_manifest_dir)
     image_license_manifest = os.path.join(lic_manifest_dir, 'image_license.manifest')
-    write_license_files(d, image_license_manifest, man_dic)
+    write_license_files(d, image_license_manifest, man_dic, rootfs=False)
+
+    link_name = d.getVar('IMAGE_LINK_NAME')
+    if link_name:
+        lic_manifest_symlink_dir = os.path.join(d.getVar('LICENSE_DIRECTORY'),
+                                    link_name)
+        # remove old symlink
+        if os.path.islink(lic_manifest_symlink_dir):
+            os.unlink(lic_manifest_symlink_dir)
+
+        # create the image dir symlink
+        os.symlink(lic_manifest_dir, lic_manifest_symlink_dir)
 
 def get_deployed_dependencies(d):
     """
@@ -185,10 +218,6 @@ def get_deployed_dependencies(d):
 
     deploy = {}
     # Get all the dependencies for the current task (rootfs).
-    # Also get EXTRA_IMAGEDEPENDS because the bootloader is
-    # usually in this var and not listed in rootfs.
-    # At last, get the dependencies from boot classes because
-    # it might contain the bootloader.
     taskdata = d.getVar("BB_TASKDEPDATA", False)
     depends = list(set([dep[0] for dep
                     in list(taskdata.values())

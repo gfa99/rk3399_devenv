@@ -3,38 +3,38 @@
 
 DESCRIPTION = "LLVM based C/C++ compiler Runtime"
 HOMEPAGE = "http://openmp.llvm.org/"
-LICENSE = "MIT | NCSA"
-SECTION = "base"
+SECTION = "libs"
 
 require clang.inc
 require common-source.inc
 
-DEPENDS += "ninja-native"
-
-RPROVIDES_${PN} += "libgomp"
-RPROVIDES_${PN}-dev += "libgomp-dev"
-
 TOOLCHAIN = "clang"
 
-LIC_FILES_CHKSUM = "file://openmp/LICENSE.txt;md5=5dcbca021bcb2fbc22186bc7a8a159e6"
-
-BASEDEPENDS_remove_toolchain-clang_class-target = "compiler-rt"
-BASEDEPENDS_remove_toolchain-clang_class-target = "libcxx"
+LIC_FILES_CHKSUM = "file://openmp/LICENSE.txt;md5=d75288d1ce0450b28b8d58a284c09c79"
 
 inherit cmake pkgconfig perlnative
 
-EXTRA_OECMAKE = "-G Ninja ${S}/openmp"
+DEPENDS += "elfutils libffi"
 
-THUMB_TUNE_CCARGS = ""
+EXTRA_OECMAKE += "-DOPENMP_LIBDIR_SUFFIX=${@d.getVar('baselib').replace('lib', '')}"
 
-do_compile() {
-	ninja ${PARALLEL_MAKE}
-}
+OECMAKE_SOURCEPATH = "${S}/openmp"
 
-do_install() {
-	DESTDIR=${D} ninja ${PARALLEL_MAKE} install
-}
+PACKAGECONFIG ?= "ompt-tools offloading-plugin"
+
+PACKAGECONFIG_remove_arm = "ompt-tools offloading-plugin"
+PACKAGECONFIG_remove_mipsarch = "ompt-tools offloading-plugin"
+PACKAGECONFIG_remove_powerpc = "ompt-tools offloading-plugin"
+
+PACKAGECONFIG[ompt-tools] = "-DOPENMP_ENABLE_OMPT_TOOLS=ON,-DOPENMP_ENABLE_OMPT_TOOLS=OFF,"
+PACKAGECONFIG[aliases] = "-DLIBOMP_INSTALL_ALIASES=ON,-DLIBOMP_INSTALL_ALIASES=OFF,"
+PACKAGECONFIG[offloading-plugin] = ",,elfutils libffi,libelf libffi"
 
 FILES_SOLIBSDEV = ""
 FILES_${PN} += "${libdir}/lib*${SOLIBSDEV}"
 INSANE_SKIP_${PN} = "dev-so"
+
+COMPATIBLE_HOST_mips64 = "null"
+COMPATIBLE_HOST_riscv32 = "null"
+
+BBCLASSEXTEND = "native nativesdk"

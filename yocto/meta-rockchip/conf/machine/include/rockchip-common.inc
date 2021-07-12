@@ -13,9 +13,15 @@ KERNEL_IMAGETYPE ?= "Image"
 KBUILD_DEFCONFIG ?= "rockchip_linux_defconfig"
 MACHINEOVERRIDES .= ":rockchip"
 
+PREFERRED_PROVIDER_virtual/bootloader ?= "u-boot"
+
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-rockchip"
+
+# Prefer using Rockchip BSP kernel 4.4
+#PREFERRED_VERSION_linux-rockchip ?= "4.19%"
+#LINUXLIBCVERSION ?= "4.19-custom%"
 PREFERRED_VERSION_linux-rockchip ?= "4.4%"
-LINUXLIBCVERSION ?= "4.4%"
+LINUXLIBCVERSION ?= "4.4-custom%"
 
 # Custom kernel might not support newest python
 PACKAGECONFIG_remove_pn-perf += " scripting"
@@ -26,10 +32,8 @@ PREFERRED_PROVIDER_virtual/libgles2 ?= "rockchip-libmali"
 PREFERRED_PROVIDER_virtual/libgles3 ?= "rockchip-libmali"
 PREFERRED_PROVIDER_virtual/libopencl ?= "rockchip-libmali"
 PREFERRED_PROVIDER_virtual/libgbm ?= "rockchip-libmali"
-PACKAGECONFIG_pn-wayland = "${@ 'no-egl' if 'wayland' in d.getVar('RK_MALI_LIB') else '' }"
+PACKAGECONFIG_pn-wayland ?= "${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'no-egl', '', d)}"
 
-# HACK: Use libmali's KHR headers
-PACKAGECONFIG_append_pn-mesa-gl += " no-khr-headers"
 DEPENDS_append_pn-mesa-gl += " rockchip-libmali"
 
 PREFERRED_PROVIDER_virtual/libgl ?= "mesa-gl"
@@ -43,27 +47,34 @@ export RK_PARTITION_GROW ?= "1"
 RK_USE_COMPRESSED_KERNEL ?= "1"
 RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""
 
-RK_MINILOADER_INI ?= "${@d.getVar('SOC_FAMILY').upper() + 'MINIALL.ini'}"
-RK_TRUST_INI ?= "${@d.getVar('SOC_FAMILY').upper() + 'TOS.ini'}"
-RK_IGNORE_BL32 ?= "0"
-
-# loader's size(K) and backup num
-RK_LOADER_SIZE ?= "1024"
-RK_LOADER_BACKUP_NUM ?= "4"
-
 IMAGE_FSTYPES_remove += "iso live"
 export RK_ROOTFS_TYPE ?= "ext4"
 
 IMAGE_FSTYPES += "${RK_ROOTFS_TYPE} wic"
 WKS_FILE ?= "generic-gptdisk.wks.in"
-do_image_wic[depends] += " \
+
+# Some partitons, e.g. trust, are allowed to be optional.
+do_fixup_wks[depends] += " \
 	virtual/kernel:do_deploy \
 	virtual/bootloader:do_deploy \
-	rk-binary-loader:do_deploy \
 "
+do_fixup_wks() {
+	[ -f "${WKS_FULL_PATH}" ] || return
 
-RK_POST_ROOTFS_SCRIPTS ?= "${RK_OVERLAY_DIR}/${MACHINE}/post_rootfs.sh"
-RK_OVERLAY_DIRS ?= "${RK_OVERLAY_DIR}/${MACHINE}/fs-overlay"
+	IMAGES=$(grep -o "[^=]*\.img" "${WKS_FULL_PATH}")
+
+	for image in ${IMAGES};do
+		if [ ! -f "${DEPLOY_DIR_IMAGE}/${image}" ];then
+			echo "${image} not provided, ignoring it."
+			sed -i "/file=${image}/d" "${WKS_FULL_PATH}"
+		fi
+	done
+}
+addtask do_fixup_wks after do_write_wks_template before do_image_wic
+
+RK_POST_ROOTFS_SCRIPTS ?= ""
+RK_OVERLAY_DIRS ?= ""
+BB_HASHBASE_WHITELIST_append += " RK_POST_ROOTFS_SCRIPTS RK_OVERLAY_DIRS"
 
 # <fslabel:mountpoint> e.g. "oem:/oem userdata:/userdata"
 RK_EXTRA_VOLUMES ?= ""
@@ -93,16 +104,29 @@ do_post_rootfs() {
 	done
 }
 
+IMAGE_POSTPROCESS_COMMAND += "link_rootfs_image;"
+link_rootfs_image() {
+	ln -sf "${IMAGE_LINK_NAME}.${RK_ROOTFS_TYPE}" \
+		"${IMGDEPLOYDIR}/rootfs.img"
+}
+
 IMAGE_POSTPROCESS_COMMAND += "gen_rkparameter;"
 gen_rkparameter() {
+	if [ ! -f "${DEPLOY_DIR_IMAGE}/loader.bin" ];then
+		echo "Skip making Rockchip parameter."
+		return
+	fi
+
 	IMAGE="${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}.wic"
 	if [ ! -f "${IMAGE}" ];then
 		echo "${IMAGE} not found."
 		return
 	fi
 
-	OUT="${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}.parameter"
-	ln -sf "${IMAGE_LINK_NAME}.parameter" "${IMGDEPLOYDIR}/parameter"
+	cd "${IMGDEPLOYDIR}"
+
+	OUT="${IMAGE_LINK_NAME}.parameter"
+	ln -sf "${OUT}" parameter
 
 	echo "Generating ${OUT}..."
 
@@ -127,7 +151,13 @@ gen_rkparameter() {
 }
 
 IMAGE_POSTPROCESS_COMMAND += "gen_rkupdateimg;"
+do_image[depends] += "rk-binary-native:do_populate_sysroot"
 gen_rkupdateimg() {
+	if [ ! -f "${DEPLOY_DIR_IMAGE}/loader.bin" ];then
+		echo "Skip packing Rockchip update image."
+		return
+	fi
+
 	IMAGE="${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}.wic"
 	if [ ! -f "${IMAGE}" ];then
 		echo "${IMAGE} not found."
@@ -145,11 +175,8 @@ gen_rkupdateimg() {
 		[ -f "${f}" ] && ln -sf "${f}" .
 	done
 
-	ln -sf "${IMAGE_LINK_NAME}.${RK_ROOTFS_TYPE}" rootfs.img
-
-	PARAMETER=parameter
 	OUT="${IMAGE_LINK_NAME}.package-file"
-	ln -sf "${IMAGE_LINK_NAME}.package-file" package-file
+	ln -sf "${OUT}" package-file
 
 	echo "Generating ${OUT}..."
 
@@ -157,7 +184,7 @@ gen_rkupdateimg() {
 	echo "package-file package-file" >> "${OUT}"
 	echo "bootloader loader.bin" >> "${OUT}"
 	echo "parameter parameter" >> "${OUT}"
-	grep -o "([^)]*)" "${PARAMETER}" | tr -d "()" | while read NAME;do
+	grep -o "([^)^:]*" parameter | tr -d "(" | while read NAME;do
 		echo -n "${NAME} " >> "${OUT}"
 		case "${NAME}" in
 			uboot-env)

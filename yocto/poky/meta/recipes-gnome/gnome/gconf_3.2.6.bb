@@ -1,4 +1,7 @@
 SUMMARY = "GNOME configuration system"
+DESCRIPTION = "GConf is a system for storing application preferences. \
+It is intended for user preferences; not configuration of something like \
+Apache, or arbitrary data storage."
 SECTION = "x11/gnome"
 HOMEPAGE = "https://projects.gnome.org/gconf/"
 LICENSE = "LGPLv2+"
@@ -12,6 +15,7 @@ SRC_URI = "${GNOME_MIRROR}/GConf/${@gnome_verdir("${PV}")}/GConf-${PV}.tar.xz;na
            file://remove_plus_from_invalid_characters_list.patch \
            file://unable-connect-dbus.patch \
            file://create_config_directory.patch \
+           file://python3.patch \
 "
 
 SRC_URI[archive.md5sum] = "2b16996d0e4b112856ee5c59130e822c"
@@ -22,12 +26,11 @@ S = "${WORKDIR}/GConf-${PV}"
 EXTRA_OECONF = "--enable-shared --disable-static \
                 --disable-orbit --with-openldap=no --disable-gtk"
 
-# Disable PolicyKit by default
-PACKAGECONFIG ??= ""
-# We really don't want PolicyKit for native
+PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'polkit', d)}"
+# We really don't want Polkit for native
 PACKAGECONFIG_class-native = ""
 
-PACKAGECONFIG[policykit] = "--enable-defaults-service,--disable-defaults-service,polkit"
+PACKAGECONFIG[polkit] = "--enable-defaults-service,--disable-defaults-service,polkit"
 PACKAGECONFIG[debug] = "--enable-debug=yes, --enable-debug=minimum"
 
 do_install_append() {
@@ -50,6 +53,8 @@ FILES_${PN} += "${libdir}/GConf/* \
                 ${datadir}/dbus-1/services/*.service \
                 ${datadir}/dbus-1/system-services/*.service \
                "
+RDEPENDS_${PN} = "python3-xml"
+
 FILES_${PN}-dev += "${datadir}/sgml/gconf/gconf-1.0.dtd"
 
 BBCLASSEXTEND = "native"

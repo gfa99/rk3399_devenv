@@ -6,10 +6,8 @@ HOMEPAGE = "https://github.com/google/glog"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://COPYING;md5=dc9db360e0bbd4e46672f3fd91dd6c4b"
 
-DEPENDS = "libunwind"
-
 SRC_URI = " \
-    git://github.com/google/glog.git;branch=v035 \
+    git://github.com/google/glog.git;nobranch=1 \
     file://0001-Rework-CMake-glog-VERSION-management.patch \
     file://0002-Find-Libunwind-during-configure.patch \
     file://0003-installation-path-fix.patch \
@@ -21,6 +19,16 @@ S = "${WORKDIR}/git"
 
 inherit cmake
 
-RDEPENDS_${PN} += "libunwind"
+PACKAGECONFIG ?= "shared unwind"
+PACKAGECONFIG_remove_riscv64 = "unwind"
+PACKAGECONFIG_remove_riscv32 = "unwind"
 
-EXTRA_OECMAKE += "-DBUILD_SHARED_LIBS=ON"
+PACKAGECONFIG[unwind] = "-DWITH_UNWIND=ON,-DWITH_UNWIND=OFF,libunwind,libunwind"
+PACKAGECONFIG[shared] = "-DBUILD_SHARED_LIBS=ON,-DBUILD_SHARED_LIBS=OFF,,"
+
+do_configure_append() {
+    # remove WORKDIR info to improve reproducibility
+    if [ -f  "${B}/config.h" ] ; then
+        sed -i 's/'$(echo ${WORKDIR} | sed 's_/_\\/_g')'/../g' ${B}/config.h
+    fi
+}

@@ -9,6 +9,8 @@ python () {
     if not os.path.isdir(dir):
         return
 
+    bb.parse.mark_dependency(d, dir)
+
     files = os.listdir(dir)
     files.sort()
     for file in files:
@@ -16,5 +18,5 @@ python () {
             d.appendVar('SRC_URI', ' file://' + file)
             bb.debug(2, 'Adding patch: ' + file + ' for ' + dir)
 
-    d.appendVar('FILESEXTRAPATHS', dir + ':')
+    d.prependVar('FILESEXTRAPATHS', dir + ':')
 }

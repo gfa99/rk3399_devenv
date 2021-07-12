@@ -6,8 +6,12 @@
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://inc/rk_mpi.h;beginline=4;endline=14;md5=acbba394ae5639b0c786f60c1f48e3d6"
 
-SRCREV = "${AUTOREV}"
-SRC_URI = "git://github.com/rockchip-linux/mpp.git;branch=develop"
+PV_append = "+git${SRCPV}"
+
+inherit freeze-rev
+
+SRCREV = "a8ac97e5a94a66c34c406635eb31c80442a9398c"
+SRC_URI = "git://github.com/JeffyCN/mirrors.git;nobranch=1;branch=mpp-dev-2021_05_18;"
 
 S = "${WORKDIR}/git"
 

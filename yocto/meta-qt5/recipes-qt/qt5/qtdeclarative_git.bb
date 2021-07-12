@@ -12,31 +12,27 @@ LIC_FILES_CHKSUM = " \
     file://LICENSE.FDL;md5=6d9f2a9af4c8b8c3c769f6cc1b6aaf7e \
 "
 
-# Patches from https://github.com/meta-qt5/qtdeclarative/commits/b5.11
-# 5.11.meta-qt5.4
-SRC_URI += "file://0001-Always-use-commit-sha1-for-QML_COMPILE_HASH.patch"
+# Patches from https://github.com/meta-qt5/qtdeclarative/commits/b5.15
+# 5.15.meta-qt5.1
+SRC_URI += " \
+    file://0001-Use-OE_QMAKE_PATH_EXTERNAL_HOST_BINS-to-locate-qmlca.patch \
+    file://0002-Use-python3-explicitly.patch \
+"
 
-DEPENDS += "qtbase"
+LDFLAGS_append_riscv64 = " -pthread"
 
-PACKAGECONFIG ??= "qtxmlpatterns qml-debug qml-network ${@bb.utils.contains('DISTRO_FEATURES', 'qt5-static', 'static', '', d)}"
-PACKAGECONFIG[qtxmlpatterns] = ",,qtxmlpatterns"
+DEPENDS += "qtbase qtdeclarative-native"
+
+PACKAGECONFIG ??= "qml-debug qml-network ${@bb.utils.contains('DISTRO_FEATURES', 'qt5-static', 'static', '', d)}"
 PACKAGECONFIG[qml-debug] = "-qml-debug,-no-qml-debug"
 PACKAGECONFIG[qml-network] = "-qml-network, -no-qml-network"
 PACKAGECONFIG[static] = ",,qtdeclarative-native"
-
-do_configure_prepend() {
-    # disable qtxmlpatterns test if it isn't enabled by PACKAGECONFIG
-    sed -e 's/^\(qtHaveModule(xmlpatterns)\)/OE_QTXMLPATTERNS_ENABLED:\1/' -i ${S}/src/imports/imports.pro
-    sed -e 's/^\(!qtHaveModule(xmlpatterns)\)/!OE_QTXMLPATTERNS_ENABLED|\1/' -i ${S}/tests/auto/quick/quick.pro
-}
 
 do_install_append_class-nativesdk() {
     # qml files not needed in nativesdk
     rm -rf ${D}${OE_QMAKE_PATH_QML}
 }
 
-EXTRA_QMAKEVARS_PRE += "${@bb.utils.contains('PACKAGECONFIG', 'qtxmlpatterns', 'CONFIG+=OE_QTXMLPATTERNS_ENABLED', '', d)}"
-
-SRCREV = "e3c0bb7811407bad1f65ea55639a4b1d1d39be15"
+SRCREV = "0fafffedf4857f6bdd8e54b72ab806594ef5674b"
 
 BBCLASSEXTEND =+ "native nativesdk"

@@ -34,6 +34,7 @@ BB_HASHBASE_WHITELIST += "ICECC_PARALLEL_MAKE ICECC_DISABLED ICECC_USER_PACKAGE_
     ICECC_DEBUG ICECC_LOGFILE ICECC_REPEAT_RATE ICECC_PREFERRED_HOST \
     ICECC_CLANG_REMOTE_CPP ICECC_IGNORE_UNVERIFIED ICECC_TEST_SOCKET \
     ICECC_ENV_DEBUG ICECC_SYSTEM_PACKAGE_BL ICECC_SYSTEM_CLASS_BL \
+    ICECC_REMOTE_CPP \
     "
 
 ICECC_ENV_EXEC ?= "${STAGING_BINDIR_NATIVE}/icecc-create-env"
@@ -56,6 +57,8 @@ ICECC_ENV_VERSION = "2"
 # See: https://github.com/icecc/icecream/issues/190
 export ICECC_CARET_WORKAROUND ??= "0"
 
+export ICECC_REMOTE_CPP ??= "0"
+
 ICECC_CFLAGS = ""
 CFLAGS += "${ICECC_CFLAGS}"
 CXXFLAGS += "${ICECC_CFLAGS}"
@@ -70,10 +73,16 @@ ICECC_ENV_DEBUG ??= ""
 #
 # libgcc-initial - fails with CPP sanity check error if host sysroot contains
 #                  cross gcc built for another target tune/variant
+# pixman - prng_state: TLS reference mismatches non-TLS reference, possibly due to
+#          pragma omp threadprivate(prng_state)
+# systemtap - _HelperSDT.c undefs macros and uses the identifiers in macros emitting
+#             inline assembly
 # target-sdk-provides-dummy - ${HOST_PREFIX} is empty which triggers the "NULL
 #                             prefix" error.
 ICECC_SYSTEM_PACKAGE_BL += "\
     libgcc-initial \
+    pixman \
+    systemtap \
     target-sdk-provides-dummy \
     "
 
@@ -96,7 +105,7 @@ def icecc_dep_prepend(d):
         return "icecc-create-env-native"
     return ""
 
-DEPENDS_prepend += "${@icecc_dep_prepend(d)} "
+DEPENDS_prepend = "${@icecc_dep_prepend(d)} "
 
 get_cross_kernel_cc[vardepsexclude] += "KERNEL_CC"
 def get_cross_kernel_cc(bb,d):
@@ -129,7 +138,18 @@ def use_icecc(bb,d):
     if icecc_is_cross_canadian(bb, d):
         return "no"
 
+    if d.getVar('INHIBIT_DEFAULT_DEPS', False):
+        # We don't have a compiler, so no icecc
+        return "no"
+
     pn = d.getVar('PN')
+    bpn = d.getVar('BPN')
+
+    # Blacklist/whitelist checks are made against BPN, because there is a good
+    # chance that if icecc should be skipped for a recipe, it should be skipped
+    # for all the variants of that recipe. PN is still checked in case a user
+    # specified a more specific recipe.
+    check_pn = set([pn, bpn])
 
     system_class_blacklist = (d.getVar('ICECC_SYSTEM_CLASS_BL') or "").split()
     user_class_blacklist = (d.getVar('ICECC_USER_CLASS_BL') or "none").split()
@@ -145,11 +165,11 @@ def use_icecc(bb,d):
     user_package_whitelist = (d.getVar('ICECC_USER_PACKAGE_WL') or "").split()
     package_blacklist = system_package_blacklist + user_package_blacklist
 
-    if pn in package_blacklist:
+    if check_pn & set(package_blacklist):
         bb.debug(1, "%s: found in blacklist, disable icecc" % pn)
         return "no"
 
-    if pn in user_package_whitelist:
+    if check_pn & set(user_package_whitelist):
         bb.debug(1, "%s: found in whitelist, enable icecc" % pn)
         return "yes"
 
@@ -233,7 +253,11 @@ def icecc_get_external_tool(bb, d, tool):
 
 def icecc_get_tool_link(tool, d):
     import subprocess
-    return subprocess.check_output("readlink -f %s" % tool, shell=True).decode("utf-8")[:-1]
+    try:
+        return subprocess.check_output("readlink -f %s" % tool, shell=True).decode("utf-8")[:-1]
+    except subprocess.CalledProcessError as e:
+        bb.note("icecc: one of the tools probably disappeared during recipe parsing, cmd readlink -f %s returned %d:\n%s" % (tool, e.returncode, e.output.decode("utf-8")))
+        return tool
 
 def icecc_get_path_tool(tool, d):
     # This is a little ugly, but we want to make sure we add an actual
@@ -302,6 +326,7 @@ def set_icecc_env():
     # dummy python version of set_icecc_env
     return
 
+set_icecc_env[vardepsexclude] += "KERNEL_CC"
 set_icecc_env() {
     if [ "${@use_icecc(bb, d)}" = "no" ]
     then
@@ -331,17 +356,6 @@ set_icecc_env() {
         return
     fi
 
-    # Create symlinks to icecc in the recipe-sysroot directory
-    mkdir -p ${ICE_PATH}
-    if [ -n "${KERNEL_CC}" ]; then
-        compilers="${@get_cross_kernel_cc(bb,d)}"
-    else
-        compilers="${HOST_PREFIX}gcc ${HOST_PREFIX}g++"
-    fi
-    for compiler in $compilers; do
-        ln -sf ${ICECC_BIN} ${ICE_PATH}/$compiler
-    done
-
     ICECC_CC="${@icecc_get_and_check_tool(bb, d, "gcc")}"
     ICECC_CXX="${@icecc_get_and_check_tool(bb, d, "g++")}"
     # cannot use icecc_get_and_check_tool here because it assumes as without target_sys prefix
@@ -359,6 +373,26 @@ set_icecc_env() {
         bbwarn "Cannot use icecc: invalid ICECC_ENV_EXEC"
         return
     fi
+
+    # Create symlinks to icecc and wrapper-scripts in the recipe-sysroot directory
+    mkdir -p $ICE_PATH/symlinks
+    if [ -n "${KERNEL_CC}" ]; then
+        compilers="${@get_cross_kernel_cc(bb,d)}"
+    else
+        compilers="${HOST_PREFIX}gcc ${HOST_PREFIX}g++"
+    fi
+    for compiler in $compilers; do
+        ln -sf $ICECC_BIN $ICE_PATH/symlinks/$compiler
+        rm -f $ICE_PATH/$compiler
+        cat <<-__EOF__ > $ICE_PATH/$compiler
+		#!/bin/sh -e
+		export ICECC_VERSION=$ICECC_VERSION
+		export ICECC_CC=$ICECC_CC
+		export ICECC_CXX=$ICECC_CXX
+		$ICE_PATH/symlinks/$compiler "\$@"
+		__EOF__
+        chmod 775 $ICE_PATH/$compiler
+    done
 
     ICECC_AS="`${ICECC_CC} -print-prog-name=as`"
     # for target recipes should return something like:
@@ -379,7 +413,7 @@ set_icecc_env() {
             ${ICECC_ENV_EXEC} ${ICECC_ENV_DEBUG} "${ICECC_CC}" "${ICECC_CXX}" "${ICECC_AS}" "${ICECC_VERSION}"
         then
             touch "${ICECC_VERSION}.done"
-        elif ! wait_for_file "${ICECC_VERSION}.done" 30 
+        elif ! wait_for_file "${ICECC_VERSION}.done" 30
         then
             # locking failed so wait for ${ICECC_VERSION}.done to appear
             bbwarn "Timeout waiting for ${ICECC_VERSION}.done"
@@ -392,10 +426,10 @@ set_icecc_env() {
     export CCACHE_PATH="$PATH"
     export CCACHE_DISABLE="1"
 
-    export ICECC_VERSION ICECC_CC ICECC_CXX
     export PATH="$ICE_PATH:$PATH"
 
-    bbnote "Using icecc"
+    bbnote "Using icecc path: $ICE_PATH"
+    bbnote "Using icecc tarball: $ICECC_VERSION"
 }
 
 do_configure_prepend() {

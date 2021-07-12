@@ -1,7 +1,11 @@
+#
+# SPDX-License-Identifier: GPL-2.0-only
+#
 import bb.siggen
+import bb.runqueue
 import oe
 
-def sstate_rundepfilter(siggen, fn, recipename, task, dep, depname, dataCache):
+def sstate_rundepfilter(siggen, fn, recipename, task, dep, depname, dataCaches):
     # Return True if we should keep the dependency, False to drop it
     def isNative(x):
         return x.endswith("-native")
@@ -9,23 +13,26 @@ def sstate_rundepfilter(siggen, fn, recipename, task, dep, depname, dataCache):
         return "-cross-" in x
     def isNativeSDK(x):
         return x.startswith("nativesdk-")
-    def isKernel(fn):
-        inherits = " ".join(dataCache.inherits[fn])
+    def isKernel(mc, fn):
+        inherits = " ".join(dataCaches[mc].inherits[fn])
         return inherits.find("/module-base.bbclass") != -1 or inherits.find("/linux-kernel-base.bbclass") != -1
-    def isPackageGroup(fn):
-        inherits = " ".join(dataCache.inherits[fn])
+    def isPackageGroup(mc, fn):
+        inherits = " ".join(dataCaches[mc].inherits[fn])
         return "/packagegroup.bbclass" in inherits
-    def isAllArch(fn):
-        inherits = " ".join(dataCache.inherits[fn])
+    def isAllArch(mc, fn):
+        inherits = " ".join(dataCaches[mc].inherits[fn])
         return "/allarch.bbclass" in inherits
-    def isImage(fn):
-        return "/image.bbclass" in " ".join(dataCache.inherits[fn])
+    def isImage(mc, fn):
+        return "/image.bbclass" in " ".join(dataCaches[mc].inherits[fn])
 
-    # (Almost) always include our own inter-task dependencies.
-    # The exception is the special do_kernel_configme->do_unpack_and_patch
-    # dependency from archiver.bbclass.
-    if recipename == depname:
-        if task == "do_kernel_configme" and dep.endswith(".do_unpack_and_patch"):
+    depmc, _, deptaskname, depmcfn = bb.runqueue.split_tid_mcfn(dep)
+    mc, _ = bb.runqueue.split_mc(fn)
+
+    # (Almost) always include our own inter-task dependencies (unless it comes
+    # from a mcdepends). The exception is the special
+    # do_kernel_configme->do_unpack_and_patch dependency from archiver.bbclass.
+    if recipename == depname and depmc == mc:
+        if task == "do_kernel_configme" and deptaskname == "do_unpack_and_patch":
             return False
         return True
 
@@ -44,11 +51,11 @@ def sstate_rundepfilter(siggen, fn, recipename, task, dep, depname, dataCache):
     # Only target packages beyond here
 
     # allarch packagegroups are assumed to have well behaved names which don't change between architecures/tunes
-    if isPackageGroup(fn) and isAllArch(fn) and not isNative(depname):
+    if isPackageGroup(mc, fn) and isAllArch(mc, fn) and not isNative(depname):
         return False
 
     # Exclude well defined machine specific configurations which don't change ABI
-    if depname in siggen.abisaferecipes and not isImage(fn):
+    if depname in siggen.abisaferecipes and not isImage(mc, fn):
         return False
 
     # Kernel modules are well namespaced. We don't want to depend on the kernel's checksum
@@ -56,10 +63,9 @@ def sstate_rundepfilter(siggen, fn, recipename, task, dep, depname, dataCache):
     # is machine specific.
     # Therefore if we're not a kernel or a module recipe (inheriting the kernel classes)
     # and we reccomend a kernel-module, we exclude the dependency.
-    depfn = dep.rsplit(".", 1)[0]
-    if dataCache and isKernel(depfn) and not isKernel(fn):
-        for pkg in dataCache.runrecs[fn]:
-            if " ".join(dataCache.runrecs[fn][pkg]).find("kernel-module-") != -1:
+    if dataCaches and isKernel(depmc, depmcfn) and not isKernel(mc, fn):
+        for pkg in dataCaches[mc].runrecs[fn]:
+            if " ".join(dataCaches[mc].runrecs[fn][pkg]).find("kernel-module-") != -1:
                 return False
 
     # Default to keep dependencies
@@ -84,11 +90,12 @@ class SignatureGeneratorOEBasic(bb.siggen.SignatureGeneratorBasic):
         self.abisaferecipes = (data.getVar("SIGGEN_EXCLUDERECIPES_ABISAFE") or "").split()
         self.saferecipedeps = (data.getVar("SIGGEN_EXCLUDE_SAFE_RECIPE_DEPS") or "").split()
         pass
-    def rundep_check(self, fn, recipename, task, dep, depname, dataCache = None):
-        return sstate_rundepfilter(self, fn, recipename, task, dep, depname, dataCache)
+    def rundep_check(self, fn, recipename, task, dep, depname, dataCaches = None):
+        return sstate_rundepfilter(self, fn, recipename, task, dep, depname, dataCaches)
 
-class SignatureGeneratorOEBasicHash(bb.siggen.SignatureGeneratorBasicHash):
-    name = "OEBasicHash"
+class SignatureGeneratorOEBasicHashMixIn(object):
+    supports_multiconfig_datacaches = True
+
     def init_rundepcheck(self, data):
         self.abisaferecipes = (data.getVar("SIGGEN_EXCLUDERECIPES_ABISAFE") or "").split()
         self.saferecipedeps = (data.getVar("SIGGEN_EXCLUDE_SAFE_RECIPE_DEPS") or "").split()
@@ -101,6 +108,8 @@ class SignatureGeneratorOEBasicHash(bb.siggen.SignatureGeneratorBasicHash):
         self.unlockedrecipes = (data.getVar("SIGGEN_UNLOCKED_RECIPES") or
                                 "").split()
         self.unlockedrecipes = { k: "" for k in self.unlockedrecipes }
+        self.buildarch = data.getVar('BUILD_ARCH')
+        self._internal = False
         pass
 
     def tasks_resolved(self, virtmap, virtpnmap, dataCache):
@@ -122,16 +131,15 @@ class SignatureGeneratorOEBasicHash(bb.siggen.SignatureGeneratorBasicHash):
             newsafedeps.append(a1 + "->" + a2)
         self.saferecipedeps = newsafedeps
 
-    def rundep_check(self, fn, recipename, task, dep, depname, dataCache = None):
-        return sstate_rundepfilter(self, fn, recipename, task, dep, depname, dataCache)
+    def rundep_check(self, fn, recipename, task, dep, depname, dataCaches = None):
+        return sstate_rundepfilter(self, fn, recipename, task, dep, depname, dataCaches)
 
     def get_taskdata(self):
-        data = super(bb.siggen.SignatureGeneratorBasicHash, self).get_taskdata()
-        return (data, self.lockedpnmap, self.lockedhashfn)
+        return (self.lockedpnmap, self.lockedhashfn, self.lockedhashes) + super().get_taskdata()
 
     def set_taskdata(self, data):
-        coredata, self.lockedpnmap, self.lockedhashfn = data
-        super(bb.siggen.SignatureGeneratorBasicHash, self).set_taskdata(coredata)
+        self.lockedpnmap, self.lockedhashfn, self.lockedhashes = data[:3]
+        super().set_taskdata(data[3:])
 
     def dump_sigs(self, dataCache, options):
         sigfile = os.getcwd() + "/locked-sigs.inc"
@@ -139,86 +147,109 @@ class SignatureGeneratorOEBasicHash(bb.siggen.SignatureGeneratorBasicHash):
         self.dump_lockedsigs(sigfile)
         return super(bb.siggen.SignatureGeneratorBasicHash, self).dump_sigs(dataCache, options)
 
-    def get_taskhash(self, fn, task, deps, dataCache):
-        h = super(bb.siggen.SignatureGeneratorBasicHash, self).get_taskhash(fn, task, deps, dataCache)
+    def prep_taskhash(self, tid, deps, dataCaches):
+        super().prep_taskhash(tid, deps, dataCaches)
+        if hasattr(self, "extramethod"):
+            (mc, _, _, fn) = bb.runqueue.split_tid_mcfn(tid)
+            inherits = " ".join(dataCaches[mc].inherits[fn])
+            if inherits.find("/native.bbclass") != -1 or inherits.find("/cross.bbclass") != -1:
+                self.extramethod[tid] = ":" + self.buildarch
 
-        recipename = dataCache.pkg_fn[fn]
+    def get_taskhash(self, tid, deps, dataCaches):
+        if tid in self.lockedhashes:
+            if self.lockedhashes[tid]:
+                return self.lockedhashes[tid]
+            else:
+                return super().get_taskhash(tid, deps, dataCaches)
+
+        # get_taskhash will call get_unihash internally in the parent class, we
+        # need to disable our filter of it whilst this runs else
+        # incorrect hashes can be calculated.
+        self._internal = True
+        h = super().get_taskhash(tid, deps, dataCaches)
+        self._internal = False
+
+        (mc, _, task, fn) = bb.runqueue.split_tid_mcfn(tid)
+
+        recipename = dataCaches[mc].pkg_fn[fn]
         self.lockedpnmap[fn] = recipename
-        self.lockedhashfn[fn] = dataCache.hashfn[fn]
+        self.lockedhashfn[fn] = dataCaches[mc].hashfn[fn]
 
         unlocked = False
         if recipename in self.unlockedrecipes:
             unlocked = True
         else:
-            def get_mc(tid):
-                tid = tid.rsplit('.', 1)[0]
-                if tid.startswith('multiconfig:'):
-                    elems = tid.split(':')
-                    return elems[1]
             def recipename_from_dep(dep):
-                # The dep entry will look something like
-                # /path/path/recipename.bb.task, virtual:native:/p/foo.bb.task,
-                # ...
+                (depmc, _, _, depfn) = bb.runqueue.split_tid_mcfn(dep)
+                return dataCaches[depmc].pkg_fn[depfn]
 
-                fn = dep.rsplit('.', 1)[0]
-                return dataCache.pkg_fn[fn]
-
-            mc = get_mc(fn)
             # If any unlocked recipe is in the direct dependencies then the
             # current recipe should be unlocked as well.
-            depnames = [ recipename_from_dep(x) for x in deps if mc == get_mc(x)]
+            depnames = [ recipename_from_dep(x) for x in deps if mc == bb.runqueue.mc_from_tid(x)]
             if any(x in y for y in depnames for x in self.unlockedrecipes):
                 self.unlockedrecipes[recipename] = ''
                 unlocked = True
 
         if not unlocked and recipename in self.lockedsigs:
             if task in self.lockedsigs[recipename]:
-                k = fn + "." + task
                 h_locked = self.lockedsigs[recipename][task][0]
                 var = self.lockedsigs[recipename][task][1]
-                self.lockedhashes[k] = h_locked
-                self.taskhash[k] = h_locked
+                self.lockedhashes[tid] = h_locked
+                self._internal = True
+                unihash = self.get_unihash(tid)
+                self._internal = False
                 #bb.warn("Using %s %s %s" % (recipename, task, h))
 
-                if h != h_locked:
+                if h != h_locked and h_locked != unihash:
                     self.mismatch_msgs.append('The %s:%s sig is computed to be %s, but the sig is locked to %s in %s'
                                           % (recipename, task, h, h_locked, var))
 
                 return h_locked
+
+        self.lockedhashes[tid] = False
         #bb.warn("%s %s %s" % (recipename, task, h))
         return h
 
+    def get_stampfile_hash(self, tid):
+        if tid in self.lockedhashes and self.lockedhashes[tid]:
+            return self.lockedhashes[tid]
+        return super().get_stampfile_hash(tid)
+
+    def get_unihash(self, tid):
+        if tid in self.lockedhashes and self.lockedhashes[tid] and not self._internal:
+            return self.lockedhashes[tid]
+        return super().get_unihash(tid)
+
     def dump_sigtask(self, fn, task, stampbase, runtime):
-        k = fn + "." + task
-        if k in self.lockedhashes:
+        tid = fn + ":" + task
+        if tid in self.lockedhashes and self.lockedhashes[tid]:
             return
         super(bb.siggen.SignatureGeneratorBasicHash, self).dump_sigtask(fn, task, stampbase, runtime)
 
     def dump_lockedsigs(self, sigfile, taskfilter=None):
         types = {}
-        for k in self.runtaskdeps:
+        for tid in self.runtaskdeps:
             if taskfilter:
-                if not k in taskfilter:
+                if not tid in taskfilter:
                     continue
-            fn = k.rsplit(".",1)[0]
+            fn = bb.runqueue.fn_from_tid(tid)
             t = self.lockedhashfn[fn].split(" ")[1].split(":")[5]
             t = 't-' + t.replace('_', '-')
             if t not in types:
                 types[t] = []
-            types[t].append(k)
+            types[t].append(tid)
 
         with open(sigfile, "w") as f:
             l = sorted(types)
             for t in l:
                 f.write('SIGGEN_LOCKEDSIGS_%s = "\\\n' % t)
                 types[t].sort()
-                sortedk = sorted(types[t], key=lambda k: self.lockedpnmap[k.rsplit(".",1)[0]])
-                for k in sortedk:
-                    fn = k.rsplit(".",1)[0]
-                    task = k.rsplit(".",1)[1]
-                    if k not in self.taskhash:
+                sortedtid = sorted(types[t], key=lambda tid: self.lockedpnmap[bb.runqueue.fn_from_tid(tid)])
+                for tid in sortedtid:
+                    (_, _, task, fn) = bb.runqueue.split_tid_mcfn(tid)
+                    if tid not in self.taskhash:
                         continue
-                    f.write("    " + self.lockedpnmap[fn] + ":" + task + ":" + self.taskhash[k] + " \\\n")
+                    f.write("    " + self.lockedpnmap[fn] + ":" + task + ":" + self.get_unihash(tid) + " \\\n")
                 f.write('    "\n')
             f.write('SIGGEN_LOCKEDSIGS_TYPES_%s = "%s"' % (self.machine, " ".join(l)))
 
@@ -226,25 +257,26 @@ class SignatureGeneratorOEBasicHash(bb.siggen.SignatureGeneratorBasicHash):
         with open(sigfile, "w") as f:
             tasks = []
             for taskitem in self.taskhash:
-                (fn, task) = taskitem.rsplit(".", 1)
+                (fn, task) = taskitem.rsplit(":", 1)
                 pn = self.lockedpnmap[fn]
                 tasks.append((pn, task, fn, self.taskhash[taskitem]))
             for (pn, task, fn, taskhash) in sorted(tasks):
-                f.write('%s.%s %s %s\n' % (pn, task, fn, taskhash))
+                f.write('%s:%s %s %s\n' % (pn, task, fn, taskhash))
 
-    def checkhashes(self, missed, ret, sq_fn, sq_task, sq_hash, sq_hashfn, d):
+    def checkhashes(self, sq_data, missed, found, d):
         warn_msgs = []
         error_msgs = []
         sstate_missing_msgs = []
 
-        for task in range(len(sq_fn)):
-            if task not in ret:
+        for tid in sq_data['hash']:
+            if tid not in found:
                 for pn in self.lockedsigs:
-                    if sq_hash[task] in iter(self.lockedsigs[pn].values()):
-                        if sq_task[task] == 'do_shared_workdir':
+                    taskname = bb.runqueue.taskname_from_tid(tid)
+                    if sq_data['hash'][tid] in iter(self.lockedsigs[pn].values()):
+                        if taskname == 'do_shared_workdir':
                             continue
                         sstate_missing_msgs.append("Locked sig is set for %s:%s (%s) yet not in sstate cache?"
-                                               % (pn, sq_task[task], sq_hash[task]))
+                                               % (pn, taskname, sq_data['hash'][tid]))
 
         checklevel = d.getVar("SIGGEN_LOCKEDSIGS_TASKSIG_CHECK")
         if checklevel == 'warn':
@@ -263,10 +295,25 @@ class SignatureGeneratorOEBasicHash(bb.siggen.SignatureGeneratorBasicHash):
         if error_msgs:
             bb.fatal("\n".join(error_msgs))
 
+class SignatureGeneratorOEBasicHash(SignatureGeneratorOEBasicHashMixIn, bb.siggen.SignatureGeneratorBasicHash):
+    name = "OEBasicHash"
+
+class SignatureGeneratorOEEquivHash(SignatureGeneratorOEBasicHashMixIn, bb.siggen.SignatureGeneratorUniHashMixIn, bb.siggen.SignatureGeneratorBasicHash):
+    name = "OEEquivHash"
+
+    def init_rundepcheck(self, data):
+        super().init_rundepcheck(data)
+        self.server = data.getVar('BB_HASHSERVE')
+        if not self.server:
+            bb.fatal("OEEquivHash requires BB_HASHSERVE to be set")
+        self.method = data.getVar('SSTATE_HASHEQUIV_METHOD')
+        if not self.method:
+            bb.fatal("OEEquivHash requires SSTATE_HASHEQUIV_METHOD to be set")
 
 # Insert these classes into siggen's namespace so it can see and select them
 bb.siggen.SignatureGeneratorOEBasic = SignatureGeneratorOEBasic
 bb.siggen.SignatureGeneratorOEBasicHash = SignatureGeneratorOEBasicHash
+bb.siggen.SignatureGeneratorOEEquivHash = SignatureGeneratorOEEquivHash
 
 
 def find_siginfo(pn, taskname, taskhashlist, d):
@@ -278,7 +325,7 @@ def find_siginfo(pn, taskname, taskhashlist, d):
     if not taskname:
         # We have to derive pn and taskname
         key = pn
-        splitit = key.split('.bb.')
+        splitit = key.split('.bb:')
         taskname = splitit[1]
         pn = os.path.basename(splitit[0]).split('_')[0]
         if key.startswith('virtual:native:'):
@@ -327,7 +374,7 @@ def find_siginfo(pn, taskname, taskhashlist, d):
 
     if not taskhashlist or (len(filedates) < 2 and not foundall):
         # That didn't work, look in sstate-cache
-        hashes = taskhashlist or ['?' * 32]
+        hashes = taskhashlist or ['?' * 64]
         localdata = bb.data.createCopy(d)
         for hashval in hashes:
             localdata.setVar('PACKAGE_ARCH', '*')
@@ -413,5 +460,149 @@ def find_sstate_manifest(taskdata, taskdata2, taskname, d, multilibcache):
             return manifest, d2
     bb.warn("Manifest %s not found in %s (variant '%s')?" % (manifest, d2.expand(" ".join(pkgarchs)), variant))
     return None, d2
+
+def OEOuthashBasic(path, sigfile, task, d):
+    """
+    Basic output hash function
+
+    Calculates the output hash of a task by hashing all output file metadata,
+    and file contents.
+    """
+    import hashlib
+    import stat
+    import pwd
+    import grp
+
+    def update_hash(s):
+        s = s.encode('utf-8')
+        h.update(s)
+        if sigfile:
+            sigfile.write(s)
+
+    h = hashlib.sha256()
+    prev_dir = os.getcwd()
+    include_owners = os.environ.get('PSEUDO_DISABLED') == '0'
+    if "package_write_" in task or task == "package_qa":
+        include_owners = False
+    include_timestamps = False
+    if task == "package":
+        include_timestamps = d.getVar('BUILD_REPRODUCIBLE_BINARIES') == '1'
+    extra_content = d.getVar('HASHEQUIV_HASH_VERSION')
+
+    try:
+        os.chdir(path)
+
+        update_hash("OEOuthashBasic\n")
+        if extra_content:
+            update_hash(extra_content + "\n")
+
+        # It is only currently useful to get equivalent hashes for things that
+        # can be restored from sstate. Since the sstate object is named using
+        # SSTATE_PKGSPEC and the task name, those should be included in the
+        # output hash calculation.
+        update_hash("SSTATE_PKGSPEC=%s\n" % d.getVar('SSTATE_PKGSPEC'))
+        update_hash("task=%s\n" % task)
+
+        for root, dirs, files in os.walk('.', topdown=True):
+            # Sort directories to ensure consistent ordering when recursing
+            dirs.sort()
+            files.sort()
+
+            def process(path):
+                s = os.lstat(path)
+
+                if stat.S_ISDIR(s.st_mode):
+                    update_hash('d')
+                elif stat.S_ISCHR(s.st_mode):
+                    update_hash('c')
+                elif stat.S_ISBLK(s.st_mode):
+                    update_hash('b')
+                elif stat.S_ISSOCK(s.st_mode):
+                    update_hash('s')
+                elif stat.S_ISLNK(s.st_mode):
+                    update_hash('l')
+                elif stat.S_ISFIFO(s.st_mode):
+                    update_hash('p')
+                else:
+                    update_hash('-')
+
+                def add_perm(mask, on, off='-'):
+                    if mask & s.st_mode:
+                        update_hash(on)
+                    else:
+                        update_hash(off)
+
+                add_perm(stat.S_IRUSR, 'r')
+                add_perm(stat.S_IWUSR, 'w')
+                if stat.S_ISUID & s.st_mode:
+                    add_perm(stat.S_IXUSR, 's', 'S')
+                else:
+                    add_perm(stat.S_IXUSR, 'x')
+
+                add_perm(stat.S_IRGRP, 'r')
+                add_perm(stat.S_IWGRP, 'w')
+                if stat.S_ISGID & s.st_mode:
+                    add_perm(stat.S_IXGRP, 's', 'S')
+                else:
+                    add_perm(stat.S_IXGRP, 'x')
+
+                add_perm(stat.S_IROTH, 'r')
+                add_perm(stat.S_IWOTH, 'w')
+                if stat.S_ISVTX & s.st_mode:
+                    update_hash('t')
+                else:
+                    add_perm(stat.S_IXOTH, 'x')
+
+                if include_owners:
+                    try:
+                        update_hash(" %10s" % pwd.getpwuid(s.st_uid).pw_name)
+                        update_hash(" %10s" % grp.getgrgid(s.st_gid).gr_name)
+                    except KeyError:
+                        bb.warn("KeyError in %s" % path)
+                        raise
+
+                if include_timestamps:
+                    update_hash(" %10d" % s.st_mtime)
+
+                update_hash(" ")
+                if stat.S_ISBLK(s.st_mode) or stat.S_ISCHR(s.st_mode):
+                    update_hash("%9s" % ("%d.%d" % (os.major(s.st_rdev), os.minor(s.st_rdev))))
+                else:
+                    update_hash(" " * 9)
+
+                update_hash(" ")
+                if stat.S_ISREG(s.st_mode):
+                    update_hash("%10d" % s.st_size)
+                else:
+                    update_hash(" " * 10)
+
+                update_hash(" ")
+                fh = hashlib.sha256()
+                if stat.S_ISREG(s.st_mode):
+                    # Hash file contents
+                    with open(path, 'rb') as d:
+                        for chunk in iter(lambda: d.read(4096), b""):
+                            fh.update(chunk)
+                    update_hash(fh.hexdigest())
+                else:
+                    update_hash(" " * len(fh.hexdigest()))
+
+                update_hash(" %s" % path)
+
+                if stat.S_ISLNK(s.st_mode):
+                    update_hash(" -> %s" % os.readlink(path))
+
+                update_hash("\n")
+
+            # Process this directory and all its child files
+            process(root)
+            for f in files:
+                if f == 'fixmepath':
+                    continue
+                process(os.path.join(root, f))
+    finally:
+        os.chdir(prev_dir)
+
+    return h.hexdigest()
 
 

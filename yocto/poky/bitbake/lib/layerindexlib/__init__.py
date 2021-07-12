@@ -1,22 +1,13 @@
 # Copyright (C) 2016-2018 Wind River Systems, Inc.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 import datetime
 
 import logging
 import imp
+import os
 
 from collections import OrderedDict
 from layerindexlib.plugin import LayerIndexPluginUrlError
@@ -80,7 +71,7 @@ class LayerIndex():
 
         if self.__class__ != newIndex.__class__ or \
            other.__class__ != newIndex.__class__:
-            raise TypeException("Can not add different types.")
+            raise TypeError("Can not add different types.")
 
         for indexEnt in self.indexes:
             newIndex.indexes.append(indexEnt)
@@ -276,8 +267,8 @@ will write out the individual elements split by layer and related components.
                 logger.debug(1, "Store not implemented in %s" % plugin.type)
                 pass
         else:
-            logger.debug(1, "No plugins support %s" % url)
-            raise LayerIndexException("No plugins support %s" % url)
+            logger.debug(1, "No plugins support %s" % indexURI)
+            raise LayerIndexException("No plugins support %s" % indexURI)
 
 
     def is_empty(self):
@@ -386,7 +377,7 @@ layerBranches set.  If not, they are effectively blank.'''
                 invalid.append(name)
 
 
-        def _resolve_dependencies(layerbranches, ignores, dependencies, invalid):
+        def _resolve_dependencies(layerbranches, ignores, dependencies, invalid, processed=None):
             for layerbranch in layerbranches:
                 if ignores and layerbranch.layer.name in ignores:
                     continue
@@ -396,6 +387,13 @@ layerBranches set.  If not, they are effectively blank.'''
                     deplayerbranch = layerdependency.dependency_layerBranch
 
                     if ignores and deplayerbranch.layer.name in ignores:
+                        continue
+
+                    # Since this is depth first, we need to know what we're currently processing
+                    # in order to avoid infinite recursion on a loop.
+                    if processed and deplayerbranch.layer.name in processed:
+                        # We have found a recursion...
+                        logger.warning('Circular layer dependency found: %s -> %s' % (processed, deplayerbranch.layer.name))
                         continue
 
                     # This little block is why we can't re-use the LayerIndexObj version,
@@ -421,7 +419,17 @@ layerBranches set.  If not, they are effectively blank.'''
 
                     # New dependency, we need to resolve it now... depth-first
                     if deplayerbranch.layer.name not in dependencies:
-                        (dependencies, invalid) = _resolve_dependencies([deplayerbranch], ignores, dependencies, invalid)
+                        # Avoid recursion on this branch.
+                        # We copy so we don't end up polluting the depth-first branch with other
+                        # branches.  Duplication between individual branches IS expected and
+                        # handled by 'dependencies' processing.
+                        if not processed:
+                            local_processed = []
+                        else:
+                            local_processed = processed.copy()
+                        local_processed.append(deplayerbranch.layer.name)
+
+                        (dependencies, invalid) = _resolve_dependencies([deplayerbranch], ignores, dependencies, invalid, local_processed)
 
                     if deplayerbranch.layer.name not in dependencies:
                         dependencies[deplayerbranch.layer.name] = [deplayerbranch, layerdependency]
@@ -650,7 +658,7 @@ class LayerIndexObj():
             if obj.id in self._index[indexname]:
                 if self._index[indexname][obj.id] == obj:
                     continue
-                raise LayerIndexError('Conflict adding object %s(%s) to index' % (indexname, obj.id))
+                raise LayerIndexException('Conflict adding object %s(%s) to index' % (indexname, obj.id))
             self._index[indexname][obj.id] = obj
 
     def add_raw_element(self, indexname, objtype, rawobjs):
@@ -835,11 +843,11 @@ class LayerIndexObj():
 
         def _resolve_dependencies(layerbranches, ignores, dependencies, invalid):
             for layerbranch in layerbranches:
-                if ignores and layerBranch.layer.name in ignores:
+                if ignores and layerbranch.layer.name in ignores:
                     continue
 
-                for layerdependency in layerbranch.index.layerDependencies_layerBranchId[layerBranch.id]:
-                    deplayerbranch = layerDependency.dependency_layerBranch
+                for layerdependency in layerbranch.index.layerDependencies_layerBranchId[layerbranch.id]:
+                    deplayerbranch = layerdependency.dependency_layerBranch
 
                     if ignores and deplayerbranch.layer.name in ignores:
                         continue

@@ -6,7 +6,7 @@ LICENSE = "MIT | Apache-2.0"
 inherit rust
 inherit cargo_common
 
-DEPENDS += "file-native python-native"
+DEPENDS += "file-native python3-native"
 DEPENDS_append_class-native = " rust-llvm-native"
 
 # We generate local targets, and need to be able to locate them
@@ -47,6 +47,9 @@ def llvm_features_from_tune(d):
         return []
     feat = frozenset(feat.split())
 
+    mach_overrides = d.getVar('MACHINEOVERRIDES')
+    mach_overrides = frozenset(mach_overrides.split(':'))
+
     if 'vfpv4' in feat:
         f.append("+vfp4")
     if 'vfpv3' in feat:
@@ -70,9 +73,9 @@ def llvm_features_from_tune(d):
         f.append("+mips32r2")
 
     v7=frozenset(['armv7a', 'armv7r', 'armv7m', 'armv7ve'])
-    if not feat.isdisjoint(v7):
+    if (not mach_overrides.isdisjoint(v7)) or (not feat.isdisjoint(v7)):
         f.append("+v7")
-    if 'armv6' in feat:
+    if ('armv6' in mach_overrides) or ('armv6' in feat):
         f.append("+v6")
 
     if 'dsp' in feat:
@@ -80,7 +83,7 @@ def llvm_features_from_tune(d):
 
     if 'thumb' in feat:
         if d.getVar('ARM_THUMB_OPT') is "thumb":
-            if not feat.isdisjoint(v7):
+            if (not mach_overrides.isdisjoint(v7)) or (not feat.isdisjoint(v7)):
                 f.append("+thumb2")
             f.append("+thumb-mode")
 
@@ -296,18 +299,13 @@ TARGET_LLVM_FEATURES = "${@llvm_features(d)}"
 # (original) target.
 TARGET_LLVM_FEATURES_class-native = "${@','.join(llvm_features_from_cc_arch(d))}"
 
-def rust_gen_target(d, thing, wd):
+def rust_gen_target(d, thing, wd, features, cpu):
     import json
     from distutils.version import LooseVersion
     arch = arch_for(d, thing)
     sys = sys_for(d, thing)
     prefix = prefix_for(d, thing)
 
-    features = ""
-    cpu = "generic"
-    if thing is "TARGET":
-        features = d.getVar('TARGET_LLVM_FEATURES') or ""
-        cpu = d.getVar('TARGET_LLVM_CPU')
     features = features or d.getVarFlag('FEATURES', arch) or ""
     features = features.strip()
 
@@ -315,7 +313,7 @@ def rust_gen_target(d, thing, wd):
     tspec = {}
     tspec['llvm-target'] = d.getVarFlag('LLVM_TARGET', arch)
     tspec['data-layout'] = d.getVarFlag('DATA_LAYOUT', arch)
-    tspec['max-atomic-width'] = d.getVarFlag('MAX_ATOMIC_WIDTH', arch)
+    tspec['max-atomic-width'] = int(d.getVarFlag('MAX_ATOMIC_WIDTH', arch))
     tspec['target-pointer-width'] = d.getVarFlag('TARGET_POINTER_WIDTH', arch)
     tspec['target-c-int-width'] = d.getVarFlag('TARGET_C_INT_WIDTH', arch)
     tspec['target-endian'] = d.getVarFlag('TARGET_ENDIAN', arch)
@@ -352,19 +350,13 @@ def rust_gen_target(d, thing, wd):
     with open(wd + sys + '.json', 'w') as f:
         json.dump(tspec, f, indent=4)
 
-
 python do_rust_gen_targets () {
     wd = d.getVar('WORKDIR') + '/targets/'
-    # It is important 'TARGET' is last here so that it overrides our less
-    # informed choices for BUILD & HOST if TARGET happens to be the same as
-    # either of them.
-    for thing in ['BUILD', 'HOST', 'TARGET']:
-        bb.debug(1, "rust_gen_target for " + thing)
-        rust_gen_target(d, thing, wd)
+    rust_gen_target(d, 'BUILD', wd, "", "generic")
 }
+
 addtask rust_gen_targets after do_patch before do_compile
 do_rust_gen_targets[dirs] += "${WORKDIR}/targets"
-
 
 do_rust_setup_snapshot () {
     for installer in "${WORKDIR}/rust-snapshot-components/"*"/install.sh"; do
@@ -471,22 +463,22 @@ rust_runx () {
 
     oe_cargo_fix_env
 
-    python src/bootstrap/bootstrap.py "$@" --verbose
+    python3 src/bootstrap/bootstrap.py ${@oe.utils.parallel_make_argument(d, '-j %d')} "$@" --verbose
 }
+rust_runx[vardepsexclude] += "PARALLEL_MAKE"
 
 do_compile () {
     rust_runx build
-    rust_runx dist
 }
 
 rust_do_install () {
-    # Only install compiler generated for the HOST_SYS. There will be
-    # one for SNAPSHOT_BUILD_SYS as well.
-    local installer=build/tmp/dist/rustc-${PV}-${HOST_SYS}/install.sh
-    ${installer} --destdir="${D}" --prefix="${prefix}" --disable-ldconfig
+    mkdir -p ${D}${bindir}
+    cp build/${HOST_SYS}/stage2/bin/* ${D}${bindir}
 
-    installer=build/tmp/dist/rust-std-${PV}-${HOST_SYS}/install.sh
-    ${installer} --destdir="${D}" --prefix="${prefix}" --disable-ldconfig
+    mkdir -p ${D}${libdir}/rustlib
+    cp -pRd build/${HOST_SYS}/stage2/lib/* ${D}${libdir}
+    # Remove absolute symlink so bitbake doesn't complain
+    rm -f ${D}${libdir}/rustlib/src/rust
 
     # Install our custom target.json files
     local td="${D}${libdir}/rustlib/"
@@ -494,12 +486,6 @@ rust_do_install () {
     for tgt in "${WORKDIR}/targets/"* ; do
         install -m 0644 "$tgt" "$td"
     done
-
-    # cleanup after rust-installer since we don't need these bits
-    rm ${D}/${libdir}/rustlib/install.log
-    rm ${D}/${libdir}/rustlib/rust-installer-version
-    rm ${D}/${libdir}/rustlib/uninstall.sh
-    rm ${D}/${libdir}/rustlib/components
 }
 
 

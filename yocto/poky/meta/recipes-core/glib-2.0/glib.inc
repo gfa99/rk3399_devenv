@@ -22,34 +22,35 @@ DEPENDS = "glib-2.0-native \
            virtual/libintl \
            virtual/libiconv \
            libffi \
-           zlib \
-           ${@bb.utils.contains('PTEST_ENABLED', '1', 'dbus', '', d)}"
+           zlib"
 
 PACKAGES += "${PN}-codegen ${PN}-utils"
 
 LEAD_SONAME = "libglib-2.0.*"
 
-inherit autotools gettext gtk-doc pkgconfig ptest-gnome upstream-version-is-even bash-completion gio-module-cache manpages
+inherit meson gettext gtk-doc pkgconfig ptest-gnome upstream-version-is-even bash-completion gio-module-cache manpages
+
+DEPENDS_append_class-target = "${@' gtk-doc' if d.getVar('GTKDOC_ENABLED') == 'True' else ''}"
+
+GTKDOC_MESON_OPTION = "gtk_doc"
+
+# This avoids the need to depend on target python3, which in case of mingw is not even possible.
+# meson's python configuration pokes into python3 configuration, so this provides the native config to it.
+unset _PYTHON_SYSCONFIGDATA_NAME
 
 S = "${WORKDIR}/glib-${PV}"
 
-PACKAGECONFIG ??= "system-pcre libmount"
+PACKAGECONFIG ??= "system-pcre libmount \
+                   ${@bb.utils.contains('PTEST_ENABLED', '1', 'tests', '', d)}"
 # To use the system pcre it must be configured with --enable-unicode-properties
-PACKAGECONFIG[system-pcre] = "--with-pcre=system,--with-pcre=internal,libpcre"
-PACKAGECONFIG[libmount] = "--enable-libmount,--disable-libmount,util-linux"
-PACKAGECONFIG[manpages] = "--enable-man --with-xml-catalog=${STAGING_ETCDIR_NATIVE}/xml/catalog.xml, --disable-man, libxslt-native xmlto-native"
-PACKAGECONFIG[libelf] = "--enable-libelf,--disable-libelf,elfutils"
+PACKAGECONFIG[system-pcre] = "-Dinternal_pcre=false,-Dinternal_pcre=true,libpcre"
+PACKAGECONFIG[libmount] = "-Dlibmount=enabled,-Dlibmount=disabled,util-linux"
+PACKAGECONFIG[manpages] = "-Dman=true, -Dman=false, libxslt-native xmlto-native"
+# libelf is auto-detected without a configuration option
+PACKAGECONFIG[libelf] = ",,elfutils"
+PACKAGECONFIG[tests] = "-Dinstalled_tests=true,-Dinstalled_tests=false,dbus"
 
-CORECONF = "--disable-dtrace --disable-fam --disable-systemtap"
-
-PRINTF = "--enable-included-printf=no"
-PRINTF_darwin = "--enable-included-printf=yes"
-PRINTF_mingw32 = "--enable-included-printf=yes"
-EXTRA_OECONF = "${PRINTF} ${CORECONF}"
-EXTRA_OECONF_class-native = "${CORECONF} --disable-selinux"
-
-# Tell configure that we'll have dbus-daemon on the target for the tests
-EXTRA_OECONF_append_class-target = " ${@bb.utils.contains('PTEST_ENABLED', '1', ' ac_cv_prog_DBUS_DAEMON=dbus-daemon', '', d)}"
+EXTRA_OEMESON = "-Ddtrace=false -Dfam=false -Dsystemtap=false -Dselinux=disabled"
 
 do_configure_prepend() {
 	sed -i -e '1s,#!.*,#!${USRBINPATH}/env python3,' ${S}/gio/gdbus-2.0/codegen/gdbus-codegen.in
@@ -59,13 +60,15 @@ FILES_${PN} = "${libdir}/lib*${SOLIBS} \
                ${libdir}/gio \
                ${libexecdir}/*gio-querymodules \
                ${datadir}/glib-2.0/schemas"
+
+FILES_${PN}-utils += "${bindir}/glib-genmarshal \
+                      ${bindir}/glib-gettextize \
+                      ${bindir}/glib-mkenums \
+                      ${bindir}/glib-compile-resources"
+
 FILES_${PN}-dev += "${libdir}/glib-2.0/include \
                     ${libdir}/gio/modules/lib*${SOLIBSDEV} \
                     ${libdir}/gio/modules/*.la \
-                    ${bindir}/glib-genmarshal \
-                    ${bindir}/glib-gettextize \
-                    ${bindir}/glib-mkenums \
-                    ${bindir}/glib-compile-resources \
                     ${datadir}/glib-2.0/gettext/po/Makefile.in.in \
                     ${datadir}/glib-2.0/schemas/gschema.dtd \
                     ${datadir}/glib-2.0/valgrind/glib.supp \
@@ -75,9 +78,12 @@ FILES_${PN}-codegen = "${datadir}/glib-2.0/codegen/*.py \
                        ${bindir}/gdbus-codegen"
 FILES_${PN}-utils = "${bindir}/*"
 
-RRECOMMENDS_${PN} += "shared-mime-info"
+SHAREDMIMEDEP = "shared-mime-info"
+SHAREDMIMEDEP_class-native = ""
 # When cross compiling for Windows we don't want to include this
-RRECOMMENDS_${PN}_remove_mingw32 = "shared-mime-info"
+SHAREDMIMEDEP_mingw32 = ""
+
+RRECOMMENDS_${PN} += "${SHAREDMIMEDEP}"
 
 ARM_INSTRUCTION_SET_armv4 = "arm"
 ARM_INSTRUCTION_SET_armv5 = "arm"
@@ -112,6 +118,8 @@ do_install_append () {
         if test "x${MLPREFIX}" != "x"; then
                 mv ${D}${libexecdir}/gio-querymodules${EXEEXT} ${D}${libexecdir}/${MLPREFIX}gio-querymodules${EXEEXT}
         fi
+        # Autotools does this, meson does not
+        mkdir -p ${D}${libdir}/gio/modules
 }
 
 do_install_append_class-target () {
@@ -122,6 +130,16 @@ do_install_append_class-target () {
 			rm ${D}${datadir}/installed-tests/glib/gdbus-serialization.test
 		fi
 	fi
+	if [ -f ${D}${datadir}/installed-tests/glib/static-link.test ]; then
+        if test "x${MLPREFIX}" != "x"; then
+                mv ${D}${datadir}/installed-tests/glib/static-link.test ${D}${datadir}/installed-tests/glib/${MLPREFIX}static-link.test
+        fi
+	fi
+}
+
+# As we do not build python3 for windows, makes no sense to ship the script that's using it
+do_install_append_mingw32() {
+        rm -f ${D}${bindir}/gtester-report
 }
 
 CODEGEN_PYTHON_RDEPENDS = "python3 python3-distutils python3-xml"
@@ -129,7 +147,11 @@ CODEGEN_PYTHON_RDEPENDS_mingw32 = ""
 
 RDEPENDS_${PN}-codegen += "${CODEGEN_PYTHON_RDEPENDS}"
 
+RDEPENDS_${PN}-ptest += "${PN}-utils"
+
 RDEPENDS_${PN}-ptest += "\
+            coreutils \
+            libgcc \
             dbus \
             gnome-desktop-testing \
             tzdata \
@@ -138,10 +160,20 @@ RDEPENDS_${PN}-ptest += "\
             tzdata-europe \
             tzdata-posix \
             shared-mime-info \
+            ${PN}-locale-ja \
+            ${PN}-locale-fr \
+            ${PN}-locale-el \
+            ${PN}-locale-hr \
+            ${PN}-locale-lt \
+            ${PN}-locale-pl \
+            ${PN}-locale-ru \
+            ${PN}-locale-th \
+            python3-core \
+            python3-modules \
+            python3-dbusmock \
+            ${PN}-codegen \
            "
 
-# When https://gitlab.gnome.org/GNOME/glib/issues/1343 is
-# fixed add locale-base-pl-pl
 RDEPENDS_${PN}-ptest_append_libc-glibc = "\
             glibc-gconv-utf-16 \
             glibc-charmap-utf-8 \
@@ -165,6 +197,7 @@ RDEPENDS_${PN}-ptest_append_libc-glibc = "\
             locale-base-fr-fr \
             locale-base-es-es \
             locale-base-en-gb \
+            locale-base-en-us \
+            locale-base-pl-pl \
+            locale-base-pl-pl.iso-8859-2 \
            "
-
-INSANE_SKIP_${PN}-ptest += "libdir"

@@ -21,11 +21,14 @@ SRC_URI = "http://downloads.yoctoproject.org/mirror/sources/DirectFB-${PV}.tar.g
            file://use-PTHREAD_MUTEX_RECURSIVE.patch \
            file://fix-client-gfx_state-initialisation.patch \
            file://fix-tslib-version-check.patch \
-          "
+           file://0001-Fix-build-on-32bit-arches-with-64bit-time_t.patch \
+           "
 
 S = "${WORKDIR}/DirectFB-${PV}"
 
 LDFLAGS_append = " -lm"
+
+CXXFLAGS_append_toolchain-clang = " -Wno-error=dtor-typedef"
 
 # Workaround for linking issues seen with armv7a + gold
 LDFLAGS_append_arm = "${@bb.utils.contains('DISTRO_FEATURES', 'ld-is-gold', ' -fuse-ld=bfd ', '', d)}"

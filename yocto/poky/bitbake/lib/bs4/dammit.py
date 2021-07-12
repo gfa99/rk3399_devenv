@@ -8,12 +8,10 @@ XML or HTML to reflect a new encoding; that's the tree builder's job.
 """
 __license__ = "MIT"
 
-from pdb import set_trace
 import codecs
 from html.entities import codepoint2name
 import re
 import logging
-import string
 
 # Import a library to autodetect character encodings.
 chardet_type = None
@@ -38,16 +36,10 @@ except ImportError:
         def chardet_dammit(s):
             return None
 
-# Available from http://cjkpython.i18n.org/.
-try:
-    import iconv_codec
-except ImportError:
-    pass
-
 xml_encoding_re = re.compile(
-    '^<\?.*encoding=[\'"](.*?)[\'"].*\?>'.encode(), re.I)
+    r'^<\?.*encoding=[\'"](.*?)[\'"].*\?>'.encode(), re.I)
 html_meta_re = re.compile(
-    '<\s*meta[^>]+charset\s*=\s*["\']?([^>]*?)[ /;\'">]'.encode(), re.I)
+    r'<\s*meta[^>]+charset\s*=\s*["\']?([^>]*?)[ /;\'">]'.encode(), re.I)
 
 class EntitySubstitution(object):
 
@@ -80,11 +72,11 @@ class EntitySubstitution(object):
         ">": "gt",
         }
 
-    BARE_AMPERSAND_OR_BRACKET = re.compile("([<>]|"
-                                           "&(?!#\d+;|#x[0-9a-fA-F]+;|\w+;)"
-                                           ")")
+    BARE_AMPERSAND_OR_BRACKET = re.compile(r"([<>]|"
+                                           r"&(?!#\d+;|#x[0-9a-fA-F]+;|\w+;)"
+                                           r")")
 
-    AMPERSAND_OR_BRACKET = re.compile("([<>&])")
+    AMPERSAND_OR_BRACKET = re.compile(r"([<>&])")
 
     @classmethod
     def _substitute_html_entity(cls, matchobj):

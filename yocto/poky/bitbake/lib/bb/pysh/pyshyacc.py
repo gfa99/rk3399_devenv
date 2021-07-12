@@ -570,6 +570,7 @@ def p_linebreak(p):
 
 def p_separator_op(p):                 
     """separator_op : COMMA
+                    | COMMA COMMA
                     | AMP"""
     p[0] = p[1]
 
@@ -636,13 +637,16 @@ def p_empty(p):
 def p_error(p):
     msg = []
     w = msg.append
-    w('%r\n' % p)
-    w('followed by:\n')
-    for i in range(5):
-        n = yacc.token()
-        if not n:
-            break
-        w('  %r\n' % n)
+    if p:
+        w('%r\n' % p)
+        w('followed by:\n')
+        for i in range(5):
+            n = yacc.token()
+            if not n:
+                break
+            w('  %r\n' % n)
+    else:
+        w('Unexpected EOF')
     raise sherrors.ShellSyntaxError(''.join(msg))
 
 # Build the parser

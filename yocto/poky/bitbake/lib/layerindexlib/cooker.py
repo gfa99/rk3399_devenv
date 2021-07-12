@@ -1,22 +1,12 @@
 # Copyright (C) 2016-2018 Wind River Systems, Inc.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 import logging
-import json
+import os
 
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from urllib.parse import unquote, urlparse
 
@@ -84,7 +74,7 @@ class CookerPlugin(layerindexlib.plugin.IndexPlugin):
         d = self.layerindex.data
 
         if not branches:
-            raise LayerIndexFetchError("No branches specified for _load_bblayers!")
+            raise layerindexlib.LayerIndexFetchError("No branches specified for _load_bblayers!")
 
         index = layerindexlib.LayerIndexObj()
 
@@ -104,7 +94,7 @@ class CookerPlugin(layerindexlib.plugin.IndexPlugin):
             return index
 
         collections = d.getVar('BBFILE_COLLECTIONS')
-        layerconfs = d.varhistory.get_variable_items_files('BBFILE_COLLECTIONS', d)
+        layerconfs = d.varhistory.get_variable_items_files('BBFILE_COLLECTIONS')
         bbfile_collections = {layer: os.path.dirname(os.path.dirname(path)) for layer, path in layerconfs.items()}
 
         (_, bb_branch, _, _) = self._get_bitbake_info()
@@ -213,7 +203,7 @@ class CookerPlugin(layerindexlib.plugin.IndexPlugin):
                     try:
                         depDict = bb.utils.explode_dep_versions2(deps)
                     except bb.utils.VersionStringException as vse:
-                        bb.fatal('Error parsing LAYERDEPENDS_%s: %s' % (c, str(vse)))
+                        bb.fatal('Error parsing LAYERDEPENDS_%s: %s' % (collection, str(vse)))
 
                     for dep, oplist in list(depDict.items()):
                         # We need to search ourselves, so use the _ version...
@@ -279,7 +269,7 @@ class CookerPlugin(layerindexlib.plugin.IndexPlugin):
 
                     layer = bb.utils.get_file_layer(realfn[0], self.config_data)
 
-                    depBranchId = collection_layerbranch[layer]
+                    depBranchId = collection[layer]
 
                     recipeId += 1
                     recipe = layerindexlib.Recipe(index, None)

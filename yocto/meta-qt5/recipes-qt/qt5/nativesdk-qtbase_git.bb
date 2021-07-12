@@ -10,7 +10,7 @@ LIC_FILES_CHKSUM = " \
     file://LICENSE.GPL3;md5=d32239bcb673463ab874e80d47fae504 \
     file://LICENSE.GPL3-EXCEPT;md5=763d8c535a234d9a3fb682c7ecb6c073 \
     file://LICENSE.FDL;md5=6d9f2a9af4c8b8c3c769f6cc1b6aaf7e \
-    file://LICENSE.QT-LICENSE-AGREEMENT-4.0;md5=948f8877345cd66106f11031977a4625 \
+    file://LICENSE.QT-LICENSE-AGREEMENT;md5=c8b6dd132d52c6e5a545df07a4e3e283 \
 "
 
 QT_MODULE = "qtbase"
@@ -22,8 +22,8 @@ require qt5-git.inc
 FILESEXTRAPATHS =. "${FILE_DIRNAME}/qtbase:"
 
 # common for qtbase-native, qtbase-nativesdk and qtbase
-# Patches from https://github.com/meta-qt5/qtbase/commits/b5.11-shared
-# 5.11.meta-qt5-shared.14
+# Patches from https://github.com/meta-qt5/qtbase/commits/b5.15-shared
+# 5.15.meta-qt5-shared.2
 SRC_URI += "\
     file://0001-Add-linux-oe-g-platform.patch \
     file://0002-cmake-Use-OE_QMAKE_PATH_EXTERNAL_HOST_BINS.patch \
@@ -37,21 +37,20 @@ SRC_URI += "\
     file://0010-linux-clang-Invert-conditional-for-defining-QT_SOCKL.patch \
     file://0011-tst_qlocale-Enable-QT_USE_FENV-only-on-glibc.patch \
     file://0012-mkspecs-common-gcc-base.conf-Use-I-instead-of-isyste.patch \
-    file://0013-Upgrade-double-conversion-to-v3.0.0.patch \
-    file://0014-double-conversion-support-AARCH64EB-and-arm-BE.patch \
-    file://0015-Disable-ltcg-for-host_build.patch \
-    file://0016-Qt5GuiConfigExtras.cmake.in-cope-with-variable-path-.patch \
-    file://0017-corelib-Include-sys-types.h-for-uint32_t.patch \
-    file://0018-Define-QMAKE_CXX.COMPILER_MACROS-for-clang-on-linux.patch \
-    file://0019-Fix-compile-issue-with-gcc-9.patch \
+    file://0013-Disable-ltcg-for-host_build.patch \
+    file://0014-Qt5GuiConfigExtras.cmake.in-cope-with-variable-path-.patch \
+    file://0015-corelib-Include-sys-types.h-for-uint32_t.patch \
+    file://0016-Define-QMAKE_CXX.COMPILER_MACROS-for-clang-on-linux.patch \
+    file://0017-input-Make-use-of-timeval-portable-for-64bit-time_t.patch \
+    file://0018-tst_qpainter-FE_-macros-are-not-defined-for-every-pl.patch \
 "
 
 # common for qtbase-native and nativesdk-qtbase
-# Patches from https://github.com/meta-qt5/qtbase/commits/b5.11-native
-# 5.11.meta-qt5-native.14
+# Patches from https://github.com/meta-qt5/qtbase/commits/b5.15-native
+# 5.15.meta-qt5-native.2
 SRC_URI += " \
-    file://0020-Always-build-uic-and-qvkgen.patch \
-    file://0021-Avoid-renameeat2-for-native-sdk-builds.patch \
+    file://0019-Always-build-uic-and-qvkgen.patch \
+    file://0020-Avoid-renameeat2-for-native-sdk-builds.patch \
 "
 
 # CMake's toolchain configuration of nativesdk-qtbase
@@ -68,6 +67,8 @@ FILES_${PN}-dev += " \
 
 FILES_${PN} += " \
     ${SDKPATHNATIVE}/environment-setup.d \
+    ${OE_QMAKE_PATH_PLUGINS} \
+    ${OE_QMAKE_PATH_LIBS}/metatypes \
 "
 
 # qttools binaries are placed in a subdir of bin in order to avoid
@@ -76,11 +77,15 @@ FILES_${PN} += " \
 # disable package auto-renaming for the tools-package.
 DEBIAN_NOAUTONAME_${PN} = "1"
 
+PACKAGECONFIG ?= ""
+PACKAGECONFIG[gui] = "-gui -qpa offscreen,-no-gui,"
+PACKAGECONFIG[imageformats] = "-qt-libpng -qt-libjpeg -gif -ico, -no-libpng -no-libjpeg -no-ico -no-gif,"
+PACKAGECONFIG[openssl] = "-openssl,-no-openssl,openssl,libssl"
+
 QT_CONFIG_FLAGS += " \
     -shared \
     -silent \
     -no-pch \
-    -no-rpath \
     -pkg-config \
     ${PACKAGECONFIG_CONFARGS} \
 "
@@ -105,16 +110,11 @@ do_configure() {
         -no-gcc-sysroot \
         -system-zlib \
         -dbus-runtime \
-        -no-libjpeg \
-        -no-libpng \
-        -no-gif \
         -no-accessibility \
         -no-cups \
-        -no-gui \
         -no-sql-mysql \
         -no-sql-sqlite \
         -no-opengl \
-        -no-openssl \
         -no-xcb \
         -no-feature-bearermanagement \
         -no-icu \
@@ -142,7 +142,6 @@ do_configure() {
         -nomake examples \
         -nomake tests \
         -no-compile-examples \
-        -no-rpath \
         -platform ${OE_QMAKE_PLATFORM_NATIVE} \
         -xplatform ${OE_QMAKE_PLATFORM} \
         ${QT_CONFIG_FLAGS}
@@ -153,7 +152,6 @@ do_install() {
 
     # remove things unused in nativesdk, we need the headers and libs
     rm -rf ${D}${datadir} \
-           ${D}/${OE_QMAKE_PATH_PLUGINS} \
            ${D}${libdir}/cmake \
            ${D}${libdir}/pkgconfig
 
@@ -198,4 +196,4 @@ fakeroot do_generate_qt_environment_file() {
 do_generate_qt_environment_file[umask] = "022"
 addtask generate_qt_environment_file after do_install before do_package
 
-SRCREV = "08de243eaa007597c2bfbc97d3d14e2f821ac4be"
+SRCREV = "f6fe4bbab7c0a390b96098b1ccf2373547a4baf9"

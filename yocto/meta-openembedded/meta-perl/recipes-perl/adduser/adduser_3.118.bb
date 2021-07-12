@@ -8,6 +8,7 @@ LIC_FILES_CHKSUM = "file://debian/copyright;md5=caed49ab166f22ef31bf1127f558d0ef
 
 SRC_URI = "https://launchpad.net/debian/+archive/primary/+sourcefiles/adduser/${PV}/${BPN}_${PV}.tar.xz \
            file://adduser-add-M-option-for-useradd.patch \
+           file://0001-adduser-set-default-shell-with-sbin-nologin.patch \
 "
 
 SRC_URI[md5sum] = "44ba2475ebdaafc9613236bdda321c97"
@@ -22,7 +23,7 @@ do_install() {
     install -m 0755 ${S}/adduser ${D}${sbindir}
     install -m 0755 ${S}/deluser ${D}${sbindir}
 
-    install -D -m 0644 ${S}/AdduserCommon.pm ${D}${libdir}/perl/${@get_perl_version(d)}/Debian/AdduserCommon.pm
+    install -D -m 0644 ${S}/AdduserCommon.pm ${D}${libdir}/perl5/${@get_perl_version(d)}/Debian/AdduserCommon.pm
     sed -i -e "s/VERSION/${PV}/" ${D}${sbindir}/*
 
     install -d ${D}/${sysconfdir}

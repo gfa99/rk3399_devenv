@@ -27,6 +27,19 @@ DISTRO = "nodistro") and contains only emulated machine support.
 For information about OpenEmbedded, see the OpenEmbedded website:
     http://www.openembedded.org/
 
+
+Contribution Guidelines
+=======================
+
+A guide to submitting patches to OpenEmbedded is available at:
+
+http://www.openembedded.org/wiki/How_to_submit_a_patch_to_OpenEmbedded
+
+There is good documentation on how to write/format patches at:
+
+https://www.openembedded.org/wiki/Commit_Patch_Message_Guidelines
+
+
 Where to Send Patches
 =====================
 
@@ -40,11 +53,11 @@ bitbake:
 
 documentation:
     Git repository: http://git.yoctoproject.org/cgit/cgit.cgi/yocto-docs/
-    Mailing list: yocto@yoctoproject.org
+    Mailing list: docs@lists.yoctoproject.org
 
 meta-poky, meta-yocto-bsp:
     Git repository: http://git.yoctoproject.org/cgit/cgit.cgi/meta-yocto(-bsp)
-    Mailing list: poky@yoctoproject.org
+    Mailing list: poky@lists.yoctoproject.org
 
 Everything else should be sent to the OpenEmbedded Core mailing list.  If in
 doubt, check the oe-core git repository for the content you intend to modify.

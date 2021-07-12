@@ -1,5 +1,3 @@
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 #
 # Copyright (C) 2003, 2004  Chris Larson
 # Copyright (C) 2003, 2004  Phil Blundell
@@ -8,18 +6,8 @@
 # Copyright (C) 2005        ROAD GmbH
 # Copyright (C) 2006        Richard Purdie
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import re
 import logging
@@ -104,11 +92,11 @@ def preferredVersionMatch(pe, pv, pr, preferred_e, preferred_v, preferred_r):
     Check if the version pe,pv,pr is the preferred one.
     If there is preferred version defined and ends with '%', then pv has to start with that version after removing the '%'
     """
-    if (pr == preferred_r or preferred_r == None):
-        if (pe == preferred_e or preferred_e == None):
+    if pr == preferred_r or preferred_r is None:
+        if pe == preferred_e or preferred_e is None:
             if preferred_v == pv:
                 return True
-            if preferred_v != None and preferred_v.endswith('%') and pv.startswith(preferred_v[:len(preferred_v)-1]):
+            if preferred_v is not None and preferred_v.endswith('%') and pv.startswith(preferred_v[:len(preferred_v)-1]):
                 return True
     return False
 
@@ -129,7 +117,7 @@ def findPreferredProvider(pn, cfgData, dataCache, pkg_pn = None, item = None):
         preferred_v = cfgData.getVar("PREFERRED_VERSION")
 
     if preferred_v:
-        m = re.match('(\d+:)*(.*)(_.*)*', preferred_v)
+        m = re.match(r'(\d+:)*(.*)(_.*)*', preferred_v)
         if m:
             if m.group(1):
                 preferred_e = m.group(1)[:-1]
@@ -384,7 +372,7 @@ def getRuntimeProviders(dataCache, rdepend):
 
     # Only search dynamic packages if we can't find anything in other variables
     for pattern in dataCache.packages_dynamic:
-        pattern = pattern.replace('+', "\+")
+        pattern = pattern.replace(r'+', r"\+")
         if pattern in regexp_cache:
             regexp = regexp_cache[pattern]
         else:

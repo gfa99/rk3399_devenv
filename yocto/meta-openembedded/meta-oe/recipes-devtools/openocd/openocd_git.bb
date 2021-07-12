@@ -9,26 +9,27 @@ SRC_URI = " \
     git://repo.or.cz/r/git2cl.git;protocol=http;destsuffix=tools/git2cl;name=git2cl \
     git://repo.or.cz/r/jimtcl.git;protocol=http;destsuffix=git/jimtcl;name=jimtcl \
     git://repo.or.cz/r/libjaylink.git;protocol=http;destsuffix=git/src/jtag/drivers/libjaylink;name=libjaylink \
-    file://0001-Fix-libusb-1.0.22-deprecated-libusb_set_debug-with-l.patch \
 "
 
 SRCREV_FORMAT = "openocd"
-SRCREV_openocd = "cdf1e826eb23c29de1019ce64125f644f01b0afe"
+SRCREV_openocd = "d46f28c2ea2611f5fbbc679a5eed253d3dcd2fe3"
 SRCREV_git2cl = "8373c9f74993e218a08819cbcdbab3f3564bbeba"
-SRCREV_jimtcl = "a9bf5975fd0f89974d689a2d9ebd0873c8d64787"
-SRCREV_libjaylink = "8645845c1abebd004e991ba9a7f808f4fd0c608b"
+SRCREV_jimtcl = "0aa0fb4e3a38d38a49de9eb585d93d63a370dcf6"
+SRCREV_libjaylink = "9aa7a5957c07bb6e862fc1a6d3153d109c7407e4"
 
 PV = "0.10+gitr${SRCPV}"
 S = "${WORKDIR}/git"
 
 inherit pkgconfig autotools-brokensep gettext
 
-BBCLASSEXTEND += "nativesdk"
+BBCLASSEXTEND += "native nativesdk"
 
-EXTRA_OECONF = "--enable-ftdi --disable-doxygen-html"
+EXTRA_OECONF = "--enable-ftdi --disable-doxygen-html --disable-werror"
 
 do_configure() {
     ./bootstrap nosubmodule
+    install -m 0755 ${STAGING_DATADIR_NATIVE}/gnu-config/config.guess ${S}/jimtcl/autosetup
+    install -m 0755 ${STAGING_DATADIR_NATIVE}/gnu-config/config.sub ${S}/jimtcl/autosetup
     oe_runconf ${EXTRA_OECONF}
 }
 
@@ -51,4 +52,5 @@ FILES_${PN} = " \
   "
 
 PACKAGECONFIG[sysfsgpio] = "--enable-sysfsgpio,--disable-sysfsgpio"
-PACKAGECONFIG ??= "sysfsgpio"
+PACKAGECONFIG[remote-bitbang] = "--enable-remote-bitbang,--disable-remote-bitbang"
+PACKAGECONFIG ??= "sysfsgpio remote-bitbang"

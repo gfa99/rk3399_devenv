@@ -1,5 +1,3 @@
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 """
  AbstractSyntaxTree classes for the Bitbake language
 """
@@ -8,25 +6,10 @@
 # Copyright (C) 2003, 2004 Phil Blundell
 # Copyright (C) 2009 Holger Hans Peter Freyther
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
-import re
-import string
-import logging
 import bb
-import itertools
 from bb import methodpool
 from bb.parse import logger
 
@@ -106,7 +89,7 @@ class DataNode(AstNode):
         self.groupd = groupd
 
     def getFunc(self, key, data):
-        if 'flag' in self.groupd and self.groupd['flag'] != None:
+        if 'flag' in self.groupd and self.groupd['flag'] is not None:
             return data.getVarFlag(key, self.groupd['flag'], expand=False, noweakdefault=True)
         else:
             return data.getVar(key, False, noweakdefault=True, parsing=True)
@@ -119,36 +102,36 @@ class DataNode(AstNode):
             'file': self.filename,
             'line': self.lineno,
         }
-        if "exp" in groupd and groupd["exp"] != None:
+        if "exp" in groupd and groupd["exp"] is not None:
             data.setVarFlag(key, "export", 1, op = 'exported', **loginfo)
 
         op = "set"
-        if "ques" in groupd and groupd["ques"] != None:
+        if "ques" in groupd and groupd["ques"] is not None:
             val = self.getFunc(key, data)
             op = "set?"
-            if val == None:
+            if val is None:
                 val = groupd["value"]
-        elif "colon" in groupd and groupd["colon"] != None:
+        elif "colon" in groupd and groupd["colon"] is not None:
             e = data.createCopy()
             op = "immediate"
             val = e.expand(groupd["value"], key + "[:=]")
-        elif "append" in groupd and groupd["append"] != None:
+        elif "append" in groupd and groupd["append"] is not None:
             op = "append"
             val = "%s %s" % ((self.getFunc(key, data) or ""), groupd["value"])
-        elif "prepend" in groupd and groupd["prepend"] != None:
+        elif "prepend" in groupd and groupd["prepend"] is not None:
             op = "prepend"
             val = "%s %s" % (groupd["value"], (self.getFunc(key, data) or ""))
-        elif "postdot" in groupd and groupd["postdot"] != None:
+        elif "postdot" in groupd and groupd["postdot"] is not None:
             op = "postdot"
             val = "%s%s" % ((self.getFunc(key, data) or ""), groupd["value"])
-        elif "predot" in groupd and groupd["predot"] != None:
+        elif "predot" in groupd and groupd["predot"] is not None:
             op = "predot"
             val = "%s%s" % (groupd["value"], (self.getFunc(key, data) or ""))
         else:
             val = groupd["value"]
 
         flag = None
-        if 'flag' in groupd and groupd['flag'] != None:
+        if 'flag' in groupd and groupd['flag'] is not None:
             flag = groupd['flag']
         elif groupd["lazyques"]:
             flag = "_defaultval"
@@ -178,7 +161,7 @@ class MethodNode(AstNode):
             funcname = ("__anon_%s_%s" % (self.lineno, self.filename.translate(MethodNode.tr_tbl)))
             self.python = True
             text = "def %s(d):\n" % (funcname) + text
-            bb.methodpool.insert_method(funcname, text, self.filename, self.lineno - len(self.body))
+            bb.methodpool.insert_method(funcname, text, self.filename, self.lineno - len(self.body) - 1)
             anonfuncs = data.getVar('__BBANONFUNCS', False) or []
             anonfuncs.append(funcname)
             data.setVar('__BBANONFUNCS', anonfuncs)
@@ -261,12 +244,14 @@ class AddTaskNode(AstNode):
         bb.build.addtask(self.func, self.before, self.after, data)
 
 class DelTaskNode(AstNode):
-    def __init__(self, filename, lineno, func):
+    def __init__(self, filename, lineno, tasks):
         AstNode.__init__(self, filename, lineno)
-        self.func = func
+        self.tasks = tasks
 
     def eval(self, data):
-        bb.build.deltask(self.func, data)
+        tasks = data.expand(self.tasks).split()
+        for task in tasks:
+            bb.build.deltask(task, data)
 
 class BBHandlerNode(AstNode):
     def __init__(self, filename, lineno, fns):
@@ -322,7 +307,7 @@ def handleAddTask(statements, filename, lineno, m):
     statements.append(AddTaskNode(filename, lineno, func, before, after))
 
 def handleDelTask(statements, filename, lineno, m):
-    func = m.group("func")
+    func = m.group(1)
     if func is None:
         return
 
@@ -355,6 +340,9 @@ def finalize(fn, d, variant = None):
         bb.event.fire(bb.event.RecipePreFinalise(fn), d)
 
         bb.data.expandKeys(d)
+
+        bb.event.fire(bb.event.RecipePostKeyExpansion(fn), d)
+
         runAnonFuncs(d)
 
         tasklist = d.getVar('__BBTASKS', False) or []

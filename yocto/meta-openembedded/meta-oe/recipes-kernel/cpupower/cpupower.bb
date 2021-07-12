@@ -5,7 +5,7 @@ LICENSE = "GPLv2"
 DEPENDS = "pciutils gettext-native"
 PROVIDES = "virtual/cpupower"
 
-inherit kernelsrc kernel-arch
+inherit kernelsrc kernel-arch bash-completion
 
 do_populate_lic[depends] += "virtual/kernel:do_patch"
 
@@ -29,7 +29,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 RDEPENDS_${PN} = "bash"
 
 python do_package_prepend() {
-    d.setVar('PKGV', d.getVar("KERNEL_VERSION", True).split("-")[0])
+    d.setVar('PKGV', d.getVar("KERNEL_VERSION").split("-")[0])
 }
 
 B = "${WORKDIR}/${BPN}-${PV}"

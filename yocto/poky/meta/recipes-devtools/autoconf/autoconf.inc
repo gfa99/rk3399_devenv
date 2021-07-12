@@ -5,9 +5,8 @@ file that lists the operating system features that the package can use, in the f
 LICENSE = "GPLv3"
 HOMEPAGE = "http://www.gnu.org/software/autoconf/"
 SECTION = "devel"
-DEPENDS += "m4-native"
-DEPENDS_class-native = "m4-native gnu-config-native"
-DEPENDS_class-nativesdk = "nativesdk-m4 nativesdk-gnu-config"
+DEPENDS = "m4-native gnu-config-native"
+
 RDEPENDS_${PN} = "m4 gnu-config \
 		  perl \
 		  perl-module-bytes \
@@ -22,10 +21,14 @@ RDEPENDS_${PN} = "m4 gnu-config \
 		  perl-module-file-find \
 		  perl-module-file-glob \
 		  perl-module-file-path \
+		  perl-module-file-spec \
+		  perl-module-file-spec-unix \
 		  perl-module-file-stat \
 		  perl-module-getopt-long \
 		  perl-module-io-file \
+		  perl-module-overloading \
 		  perl-module-posix \
+		  perl-module-symbol \
 		  perl-module-thread-queue \
 		  perl-module-threads \
 		 "
@@ -46,16 +49,17 @@ RDEPENDS_${PN}_class-nativesdk = "\
 		  nativesdk-perl-module-file-find \
 		  nativesdk-perl-module-file-glob \
 		  nativesdk-perl-module-file-path \
+		  nativesdk-perl-module-file-spec \
+		  nativesdk-perl-module-file-spec-unix \
 		  nativesdk-perl-module-file-stat \
 		  nativesdk-perl-module-getopt-long \
 		  nativesdk-perl-module-io-file \
+		  nativesdk-perl-module-overloading \
 		  nativesdk-perl-module-posix \
+		  nativesdk-perl-module-symbol \
 		  nativesdk-perl-module-thread-queue \
 		  nativesdk-perl-module-threads \
                   "
-
-SRC_URI = "${GNU_MIRROR}/autoconf/autoconf-${PV}.tar.gz \
-	   file://program_prefix.patch"
 
 inherit autotools texinfo
 

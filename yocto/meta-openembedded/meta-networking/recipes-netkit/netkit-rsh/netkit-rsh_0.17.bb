@@ -31,13 +31,13 @@ PAM_SRC_URI = "file://rexec.pam \
 "
 SRC_URI += "${@bb.utils.contains('DISTRO_FEATURES', 'pam', '${PAM_SRC_URI}', '', d)}"
 
-inherit pkgconfig
+inherit pkgconfig update-alternatives
 
 CFLAGS += " -D_GNU_SOURCE -Wno-deprecated-declarations"
 LDFLAGS += " -L${STAGING_LIBDIR} -lutil -lcrypt"
 
 PACKAGECONFIG ??= ""
-PACKAGECONFIG += "${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)}"
+PACKAGECONFIG_append = " ${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)}"
 PACKAGECONFIG[pam] = " , --without-pam, libpam, libpam"
 
 COMPATIBLE_HOST_libc-musl = 'null'
@@ -103,6 +103,3 @@ RPROVIDES_${PN}-server = "rshd"
 
 RDEPENDS_${PN}-server = "xinetd"
 RDEPENDS_${PN}-server += "tcp-wrappers"
-
-# http://errors.yoctoproject.org/Errors/Details/186963/
-EXCLUDE_FROM_WORLD_libc-musl = "1"

@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 """
 BitBake 'TaskData' implementation
 
@@ -10,18 +7,8 @@ Task data collection and handling
 
 # Copyright (C) 2006  Richard Purdie
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import logging
 import re
@@ -34,8 +21,13 @@ def re_match_strings(target, strings):
     Whether or not the string 'target' matches
     any one string of the strings which can be regular expression string
     """
-    return any(name == target or re.match(name, target)
-               for name in strings)
+    for name in strings:
+        if name.startswith("^") or name.endswith("$"):
+            if re.match(name, target):
+                return True
+        elif name == target:
+            return True
+    return False
 
 class TaskEntry:
     def __init__(self):
@@ -93,7 +85,7 @@ class TaskData:
         def add_mcdepends(task):
             for dep in task_deps['mcdepends'][task].split():
                 if len(dep.split(':')) != 5:
-                    bb.msg.fatal("TaskData", "Error for %s:%s[%s], multiconfig dependency %s does not contain exactly four  ':' characters.\n Task '%s' should be specified in the form 'multiconfig:fromMC:toMC:packagename:task'" % (fn, task, 'mcdepends', dep, 'mcdepends'))
+                    bb.msg.fatal("TaskData", "Error for %s:%s[%s], multiconfig dependency %s does not contain exactly four  ':' characters.\n Task '%s' should be specified in the form 'mc:fromMC:toMC:packagename:task'" % (fn, task, 'mcdepends', dep, 'mcdepends'))
                 if dep not in self.mcdepends:
                     self.mcdepends.append(dep)
 
@@ -375,7 +367,7 @@ class TaskData:
             bb.event.fire(bb.event.NoProvider(item, dependees=self.get_dependees(item), reasons=["No eligible PROVIDERs exist for '%s'" % item]), cfgData)
             raise bb.providers.NoProvider(item)
 
-        if len(eligible) > 1 and foundUnique == False:
+        if len(eligible) > 1 and not foundUnique:
             if item not in self.consider_msgs_cache:
                 providers_list = []
                 for fn in eligible:

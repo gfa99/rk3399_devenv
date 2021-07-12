@@ -6,13 +6,13 @@ LIC_FILES_CHKSUM = "file://debian/copyright;md5=c3ea231a32635cbb5debedf3e88aa3df
 
 PV = "4.1+git${SRCPV}"
 
-SRC_URI = "git://risingtidesystems.com/lio-utils.git \
+SRC_URI = "git://github.com/Datera/lio-utils.git \
            file://0001-Makefiles-Respect-environment-variables-and-add-LDFL.patch \
            "
-SRCREV = "28bd928655bdc7bd3cf380f0196630690c51e05f"
+SRCREV = "0ac9091c1ff7a52d5435a4f4449e82637142e06e"
 S = "${WORKDIR}/git"
 
-inherit distutils
+inherit ${@bb.utils.contains("BBFILE_COLLECTIONS", "meta-python2", "distutils", "", d)}
 
 EXTRA_OEMAKE += "DESTDIR=${D}"
 
@@ -64,3 +64,10 @@ FILES_${PN} += "${sbindir}/* /etc/init.d/* /etc/target/*"
 # http://errors.yoctoproject.org/Errors/Details/184712/
 # python-native/python: can't open file 'setup.py': [Errno 2] No such file or directory
 CLEANBROKEN = "1"
+
+python() {
+    if 'meta-python2' not in d.getVar('BBFILE_COLLECTIONS').split():
+        raise bb.parse.SkipRecipe('Requires meta-python2 to be present.')
+}
+
+

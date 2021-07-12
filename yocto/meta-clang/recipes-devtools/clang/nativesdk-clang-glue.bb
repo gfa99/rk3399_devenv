@@ -3,12 +3,10 @@
 
 DESCRIPTION = "SDK Cross compiler wrappers for LLVM based C/C++ compiler"
 HOMEPAGE = "http://clang.llvm.org/"
-LICENSE = "NCSA"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/NCSA;md5=1b5fdec70ee13ad8a91667f16c1959d7"
+LICENSE = "Apache-2.0-with-LLVM-exception"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0-with-LLVM-exception;md5=0bcd48c3bdfef0c9d9fd17726e4b7dab"
 SECTION = "devel"
 
-require clang.inc
-require common-source.inc
 inherit nativesdk
 DEPENDS += "nativesdk-clang"
 
@@ -17,11 +15,19 @@ do_install() {
     cd ${D}${prefix_nativesdk}
     ln -s ..${libdir} .
     ln -s ..${includedir} .
+    cd ..
+    ln -s .${base_libdir} .
 }
 
 sysroot_stage_all () {
 	sysroot_stage_dir ${D} ${SYSROOT_DESTDIR}
 }
 
-FILES_${PN} += "${prefix_nativesdk}"
+FILES_${PN} += "${prefix_nativesdk} ${base_libdir_nativesdk}"
 FILES_${PN}-dbg = ""
+
+deltask do_configure
+deltask do_compile
+deltask do_patch
+deltask do_fetch
+deltask do_unpack

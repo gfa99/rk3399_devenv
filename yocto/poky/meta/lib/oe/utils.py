@@ -1,3 +1,7 @@
+#
+# SPDX-License-Identifier: GPL-2.0-only
+#
+
 import subprocess
 import multiprocessing
 import traceback
@@ -78,12 +82,12 @@ def prune_suffix(var, suffixes, d):
     # See if var ends with any of the suffixes listed and
     # remove it if found
     for suffix in suffixes:
-        if var.endswith(suffix):
-            var = var.replace(suffix, "")
+        if suffix and var.endswith(suffix):
+            var = var[:-len(suffix)]
 
     prefix = d.getVar("MLPREFIX")
     if prefix and var.startswith(prefix):
-        var = var.replace(prefix, "")
+        var = var[len(prefix):]
 
     return var
 
@@ -165,7 +169,7 @@ def any_distro_features(d, features, truevalue="1", falsevalue=""):
     """
     return bb.utils.contains_any("DISTRO_FEATURES", features, truevalue, falsevalue, d)
 
-def parallel_make(d):
+def parallel_make(d, makeinst=False):
     """
     Return the integer value for the number of parallel threads to use when
     building, scraped out of PARALLEL_MAKE. If no parallelization option is
@@ -173,7 +177,10 @@ def parallel_make(d):
 
     e.g. if PARALLEL_MAKE = "-j 10", this will return 10 as an integer.
     """
-    pm = (d.getVar('PARALLEL_MAKE') or '').split()
+    if makeinst:
+        pm = (d.getVar('PARALLEL_MAKEINST') or '').split()
+    else:
+        pm = (d.getVar('PARALLEL_MAKE') or '').split()
     # look for '-j' and throw other options (e.g. '-l') away
     while pm:
         opt = pm.pop(0)
@@ -188,7 +195,7 @@ def parallel_make(d):
 
     return None
 
-def parallel_make_argument(d, fmt, limit=None):
+def parallel_make_argument(d, fmt, limit=None, makeinst=False):
     """
     Helper utility to construct a parallel make argument from the number of
     parallel threads specified in PARALLEL_MAKE.
@@ -201,7 +208,7 @@ def parallel_make_argument(d, fmt, limit=None):
     e.g. if PARALLEL_MAKE = "-j 10", parallel_make_argument(d, "-n %d") will return
     "-n 10"
     """
-    v = parallel_make(d)
+    v = parallel_make(d, makeinst)
     if v:
         if limit:
             v = min(limit, v)
@@ -214,7 +221,7 @@ def packages_filter_out_system(d):
     PN-dbg PN-doc PN-locale-eb-gb removed.
     """
     pn = d.getVar('PN')
-    blacklist = [pn + suffix for suffix in ('', '-dbg', '-dev', '-doc', '-locale', '-staticdev')]
+    blacklist = [pn + suffix for suffix in ('', '-dbg', '-dev', '-doc', '-locale', '-staticdev', '-src')]
     localepkg = pn + "-locale-"
     pkgs = []
 
@@ -241,9 +248,9 @@ def trim_version(version, num_parts=2):
     trimmed = ".".join(parts[:num_parts])
     return trimmed
 
-def cpu_count():
-    import multiprocessing
-    return multiprocessing.cpu_count()
+def cpu_count(at_least=1):
+    cpus = len(os.sched_getaffinity(0))
+    return max(cpus, at_least)
 
 def execute_pre_post_process(d, cmds):
     if cmds is None:
@@ -307,6 +314,10 @@ def multiprocess_launch(target, items, d, extraargs=None):
             p.start()
             launched.append(p)
         for q in launched:
+            # Have to manually call update() to avoid deadlocks. The pipe can be full and
+            # transfer stalled until we try and read the results object but the subprocess won't exit
+            # as it still has data to write (https://bugs.python.org/issue8426)
+            q.update()
             # The finished processes are joined when calling is_alive()
             if not q.is_alive():
                 if q.exception:
@@ -320,13 +331,18 @@ def multiprocess_launch(target, items, d, extraargs=None):
     if errors:
         msg = ""
         for (e, tb) in errors:
-            msg = msg + str(e) + ": " + str(tb) + "\n"
+            if isinstance(e, subprocess.CalledProcessError) and e.output:
+                msg = msg + str(e) + "\n"
+                msg = msg + "Subprocess output:"
+                msg = msg + e.output.decode("utf-8", errors="ignore")
+            else:
+                msg = msg + str(e) + ": " + str(tb) + "\n"
         bb.fatal("Fatal errors occurred in subprocesses:\n%s" % msg)
     return results
 
 def squashspaces(string):
     import re
-    return re.sub("\s+", " ", string).strip()
+    return re.sub(r"\s+", " ", string).strip()
 
 def format_pkg_list(pkg_dict, ret_format=None):
     output = []
@@ -356,6 +372,37 @@ def format_pkg_list(pkg_dict, ret_format=None):
 
     return output_str
 
+
+# Helper function to get the host compiler version
+# Do not assume the compiler is gcc
+def get_host_compiler_version(d, taskcontextonly=False):
+    import re, subprocess
+
+    if taskcontextonly and d.getVar('BB_WORKERCONTEXT') != '1':
+        return
+
+    compiler = d.getVar("BUILD_CC")
+    # Get rid of ccache since it is not present when parsing.
+    if compiler.startswith('ccache '):
+        compiler = compiler[7:]
+    try:
+        env = os.environ.copy()
+        # datastore PATH does not contain session PATH as set by environment-setup-...
+        # this breaks the install-buildtools use-case
+        # env["PATH"] = d.getVar("PATH")
+        output = subprocess.check_output("%s --version" % compiler, \
+                    shell=True, env=env, stderr=subprocess.STDOUT).decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        bb.fatal("Error running %s --version: %s" % (compiler, e.output.decode("utf-8")))
+
+    match = re.match(r".* (\d+\.\d+)\.\d+.*", output.split('\n')[0])
+    if not match:
+        bb.fatal("Can't get compiler version from %s --version output" % compiler)
+
+    version = match.group(1)
+    return compiler, version
+
+
 def host_gcc_version(d, taskcontextonly=False):
     import re, subprocess
 
@@ -363,14 +410,18 @@ def host_gcc_version(d, taskcontextonly=False):
         return
 
     compiler = d.getVar("BUILD_CC")
+    # Get rid of ccache since it is not present when parsing.
+    if compiler.startswith('ccache '):
+        compiler = compiler[7:]
     try:
         env = os.environ.copy()
         env["PATH"] = d.getVar("PATH")
-        output = subprocess.check_output("%s --version" % compiler, shell=True, env=env).decode("utf-8")
+        output = subprocess.check_output("%s --version" % compiler, \
+                    shell=True, env=env, stderr=subprocess.STDOUT).decode("utf-8")
     except subprocess.CalledProcessError as e:
         bb.fatal("Error running %s --version: %s" % (compiler, e.output.decode("utf-8")))
 
-    match = re.match(".* (\d\.\d)\.\d.*", output.split('\n')[0])
+    match = re.match(r".* (\d+\.\d+)\.\d+.*", output.split('\n')[0])
     if not match:
         bb.fatal("Can't get compiler version from %s --version output" % compiler)
 
@@ -469,7 +520,7 @@ def write_ld_so_conf(d):
         f.write(d.getVar("base_libdir") + '\n')
         f.write(d.getVar("libdir") + '\n')
 
-class ImageQAFailed(bb.build.FuncFailed):
+class ImageQAFailed(Exception):
     def __init__(self, description, name=None, logfile=None):
         self.description = description
         self.name = name
@@ -482,3 +533,6 @@ class ImageQAFailed(bb.build.FuncFailed):
 
         return msg
 
+def sh_quote(string):
+    import shlex
+    return shlex.quote(string)
