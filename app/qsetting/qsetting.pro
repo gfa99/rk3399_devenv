@@ -28,4 +28,6 @@ HEADERS += \
 FORMS += \
     qtkeyboard.ui \
 
+LIBS += -lDeviceIo
+
 RESOURCES += res.qrc

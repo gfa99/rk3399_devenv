@@ -1,4 +1,3 @@
-
 #include <QApplication>
 #include <QDebug>
 #include <QDesktopWidget>
@@ -9,7 +8,9 @@
 #include "qtinputdialog.h"
 #include "qtwifi.h"
 
-qtWifi::qtWifi(QWidget *parent, QLabel *label, QPushButton *btn, bool on): cnt(0)
+qtWifi* qtWifi::_instance = nullptr;
+
+qtWifi::qtWifi(QWidget *parent, QLabel *label, QPushButton *btn, bool on)
 {
     const QRect availableGeometry = QApplication::desktop()->availableGeometry(parent);
     resize(availableGeometry.width(), availableGeometry.height());
@@ -42,46 +43,137 @@ qtWifi::qtWifi(QWidget *parent, QLabel *label, QPushButton *btn, bool on): cnt(0
     }
     setObjectName("WiFi");
     setFont(font);
-    scanThread = new wifiScanThread();
-    connect(scanThread, SIGNAL(resultReady(QStringList)), this, SLOT(handleResults(QStringList)));
-    connect(scanThread, SIGNAL(finished()), scanThread, SLOT(deleteLater()));
-    statusThread = new wifiStatusThread();
-    connect(statusThread, SIGNAL(updateText(QString)), this, SLOT(updateText(QString)));
-    connect(statusThread, SIGNAL(finished()), statusThread, SLOT(deleteLater()));
+
+    Timer = new QTimer(this);
+
     connect(this, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(on_itemClicked(QListWidgetItem *)));
     show();
-    if(on)
+    if (on)
         turnOn();
 }
 
 qtWifi::~qtWifi()
 {
-    QKeyBoard *qkb = QKeyBoard::getInstance();
-    delete qkb;
-    inputDialog *dialog = inputDialog::getInstance(this);
-    delete dialog;
-    if(scanThread){
-        if(scanThread->isRunning()){
-            scanThread->terminate();
-            scanThread->wait();
-        }
-        delete scanThread;
-        scanThread = nullptr;
-    }
-    if(statusThread){
-        if(statusThread->isRunning()){
-            statusThread->terminate();
-            statusThread->wait();
-        }
-        delete statusThread;
-        statusThread = nullptr;
-    }
-    if(switchBtn){
+    if (switchBtn)
         switchBtn->setVisible(false);
-    }
-    if(text){
+
+    if (text)
         text->setVisible(false);
+    _instance = nullptr;
+}
+
+void qtWifi::turnOn()
+{
+    RK_wifi_register_callback(wifi_callback);
+    if (RK_wifi_enable(1) < 0)
+        printf("[%s] Rk_wifi_enable 1 fail!\n", __func__);
+    Timer->stop();
+    Timer->setInterval(10000);
+    connect(Timer, SIGNAL(timeout()), this, SLOT(on_timer_timeout()));
+
+    if (text)
+        text->setVisible(true);
+
+    Timer->start();
+    text->setText("Scaning");
+}
+
+void qtWifi::turnOff()
+{
+    if (RK_wifi_enable(0) < 0)
+        printf("RK_wifi_enable 0 fail!\n");
+    Timer->stop();
+    clear();
+    if (text)
+        text->setVisible(false);
+}
+
+static int search_for_ssid(const char *str)
+{
+    const char key[] = "\"ssid\"";
+    int i;
+
+    if (strlen(str) < strlen(key))
+        return -1;
+
+    for (i = 0; i < (strlen(str) - strlen(key)); i++) {
+        if (!strncmp(key, &str[i], strlen(key)))
+            return i;
     }
+    return -1;
+}
+
+static char *get_string(const char *str)
+{
+    int i, begin = -1, count;
+    char *dst;
+
+    for (i = 0; i < strlen(str); i++) {
+        if (str[i] == '\"') {
+            if (begin == -1) {
+                begin = i;
+                continue;
+            } else {
+                count = i - begin -1;
+                if (!count)
+                    return NULL;
+                dst = strndup(&str[begin + 1], count);
+                return dst;
+            }
+        }
+    }
+    return NULL;
+}
+
+int qtWifi::wifi_callback(RK_WIFI_RUNNING_State_e state,
+                      RK_WIFI_INFO_Connection_s *info)
+{
+    qtWifi *wifi = qtWifi::getInstance();
+
+    if (state == RK_WIFI_State_CONNECTED) {
+        printf("RK_WIFI_State_CONNECTED\n");
+        //wifi->ssid = QLatin1String(info->ssid);
+        wifi->ssid = QString(info->ssid);
+        wifi->text->setText(wifi->ssid + " Connected");
+    } else if (state == RK_WIFI_State_CONNECTFAILED) {
+        printf("RK_WIFI_State_CONNECTFAILED\n");
+    } else if (state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY) {
+        printf("RK_WIFI_State_CONNECTFAILED_WRONG_KEY\n");
+    } else if (state == RK_WIFI_State_OPEN) {
+        printf("RK_WIFI_State_OPEN\n");
+    } else if (state == RK_WIFI_State_OFF) {
+        printf("RK_WIFI_State_OFF\n");
+    } else if (state == RK_WIFI_State_DISCONNECTED) {
+        printf("RK_WIFI_State_DISCONNECTED\n");
+        wifi->text->setText("Scaning");
+    } else if (state == RK_WIFI_State_SCAN_RESULTS) {
+        char *scan_r, *str = nullptr;
+        int cnt = 0, tmp = 0;
+        QString line;
+        QStringList list;
+
+        if (wifi == nullptr)
+                return 0;
+        scan_r = strdup(RK_wifi_scan_r());
+        wifi->clear();
+        while (1) {
+            tmp = search_for_ssid(&scan_r[cnt]);
+            if (tmp == -1)
+                break;
+            str = get_string(&scan_r[cnt + tmp + 6]);
+            if (str == NULL) {
+                line = QString("NULL");
+            } else {
+                line = QString(str);
+                free(str);
+            }
+            list << line;
+            cnt += tmp + 6;
+        }
+        wifi->addItems(list);
+        free(scan_r);
+    }
+    return 0;
 }
 
 bool qtWifi::isOn()
@@ -96,42 +188,33 @@ bool qtWifi::isOn()
     return false;
 }
 
-void qtWifi::turnOn()
+void qtWifi::on_itemClicked(QListWidgetItem *item)
 {
-    if(QFile::exists("/userdata")){
-        QProcess p;
-        p.start("ifconfig wlan0 up");
-        p.waitForStarted();
-        p.waitForFinished();
-        scanThread->start();
-        statusThread->start();
-    } else {
-        QStringList list;
-        list << "wifi1" << "wifi2" << "wifi3" << "wifi4" << "wifi5" << "wifi6" << "wifi7";
-        addItems(list);
-    }
-    if(text){
-        text->setVisible(true);
-    }
-}
+    QKeyBoard::getInstance();
+    inputDialog *dialog = inputDialog::getInstance(this);
+    const char *c_ssid, *pswd;
 
-void qtWifi::turnOff()
-{
-    if(QFile::exists("/userdata")){
-        QProcess p;
-        p.start("ifconfig wlan0 down");
-        p.waitForStarted();
-        p.waitForFinished();
-    }
-    clear();
-    if(text){
-        text->setVisible(false);
-    }
-}
+    ssid = item->text();
+    dialog->setText("Connect", "Cancel", "Password of " + item->text());
+    if (dialog->isRunning())
+        dialog->exit(false);
 
-void qtWifi::updateText(QString t)
-{
-    text->setText(t);
+    int result = dialog->exec();
+    if(result){
+        QString str = dialog->getEditText();
+        QProcess p;
+        QStringList arguments;
+
+        std::string s_ssid = ssid.toStdString();
+        c_ssid = s_ssid.c_str();
+
+        std::string s_pswd = str.toStdString();
+        pswd = s_pswd.c_str();
+
+        printf("ssid: %s, %s\n", c_ssid, pswd);
+        if (RK_wifi_connect(c_ssid, pswd) < 0)
+            printf("RK_wifi_connect1 fail!\n");
+    }
 }
 
 void qtWifi::on_btnClicked()
@@ -147,82 +230,10 @@ void qtWifi::on_btnClicked()
     }
 }
 
-void qtWifi::on_itemClicked(QListWidgetItem *item)
+void qtWifi::on_timer_timeout()
 {
-    QKeyBoard::getInstance();
-    inputDialog *dialog = inputDialog::getInstance(this);
-    QString ssid = item->text();
-    dialog->setText("Connect", "Cancel", "Password of " + item->text());
-    int result = dialog->exec();
-    if(result){
-        QString str = dialog->getEditText();
-        QProcess p;
-        QStringList arguments;
-
-        QString ss = "wifi_start.sh " + ssid + " " + str;
-        qDebug() << ss;
-        p.start(ss);
-//        arguments << "-c" << "wifi_start.sh " + item->text() + " " + str;
-//        p.start("sh", arguments);
-        p.waitForStarted();
-        p.waitForFinished();
-    }
-}
-
-void qtWifi::handleResults(const QStringList &list)
-{
-    clear();
-    addItems(list);
-}
-
-void wifiStatusThread::run() {
-    QProcess p;
-    while(1){
-//        qDebug() << "wifiStatusThread update";
-        p.start("wpa_cli -i wlan0 status");
-        p.waitForStarted();
-        p.waitForFinished();
-        QTextStream tt(p.readAllStandardOutput());
-        QString ll, ssid;
-        bool found = false;
-        do{
-            ll = tt.readLine();
-//            qDebug() << ll;
-            if(!ll.compare("wpa_state=COMPLETED")){
-                found = true;
-            }
-            if(!ll.mid(0, 5).compare("ssid=")){
-                ssid = ll.mid(5, ll.count());
-            }
-        }while (! ll.isNull());
-
-        if(found){
-            emit updateText(ssid + " Connected");
-        }else {
-            emit updateText("Scaning");
-        }
-        sleep(1);
-    }
-}
-
-void wifiScanThread::run() {
-    QProcess p;
-    while(1){
-        QStringList arguments;
-        arguments << "-c" << "iw dev wlan0 scan | grep SSID";
-        p.start("sh", arguments);
-        p.waitForStarted();
-        p.waitForFinished();
-        QTextStream result(p.readAllStandardOutput());
-        QString line;
-        QStringList list, sl;
-        do{
-            line = result.readLine();
-            line = line.mid(7);
-//            qDebug() << line;
-            list << line;
-        }while (! line.isNull());
-        emit resultReady(list);
-        sleep(10);
-    }
+    printf("refresh\n");
+    if (RK_wifi_scan() < 0)
+        printf("RK_wifi_scan fail!\n");
+    Timer->start();
 }

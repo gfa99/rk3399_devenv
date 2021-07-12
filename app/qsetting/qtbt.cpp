@@ -63,7 +63,7 @@ void qtBT::scan_status_cb(RK_BT_DISCOVERY_STATE status)
                     break;
             case RK_BT_DISC_STOPPED_AUTO:
                     #ifdef RKDEVICEIO
-                    rk_bt_start_discovery(1000);
+                    rk_bt_start_discovery(1000, SCAN_TYPE_AUTO);
                     #endif
                     break;
 
@@ -128,6 +128,10 @@ void qtBT::scan_cb(const char *address,const char *name, unsigned int bt_class, 
 void qtBT::open()
 {
 #ifdef RKDEVICEIO
+    int count;
+    RkBtScanedDevice *dev = NULL;
+    static RkBtScanedDevice *g_dev_list_test;
+
     memset(&bt_content, 0, sizeof(RkBtContent));
     bt_content.bt_name = "ROCKCHIP_AUDIO";
     bt_content.bt_addr = "11:22:33:44:55:66";
@@ -141,11 +145,9 @@ void qtBT::open()
     rk_bt_register_dev_found_callback(qtBT::scan_cb);
     rk_bt_source_register_status_cb(NULL, source_connect_cb);
     rk_bt_set_device_name("Rockchip Linux BT");
-    rk_bt_start_discovery(3000);
+    rk_bt_start_discovery(1000, SCAN_TYPE_AUTO);
+    rk_bt_enable_reconnect(0);
     rk_bt_source_open();
-    int count;
-    bt_paried_device *dev = NULL;
-    static RkBtPraiedDevice *g_dev_list_test;
     rk_bt_get_paired_devices(&g_dev_list_test, &count);
 
     qDebug() << "current paired devices count: " << count;
@@ -272,18 +274,18 @@ void qtBT::on_itemClicked(QListWidgetItem *item)
         if(!pair.compare("Paired")){
             qDebug() << "connectint to " << addr.toLatin1().data();
             #ifdef RKDEVICEIO
-            rk_bt_source_connect(addr.toLatin1().data());
+            rk_bt_source_connect_by_addr(addr.toLatin1().data());
             #endif
         }else if(!pair.compare("Connected")){
             qDebug() << "disconnecting " << addr << name;
             #ifdef RKDEVICEIO
-            rk_bt_source_disconnect(addr.toLatin1().data());
+            rk_bt_source_disconnect_by_addr(addr.toLatin1().data());
             #endif
             takeItem(row(item));
         }else{
             qDebug() << "connectint to " << addr.toLatin1().data();
             #ifdef RKDEVICEIO
-            rk_bt_source_connect(addr.toLatin1().data());
+            rk_bt_source_connect_by_addr(addr.toLatin1().data());
             #endif
         }
     }

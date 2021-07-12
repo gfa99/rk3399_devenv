@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT  += quickwidgets widgets
+QT  += widgets
 
 TARGET = qfm
 TEMPLATE = app

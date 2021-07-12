@@ -122,6 +122,10 @@ MultiVideoPlayer::MultiVideoPlayer(QStringList list)
     setCentralWidget(widget);
     setWindowState(Qt::WindowMaximized);
     setWindowFlags(Qt::FramelessWindowHint);
+
+    QPalette palette = QWidget::palette();
+    palette.setColor(QPalette::Window, Qt::black);
+    setPalette(palette);
 }
 
 MultiVideoPlayer::~MultiVideoPlayer()

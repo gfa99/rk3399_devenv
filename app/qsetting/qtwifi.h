@@ -9,21 +9,10 @@
 #include <QThread>
 #include <QTimer>
 
-class wifiStatusThread : public QThread
-{
-    Q_OBJECT
-    void run();
-signals:
-    void updateText(QString t);
-};
-
-class wifiScanThread : public QThread
-{
-    Q_OBJECT
-    void run();
-signals:
-    void resultReady(const QStringList &s);
-};
+extern "C" {
+#include "DeviceIo/Rk_wifi.h"
+#include "DeviceIo/Rk_softap.h"
+}
 
 class qtWifi : public QListWidget
 {
@@ -32,20 +21,36 @@ class qtWifi : public QListWidget
 public:
     qtWifi(QWidget *parent = nullptr, QLabel *label = nullptr, QPushButton *btn = nullptr, bool on = false);
     ~qtWifi();
-    int cnt;
+
+    static qtWifi* getInstance(QWidget *parent, QLabel *label, QPushButton *btn,  bool on = false)
+    {
+        if (!_instance) {
+            _instance = new qtWifi(parent, label, btn, on);
+        }
+        return _instance;
+    }
+
+    static qtWifi* getInstance(void)
+    {
+        return _instance;
+    }
+
     bool isOn();
     void turnOn();
     void turnOff();
-public slots:
-    void updateText(QString t);
-    void on_btnClicked();
-    void on_itemClicked(QListWidgetItem *item);
-    void handleResults(const QStringList &list);
 private:
+    static int wifi_callback(RK_WIFI_RUNNING_State_e state,
+                             RK_WIFI_INFO_Connection_s *info);
+    static qtWifi* _instance;
     QLabel *text;
     QPushButton *switchBtn;
-    wifiScanThread *scanThread;
-    wifiStatusThread *statusThread;
+    QTimer *Timer;
+    QString ssid;
+
+public slots:
+    void on_btnClicked();
+    void on_itemClicked(QListWidgetItem *item);
+    void on_timer_timeout();
 };
 
-#endif // QTWIFI_H
+#endif /* QTWIFI_H */

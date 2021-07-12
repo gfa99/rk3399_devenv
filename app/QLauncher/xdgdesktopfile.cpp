@@ -583,36 +583,7 @@ bool XdgDesktopFile::isValid() const
  ************************************************/
 QIcon XdgDesktopFile::fromTheme(const QString& iconName, int size, const QIcon& fallback)
 {
-    if (iconName.isEmpty())
-        return fallback;
-
-    bool isAbsolute = (iconName[0] == QLatin1Char('/'));
-
-    QString name = QFileInfo(iconName).fileName();
-    if (name.endsWith(QLatin1String(".png"), Qt::CaseInsensitive) ||
-        name.endsWith(QLatin1String(".svg"), Qt::CaseInsensitive) ||
-        name.endsWith(QLatin1String(".xpm"), Qt::CaseInsensitive))
-    {
-        name.truncate(name.length() - 4);
-    }
-
-    QIcon *cachedIcon;
-    if (!isAbsolute) {
-        QString absolute_name_png = "/usr/share/pixmaps/" + name + ".png";
-        QString absolute_name_xpm = "/usr/share/pixmaps/" + name + ".xpm";
-        QFileInfo fileInfoPng(absolute_name_png);
-        QFileInfo fileInfoXpm(absolute_name_xpm);
-        if(fileInfoPng.isFile())
-            cachedIcon = new QIcon(QPixmap(absolute_name_png).scaled(QSize(size, size)));
-        else if(fileInfoXpm.isFile())
-            cachedIcon = new QIcon(QPixmap(absolute_name_xpm).scaled(QSize(size, size)));
-        else
-            cachedIcon = new QIcon(QPixmap(DEFAULT_ICON).scaled(QSize(size, size)));
-    } else {
-        cachedIcon = new QIcon(QPixmap(iconName).scaled(QSize(size, size)));
-    }
-
-    return *cachedIcon;
+    return QIcon::fromTheme(iconName, fallback);
 }
 
 QIcon const XdgDesktopFile::icon(int size, const QIcon& fallback) const

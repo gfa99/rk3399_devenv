@@ -16,13 +16,15 @@ public:
     static inputDialog* getInstance(QWidget *parent = nullptr)
     {
         if (!_instance) {
-            _instance = new inputDialog(parent);
+            _instance = new inputDialog;
         }
         return _instance;
     }
     void setText(QString yes, QString no, QString text);
     QString getEditText(){return wordEdit->text();}
     int exec();
+    bool isRunning();
+    void exit(bool result);
 
 private:
     static inputDialog* _instance;

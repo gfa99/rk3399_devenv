@@ -66,6 +66,21 @@ int inputDialog::exec()
     return m_chooseResult;
 }
 
+void inputDialog::exit(bool result)
+{
+    if(m_eventLoop != nullptr) {
+        m_chooseResult = result;
+        close();
+    }
+}
+
+bool inputDialog::isRunning(void)
+{
+    if(m_eventLoop != nullptr)
+        return m_eventLoop->isRunning();
+    return false;
+}
+
 void inputDialog::slot_onApplicationFocusChanged(QWidget *, QWidget *nowWidget)
 {
     if (nowWidget != nullptr && !isAncestorOf(nowWidget)) {

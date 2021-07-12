@@ -239,7 +239,15 @@ QPushButton* qtCamera::getButton()
 
 void qtCamera::updateRecordTime()
 {
-    QString str = QString("Recorded %1 sec").arg(m_mediaRecorder->duration()/1000);
+    quint32 dura_smal;
+    quint64 duration;
+
+    dura_smal = m_mediaRecorder->duration() % 1000;
+    duration = m_mediaRecorder->duration() / 1000;
+    if (dura_smal >= 500)
+        duration += 1;
+
+    QString str = QString("Recorded %1 sec").arg(duration);
     statusBar()->showMessage(str);
 }
 

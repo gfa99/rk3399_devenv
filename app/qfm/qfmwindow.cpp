@@ -69,7 +69,7 @@ QfmWindow::QfmWindow(QWidget *parent) : QMainWindow(parent)
     m_topDirList<<"Root"<<"Home"<<"Oem"<<"User Data"<<"SD Card"<<"USB Disk";
     m_topPathList<<"/"<<QStandardPaths::standardLocations(QStandardPaths::HomeLocation)<<"/oem"<<"/userdata"<<"/sdcard"<<"/udisk";
     m_videoSuffixList<<"*.mp4"<<"*.m4v"<<"*.avi"<<"*.wmv"<<"*.mkv"<<"*.asf"<<"*.mov"<<"*.ts"<<"*.mpg"<<"*.mpeg"<<"*.vob"<<"*.m2ts"<<"*.webm";
-    m_musicSuffixList<<"*.mp1"<<"*.mp2"<<"*.mp3"<<"*.wav"<<"*.wave"<<"*.wma"<<"*.ogg"<<"*.aac"<<"*.m4a"<<"*.flac";
+    m_musicSuffixList<<"*.mp1"<<"*.mp2"<<"*.mp3"<<"*.wav"<<"*.wave"<<"*.wma"<<"*.ogg"<<"*.m4a"<<"*.flac";
     m_picSuffixList<<"*.jpg"<<"*.png"<<"*.bmp"<<"*.jpeg";
     m_Filter = FileAll;
     initLayout();
