@@ -43,5 +43,17 @@ MIC_NUM=6
 export RK_MISC=wipe_all-misc.img
 #choose enable distro module
 export RK_DISTRO_MODULE=
-#choose enable Linux A/B
-export RK_LINUX_AB_ENABLE=
+# Define package-file for update_ab.img
+export RK_PACKAGE_FILE_AB=
+# Define package-file for ota update_ota.img
+export RK_PACKAGE_FILE_OTA=
+
+##########################################################
+### enable build update_sdcard.img
+### Detail to see docs/Linux/Recovery/Rockchip_Developer_Guide_Linux_Upgrade_CN.pdf
+# export RK_UPDATE_SDCARD_ENABLE_FOR_AB=true
+### Recovery config
+# export RK_UPDATE_SDCARD_CFG_RECOVERY=
+### Recovery image format type: fit(flattened image tree)
+# export RK_RECOVERY_FIT_ITS=
+##########################################################

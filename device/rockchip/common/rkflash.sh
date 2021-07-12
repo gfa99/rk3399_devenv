@@ -40,6 +40,16 @@ then
 	$UPGRADETOOL di -oem $OEM
 	$UPGRADETOOL di -userdata $USERDATA
 	$UPGRADETOOL di -rootfs $ROOTFS
+	$UPGRADETOOL rd
+fi
+
+if [ $FLASH_TYPE = tb ]
+then
+	$UPGRADETOOL ul $LOADER
+	$UPGRADETOOL di -p $PARAMETER
+	$UPGRADETOOL di -uboot $UBOOT
+	$UPGRADETOOL di -b $BOOT
+	$UPGRADETOOL rd
 fi
 
 if [ $FLASH_TYPE = norecovery ]; then
@@ -70,6 +80,15 @@ then
 	fi
 	echo "flash parameter: $PARAMETER"
 	$UPGRADETOOL di -p $PARAMETER
+fi
+
+if [ $FLASH_TYPE = resource ]
+then
+        if [ -n "$2" ];then
+                RESOURCE=$2
+        fi
+        echo "flash resource: $RESOURCE"
+        $UPGRADETOOL di -resource $RESOURCE
 fi
 
 if [ $FLASH_TYPE = uboot ]
