@@ -202,6 +202,7 @@ static int spl_get_lastboot(AvbABData *ab_data)
 
 int spl_get_current_slot(struct blk_desc *dev_desc, char *partition, char *slot)
 {
+	static int last_slot_index = -1;
 	size_t slot_index_to_boot;
 	AvbABData ab_data;
 	int ret;
@@ -238,30 +239,83 @@ int spl_get_current_slot(struct blk_desc *dev_desc, char *partition, char *slot)
 	else if (slot_index_to_boot == 1)
 		memcpy(slot, "_b", 2);
 
+	if (last_slot_index != slot_index_to_boot) {
+		last_slot_index = slot_index_to_boot;
+		printf("SPL: A/B-slot: %s, successful: %d, tries-remain: %d\n",
+		       slot,
+		       ab_data.slots[slot_index_to_boot].successful_boot,
+		       ab_data.slots[slot_index_to_boot].tries_remaining);
+	}
+
 out:
 	return 0;
 }
 
-int spl_get_partitions_sector(struct blk_desc *dev_desc, char *partition,
-			       u32 *sectors)
+int spl_ab_append_part_slot(struct blk_desc *dev_desc,
+			    const char *part_name,
+			    char *new_name)
 {
-	disk_partition_t part_info;
-	char part[10] = {0};
-	char slot[3] = {0};
+	char slot_suffix[3] = {0};
 
-	if (!partition || !sectors)
-		return -EFAULT;
+	if (!strcmp(part_name, "misc")) {
+		strcat(new_name, part_name);
+		return 0;
+	}
 
-	spl_get_current_slot(dev_desc, "misc", slot);
-	if (strlen(partition) > 8)
-		return -ENOMEM;
+	if (spl_get_current_slot(dev_desc, "misc", slot_suffix)) {
+		printf("No misc partition\n");
+		strcat(new_name, part_name);
+		return 0;
+	}
 
-	strcat(part, partition);
-	strcat(part, slot);
-	if (part_get_info_by_name(dev_desc, part, &part_info) < 0)
-		return -ENODEV;
-
-	*sectors = part_info.start;
+	strcpy(new_name, part_name);
+	strcat(new_name, slot_suffix);
 
 	return 0;
+}
+
+static int spl_save_metadata_if_changed(struct blk_desc *dev_desc,
+					AvbABData *ab_data,
+					AvbABData *ab_data_orig)
+{
+	if (safe_memcmp(ab_data, ab_data_orig, sizeof(AvbABData)))
+		return spl_ab_data_write(dev_desc, ab_data, "misc");
+
+	return 0;
+}
+
+/* If verify fail in a/b system, then decrease 1. */
+int spl_ab_decrease_tries(struct blk_desc *dev_desc)
+{
+	AvbABData ab_data, ab_data_orig;
+	size_t slot_index = 0;
+	char slot_suffix[3] = {0};
+	int ret = -1;
+
+	ret = spl_get_current_slot(dev_desc, "misc", slot_suffix);
+	if (ret)
+		goto out;
+
+	if (!strncmp(slot_suffix, "_a", 2))
+		slot_index = 0;
+	else if (!strncmp(slot_suffix, "_b", 2))
+		slot_index = 1;
+	else
+		slot_index = 0;
+
+	ret = spl_ab_data_read(dev_desc, &ab_data, "misc");
+	if (ret)
+		goto out;
+
+	memcpy(&ab_data_orig, &ab_data, sizeof(AvbABData));
+
+	/* ... and decrement tries remaining, if applicable. */
+	if (!ab_data.slots[slot_index].successful_boot &&
+	    ab_data.slots[slot_index].tries_remaining > 0)
+		ab_data.slots[slot_index].tries_remaining -= 1;
+
+	ret = spl_save_metadata_if_changed(dev_desc, &ab_data, &ab_data_orig);
+
+out:
+	return ret;
 }

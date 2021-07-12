@@ -825,6 +825,8 @@ struct hdmi_edid_data {
 struct ddc_adapter {
 	int (*ddc_xfer)(struct ddc_adapter *adap, struct i2c_msg *msgs,
 			int num);
+	struct udevice *i2c_bus;
+	struct dm_i2c_ops *ops;
 };
 
 /**
@@ -853,5 +855,10 @@ u8 drm_scdc_readb(struct ddc_adapter *adap, u8 offset,
 		  u8 *value);
 u8 drm_scdc_writeb(struct ddc_adapter *adap, u8 offset,
 		   u8 value);
+void drm_mode_sort(struct hdmi_edid_data *edid_data);
+int drm_mode_prune_invalid(struct hdmi_edid_data *edid_data);
+void drm_rk_filter_whitelist(struct hdmi_edid_data *edid_data);
+void drm_rk_select_mode(struct hdmi_edid_data *edid_data,
+			struct base_screen_info *screen_info);
 
 #endif /* __EDID_H_ */

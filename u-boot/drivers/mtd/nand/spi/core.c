@@ -651,25 +651,18 @@ static int spinand_mtd_write(struct mtd_info *mtd, loff_t to,
 static bool spinand_isbad(struct nand_device *nand, const struct nand_pos *pos)
 {
 	struct spinand_device *spinand = nand_to_spinand(nand);
+	u8 marker[2] = { };
 	struct nand_page_io_req req = {
 		.pos = *pos,
-		.ooblen = 2,
+		.ooblen = sizeof(marker),
 		.ooboffs = 0,
-		.oobbuf.in = spinand->oobbuf,
+		.oobbuf.in = marker,
 		.mode = MTD_OPS_RAW,
 	};
-	int ret;
 
-	memset(spinand->oobbuf, 0, 2);
-	ret = spinand_select_target(spinand, pos->target);
-	if (ret)
-		return ret;
-
-	ret = spinand_read_page(spinand, &req, false);
-	if (ret)
-		return ret;
-
-	if (spinand->oobbuf[0] != 0xff || spinand->oobbuf[1] != 0xff)
+	spinand_select_target(spinand, pos->target);
+	spinand_read_page(spinand, &req, false);
+	if (marker[0] != 0xff || marker[1] != 0xff)
 		return true;
 
 	return false;
@@ -698,28 +691,20 @@ static int spinand_mtd_block_isbad(struct mtd_info *mtd, loff_t offs)
 static int spinand_markbad(struct nand_device *nand, const struct nand_pos *pos)
 {
 	struct spinand_device *spinand = nand_to_spinand(nand);
+	u8 marker[2] = { 0, 0 };
 	struct nand_page_io_req req = {
 		.pos = *pos,
 		.ooboffs = 0,
-		.ooblen = 2,
-		.oobbuf.out = spinand->oobbuf,
+		.ooblen = sizeof(marker),
+		.oobbuf.out = marker,
+		.mode = MTD_OPS_RAW,
 	};
 	int ret;
 
-	/* Erase block before marking it bad. */
 	ret = spinand_select_target(spinand, pos->target);
 	if (ret)
 		return ret;
 
-	ret = spinand_write_enable_op(spinand);
-	if (ret)
-		return ret;
-
-	ret = spinand_erase_op(spinand, pos);
-	if (ret)
-		return ret;
-
-	memset(spinand->oobbuf, 0, 2);
 	return spinand_write_page(spinand, &req);
 }
 
@@ -830,10 +815,45 @@ static const struct nand_ops spinand_ops = {
 };
 
 static const struct spinand_manufacturer *spinand_manufacturers[] = {
+#ifdef CONFIG_SPI_NAND_GIGADEVICE
 	&gigadevice_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_MACRONIX
 	&macronix_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_MICRON
 	&micron_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_TOSHIBA
+	&toshiba_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_WINBOND
 	&winbond_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_DOSILICON
+	&dosilicon_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_ESMT
+	&esmt_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_XTX
+	&xtx_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_HYF
+	&hyf_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_FMSH
+	&fmsh_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_FORESEE
+	&foresee_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_BIWIN
+	&biwin_spinand_manufacturer,
+#endif
+#ifdef CONFIG_SPI_NAND_ETRON
+	&etron_spinand_manufacturer,
+#endif
 };
 
 static int spinand_manufacturer_detect(struct spinand_device *spinand)
@@ -1021,7 +1041,7 @@ static int spinand_noecc_ooblayout_free(struct mtd_info *mtd, int section,
 
 static const struct mtd_ooblayout_ops spinand_noecc_ooblayout = {
 	.ecc = spinand_noecc_ooblayout_ecc,
-	.free = spinand_noecc_ooblayout_free,
+	.rfree = spinand_noecc_ooblayout_free,
 };
 
 static int spinand_init(struct spinand_device *spinand)
@@ -1088,6 +1108,7 @@ static int spinand_init(struct spinand_device *spinand)
 			goto err_free_bufs;
 	}
 
+	nand->bbt.option = NANDDEV_BBT_USE_FLASH;
 	ret = nanddev_init(nand, &spinand_ops, THIS_MODULE);
 	if (ret)
 		goto err_manuf_cleanup;
@@ -1113,6 +1134,10 @@ static int spinand_init(struct spinand_device *spinand)
 		goto err_cleanup_nanddev;
 
 	mtd->oobavail = ret;
+
+	/* Propagate ECC information to mtd_info */
+	mtd->ecc_strength = nand->eccreq.strength;
+	mtd->ecc_step_size = nand->eccreq.step_size;
 
 	return 0;
 
@@ -1146,7 +1171,7 @@ static int spinand_bind(struct udevice *udev)
 	struct udevice *bdev;
 
 	ret = blk_create_devicef(udev, "mtd_blk", "blk", IF_TYPE_MTD,
-				 1, 512, 0, &bdev);
+				 BLK_MTD_SPI_NAND, 512, 0, &bdev);
 	if (ret)
 		printf("Cannot create block device\n");
 #endif

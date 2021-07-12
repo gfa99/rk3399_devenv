@@ -43,6 +43,7 @@ static struct mm_region rk1808_mem_map[] = {
 struct mm_region *mem_map = rk1808_mem_map;
 
 #define GRF_BASE	0xfe000000
+#define PMUGRF_BASE	0xfe020000
 
 enum {
 	GPIO4A3_SHIFT           = 12,
@@ -65,11 +66,18 @@ enum {
 	UART2_IO_SEL_USB,
 };
 
+#define SECURE_FIRE_WALL 0xff590040
+
 int arch_cpu_init(void)
 {
 	/* Set cif qos priority */
 	writel(QOS_PRIORITY_LEVEL(2, 2), NIU_CIF_ADDR);
 	writel(QOS_PRIORITY_LEVEL(2, 2), NIU_ISP_ADDR);
+
+	/* Set dram to unsecure */
+#ifdef CONFIG_SPL_BUILD
+	writel(0, SECURE_FIRE_WALL);
+#endif
 
 	return 0;
 }
@@ -80,7 +88,7 @@ int arch_cpu_init(void)
 void board_debug_uart_init(void)
 {
 #ifdef CONFIG_TPL_BUILD
-	static struct rk1808_grf * const grf = (void *)GRF_BASE;
+	struct rk1808_grf * const grf = (void *)GRF_BASE;
 
 	/* Enable early UART2 channel m0 on the rk1808 */
 	rk_clrsetreg(&grf->iofunc_con0, UART2_IO_SEL_MASK,
@@ -211,6 +219,11 @@ static int env_fixup_ramdisk_addr_r(void)
 
 int rk_board_init(void)
 {
+	struct rk1808_pmugrf * const pmugrf = (void *)PMUGRF_BASE;
+
+	/* Set GPIO0_C2 default to pull down from normal */
+	rk_clrsetreg(&pmugrf->gpio0c_p, 0x30, 0x20);
+
 #if defined(CONFIG_ROCKCHIP_SMCCC) && defined(CONFIG_ROCKCHIP_RK1806)
 	sip_smc_get_sip_version();
 #endif
@@ -224,4 +237,15 @@ int rk_board_late_init(void)
 #endif
 
 	return 0;
+}
+
+void mmc_gpio_init_direct(void)
+{
+	struct rk1808_grf * const grf = (void *)GRF_BASE;
+
+	/*
+	 * The rk1808's pin drive strength control must set to 2ma.
+	 */
+	rk_clrsetreg(&grf->gpio1a_e, 0xffff, 0x5555);
+	rk_clrsetreg(&grf->gpio1b_e, 0xff, 0x00);
 }

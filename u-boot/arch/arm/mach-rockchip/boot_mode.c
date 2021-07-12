@@ -5,176 +5,207 @@
  */
 
 #include <common.h>
-#include <adc.h>
+#include <boot_rkimg.h>
+#include <malloc.h>
 #include <asm/io.h>
 #include <asm/arch/boot_mode.h>
-#include <asm/arch/hotkey.h>
-#include <asm/arch/param.h>
-#include <cli.h>
-#include <dm.h>
-#include <fdtdec.h>
-#include <boot_rkimg.h>
-#include <stdlib.h>
-#include <linux/usb/phy-rockchip-inno-usb2.h>
-#include <key.h>
-#ifdef CONFIG_DM_RAMDISK
-#include <ramdisk.h>
-#endif
-#include <mmc.h>
-#include <console.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#if (CONFIG_ROCKCHIP_BOOT_MODE_REG == 0)
+enum {
+	PH = 0,	/* P: Priority, H: high, M: middle, L: low*/
+	PM,
+	PL,
+};
 
-int setup_boot_mode(void)
+static int misc_require_recovery(u32 bcb_offset)
 {
-	return 0;
+	struct bootloader_message *bmsg;
+	struct blk_desc *dev_desc;
+	disk_partition_t part;
+	int cnt, recovery = 0;
+
+	dev_desc = rockchip_get_bootdev();
+	if (!dev_desc) {
+		printf("dev_desc is NULL!\n");
+		goto out;
+	}
+
+	if (part_get_info_by_name(dev_desc, PART_MISC, &part) < 0) {
+		printf("No misc partition\n");
+		goto out;
+	}
+
+	cnt = DIV_ROUND_UP(sizeof(struct bootloader_message), dev_desc->blksz);
+	bmsg = memalign(ARCH_DMA_MINALIGN, cnt * dev_desc->blksz);
+	if (blk_dread(dev_desc, part.start + bcb_offset, cnt, bmsg) != cnt) {
+		recovery = 0;
+	} else {
+		recovery = !strcmp(bmsg->command, "boot-recovery");
+		if (!strcmp(bmsg->recovery, "recovery\n--rk_fwupdate\n"))
+			env_set("rk_fwupdate", "y"); /* set for late use */
+	}
+
+	free(bmsg);
+out:
+	return recovery;
 }
 
+/*
+ * There are three ways to get reboot-mode:
+ *
+ * No1. Android BCB which is defined in misc.img (0KB or 16KB offset)
+ * No2. CONFIG_ROCKCHIP_BOOT_MODE_REG that supports "reboot xxx" commands
+ * No3. Env variable "reboot_mode" which is added by U-Boot
+ *
+ * Recovery mode from:
+ *	- Android BCB in misc.img
+ *	- "reboot recovery" command
+ *	- recovery key pressed without usb attach
+ */
+int rockchip_get_boot_mode(void)
+{
+	static int boot_mode[] =		/* static */
+		{ -EINVAL, -EINVAL, -EINVAL };
+	static int bcb_offset = -EINVAL;	/* static */
+	uint32_t reg_boot_mode;
+	char *env_reboot_mode;
+	int clear_boot_reg = 0;
+#ifdef CONFIG_ANDROID_BOOT_IMAGE
+	u32 offset = android_bcb_msg_sector_offset();
 #else
-
-void set_back_to_bootrom_dnl_flag(void)
-{
-	writel(BOOT_BROM_DOWNLOAD, CONFIG_ROCKCHIP_BOOT_MODE_REG);
-}
-
-/*
- * detect download key status by adc, most rockchip
- * based boards use adc sample the download key status,
- * but there are also some use gpio. So it's better to
- * make this a weak function that can be override by
- * some special boards.
- */
-#define KEY_DOWN_MIN_VAL	0
-#define KEY_DOWN_MAX_VAL	30
-
-__weak int rockchip_dnl_key_pressed(void)
-{
-	int keyval = false;
-
-/*
- * This is a generic interface to read key
- */
-#if defined(CONFIG_DM_KEY)
-	keyval = key_read(KEY_VOLUMEUP);
-
-	return key_is_pressed(keyval);
-
-#elif defined(CONFIG_ADC)
-	const void *blob = gd->fdt_blob;
-	unsigned int val;
-	int channel = 1;
-	int node;
-	int ret;
-	u32 chns[2];
-
-	node = fdt_node_offset_by_compatible(blob, 0, "adc-keys");
-	if (node >= 0) {
-	       if (!fdtdec_get_int_array(blob, node, "io-channels", chns, 2))
-		       channel = chns[1];
-	}
-
-	ret = adc_channel_single_shot("saradc", channel, &val);
-	if (ret) {
-		printf("%s adc_channel_single_shot fail! ret=%d\n", __func__, ret);
-		return false;
-	}
-
-	if ((val >= KEY_DOWN_MIN_VAL) && (val <= KEY_DOWN_MAX_VAL))
-		return true;
-	else
-		return false;
+	u32 offset = BCB_MESSAGE_BLK_OFFSET;
 #endif
 
-	return keyval;
-}
-
-void boot_devtype_init(void)
-{
-	const char *devtype_num_set = "run rkimg_bootdev";
-	char *devtype = NULL, *devnum = NULL;
-	static int done = 0;
-	int atags_en = 0;
-	int ret;
-
-	if (done)
-		return;
-
-	ret = param_parse_bootdev(&devtype, &devnum);
-	if (!ret) {
-		atags_en = 1;
-		env_set("devtype", devtype);
-		env_set("devnum", devnum);
-
-#ifdef CONFIG_DM_MMC
-		if (!strcmp("mmc", devtype))
-			mmc_initialize(gd->bd);
-#endif
-		/*
-		 * For example, the pre-loader do not have mtd device,
-		 * and pass devtype is nand. Then U-Boot can not get
-		 * dev_desc when use mtd driver to read firmware. So
-		 * test the block dev is exist or not here.
-		 *
-		 * And the devtype & devnum maybe wrong sometimes, it
-		 * is better to test first.
-		 */
-		if (blk_get_devnum_by_typename(devtype, atoi(devnum)))
-			goto finish;
-	}
-
-	/* If not find valid bootdev by atags, scan all possible */
-#ifdef CONFIG_DM_MMC
-	mmc_initialize(gd->bd);
-#endif
-	ret = run_command_list(devtype_num_set, -1, 0);
-	if (ret) {
-		/* Set default dev type/num if command not valid */
-		devtype = "mmc";
-		devnum = "0";
-		env_set("devtype", devtype);
-		env_set("devnum", devnum);
-	}
-
-finish:
-	done = 1;
-	printf("Bootdev%s: %s %s\n", atags_en ? "(atags)" : "",
-	       env_get("devtype"), env_get("devnum"));
-}
-
-void rockchip_dnl_mode_check(void)
-{
-	/* recovery key or "ctrl+d" */
-	if (rockchip_dnl_key_pressed() ||
-	    is_hotkey(HK_ROCKUSB_DNL)) {
-		printf("download key pressed... ");
-		if (rockchip_u2phy_vbus_detect() > 0) {
-			printf("entering download mode...\n");
-			/* If failed, we fall back to bootrom download mode */
-			run_command_list("rockusb 0 ${devtype} ${devnum}", -1, 0);
-			set_back_to_bootrom_dnl_flag();
-			do_reset(NULL, 0, 0, NULL);
-		} else {
-			printf("entering recovery mode!\n");
-			env_set("reboot_mode", "recovery-key");
+	/*
+	 * Env variable "reboot_mode" which is added by U-Boot, reading ever time.
+	 */
+	env_reboot_mode = env_get("reboot_mode");
+	if (env_reboot_mode) {
+		if (!strcmp(env_reboot_mode, "recovery-key")) {
+			printf("boot mode: recovery (key)\n");
+			return BOOT_MODE_RECOVERY;
+		} else if (!strcmp(env_reboot_mode, "recovery-usb")) {
+			printf("boot mode: recovery (usb)\n");
+			return BOOT_MODE_RECOVERY;
+		} else if (!strcmp(env_reboot_mode, "recovery")) {
+			printf("boot mode: recovery (env)\n");
+			return BOOT_MODE_RECOVERY;
+		} else if (!strcmp(env_reboot_mode, "fastboot")) {
+			printf("boot mode: fastboot\n");
+			return BOOT_MODE_BOOTLOADER;
 		}
-	} else if (is_hotkey(HK_FASTBOOT)) {
-		env_set("reboot_mode", "fastboot");
 	}
+
+	/*
+	 * Android BCB special handle:
+	 *    Once the Android BCB offset changed, reinitalize "boot_mode[PM]".
+	 *
+	 * Background:
+	 *    1. there are two Android BCB at the 0KB(google) and 16KB(rk)
+	 *       offset in misc.img
+	 *    2. Android image: return 0KB offset if image version >= 10,
+	 *	 otherwise 16KB
+	 *    3. Not Android image: return 16KB offset, eg: FIT image.
+	 *
+	 * To handle the cases of 16KB and 0KB, we reinitial boot_mode[PM] once
+	 * Android BCB is changed.
+	 *
+	 * PH and PL is from boot mode register and reading once.
+	 * PM is from misc.img and should be updated if BCB offset is changed.
+	 * Return the boot mode according to priority: PH > PM > PL.
+	 */
+	if (bcb_offset != offset) {
+		boot_mode[PM] = -EINVAL;
+		bcb_offset = offset;
+	}
+
+	/* directly return if there is already valid mode */
+	if (boot_mode[PH] != -EINVAL)
+		return boot_mode[PH];
+	else if (boot_mode[PM] != -EINVAL)
+		return boot_mode[PM];
+	else if (boot_mode[PL] != -EINVAL)
+		return boot_mode[PL];
+
+	/*
+	 * Boot mode priority
+	 *
+	 * Anyway, we should set download boot mode as the highest priority, so:
+	 * reboot loader/bootloader/fastboot > misc partition "recovery" > reboot xxx.
+	 */
+	reg_boot_mode = readl((void *)CONFIG_ROCKCHIP_BOOT_MODE_REG);
+	if (reg_boot_mode == BOOT_LOADER) {
+		printf("boot mode: loader\n");
+		boot_mode[PH] = BOOT_MODE_LOADER;
+		clear_boot_reg = 1;
+	} else if (reg_boot_mode == BOOT_DFU) {
+		printf("boot mode: dfu\n");
+		boot_mode[PH] = BOOT_MODE_DFU;
+		clear_boot_reg = 1;
+	} else if (reg_boot_mode == BOOT_FASTBOOT) {
+		printf("boot mode: bootloader\n");
+		boot_mode[PH] = BOOT_MODE_BOOTLOADER;
+		clear_boot_reg = 1;
+	} else if (misc_require_recovery(bcb_offset)) {
+		printf("boot mode: recovery (misc)\n");
+		boot_mode[PM] = BOOT_MODE_RECOVERY;
+	} else {
+		switch (reg_boot_mode) {
+		case BOOT_NORMAL:
+			printf("boot mode: normal\n");
+			boot_mode[PL] = BOOT_MODE_NORMAL;
+			clear_boot_reg = 1;
+			break;
+		case BOOT_RECOVERY:
+			printf("boot mode: recovery (cmd)\n");
+			boot_mode[PL] = BOOT_MODE_RECOVERY;
+			clear_boot_reg = 1;
+			break;
+		case BOOT_UMS:
+			printf("boot mode: ums\n");
+			boot_mode[PL] = BOOT_MODE_UMS;
+			clear_boot_reg = 1;
+			break;
+		case BOOT_CHARGING:
+			printf("boot mode: charging\n");
+			boot_mode[PL] = BOOT_MODE_CHARGING;
+			clear_boot_reg = 1;
+			break;
+		case BOOT_PANIC:
+			printf("boot mode: panic\n");
+			boot_mode[PL] = BOOT_MODE_PANIC;
+			break;
+		case BOOT_WATCHDOG:
+			printf("boot mode: watchdog\n");
+			boot_mode[PL] = BOOT_MODE_WATCHDOG;
+			break;
+		default:
+			printf("boot mode: None\n");
+			boot_mode[PL] = BOOT_MODE_UNDEFINE;
+		}
+	}
+
+	/*
+	 * We don't clear boot mode reg when its value stands for the reboot
+	 * reason or others(in the future), the kernel will need and clear it.
+	 */
+	if (clear_boot_reg)
+		writel(BOOT_NORMAL, (void *)CONFIG_ROCKCHIP_BOOT_MODE_REG);
+
+	if (boot_mode[PH] != -EINVAL)
+		return boot_mode[PH];
+	else if (boot_mode[PM] != -EINVAL)
+		return boot_mode[PM];
+	else
+		return boot_mode[PL];
 }
 
 int setup_boot_mode(void)
 {
-	int boot_mode = BOOT_MODE_NORMAL;
 	char env_preboot[256] = {0};
 
-	boot_devtype_init();
-	rockchip_dnl_mode_check();
-#ifdef CONFIG_RKIMG_BOOTLOADER
-	boot_mode = rockchip_get_boot_mode();
-#endif
-	switch (boot_mode) {
+	switch (rockchip_get_boot_mode()) {
 	case BOOT_MODE_BOOTLOADER:
 		printf("enter fastboot!\n");
 #if defined(CONFIG_FASTBOOT_FLASH_MMC_DEV)
@@ -191,9 +222,15 @@ int setup_boot_mode(void)
 		printf("enter UMS!\n");
 		env_set("preboot", "setenv preboot; ums mmc 0");
 		break;
+#if defined(CONFIG_CMD_DFU)
+	case BOOT_MODE_DFU:
+		printf("enter DFU!\n");
+		env_set("preboot", "setenv preboot; dfu 0 ${devtype} ${devnum}; rbrom");
+		break;
+#endif
 	case BOOT_MODE_LOADER:
 		printf("enter Rockusb!\n");
-		env_set("preboot", "setenv preboot; rockusb 0 ${devtype} ${devnum}");
+		env_set("preboot", "setenv preboot; rockusb 0 ${devtype} ${devnum}; rbrom");
 		break;
 	case BOOT_MODE_CHARGING:
 		printf("enter charging!\n");
@@ -203,5 +240,3 @@ int setup_boot_mode(void)
 
 	return 0;
 }
-
-#endif

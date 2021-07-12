@@ -14,6 +14,7 @@
 
 #include <common.h>
 #include <command.h>
+#include <amp.h>
 #include <dm.h>
 #include <dm/root.h>
 #include <image.h>
@@ -67,7 +68,7 @@ void arch_lmb_reserve(struct lmb *lmb)
 		    gd->ram_top - sp);
 }
 
-__weak void board_quiesce_devices(void)
+__weak void board_quiesce_devices(void *images)
 {
 }
 
@@ -76,7 +77,7 @@ __weak void board_quiesce_devices(void)
  *
  * @fake: non-zero to do everything except actually boot
  */
-static void announce_and_cleanup(int fake)
+static void announce_and_cleanup(bootm_headers_t *images, int fake)
 {
 	ulong us;
 
@@ -97,7 +98,7 @@ static void announce_and_cleanup(int fake)
 	udc_disconnect();
 #endif
 
-	board_quiesce_devices();
+	board_quiesce_devices(images);
 
 	/* Flush all console data */
 	flushc();
@@ -323,6 +324,12 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 	void (*kernel_entry)(void *fdt_addr, void *res0, void *res1,
 			void *res2);
 	int fake = (flag & BOOTM_STATE_OS_FAKE_GO);
+#ifdef CONFIG_AMP
+	int flags = amp_flags();
+	images->os.arch = amp_os_arch();
+#else
+	int flags = 0;
+#endif
 
 	kernel_entry = (void (*)(void *fdt_addr, void *res0, void *res1,
 				void *res2))images->ep;
@@ -331,7 +338,7 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 		(ulong) kernel_entry);
 	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
 
-	announce_and_cleanup(fake);
+	announce_and_cleanup(images, fake);
 
 	if (!fake) {
 #ifdef CONFIG_ARMV8_PSCI
@@ -348,11 +355,11 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 		if ((IH_ARCH_DEFAULT == IH_ARCH_ARM64) &&
 		    (images->os.arch == IH_ARCH_ARM))
 			armv8_switch_to_el2(0, (u64)gd->bd->bi_arch_number,
-					    (u64)images->ft_addr, 0,
+					    (u64)images->ft_addr, flags,
 					    (u64)images->ep,
 					    ES_TO_AARCH32);
 		else
-			armv8_switch_to_el2((u64)images->ft_addr, 0, 0, 0,
+			armv8_switch_to_el2((u64)images->ft_addr, 0, 0, flags,
 					    images->ep,
 					    ES_TO_AARCH64);
 #endif
@@ -381,7 +388,7 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 	debug("## Transferring control to Linux (at address %08lx)" \
 		"...\n", (ulong) kernel_entry);
 	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
-	announce_and_cleanup(fake);
+	announce_and_cleanup(images, fake);
 
 	if (IMAGE_ENABLE_OF_LIBFDT && images->ft_len)
 		r2 = (unsigned long)images->ft_addr;

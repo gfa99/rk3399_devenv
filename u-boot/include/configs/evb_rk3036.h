@@ -14,18 +14,11 @@
 #define CONFIG_SYS_MMC_ENV_DEV          0
 #define CONFIG_SYS_MMC_ENV_PART         0
 #define CONFIG_SYS_REDUNDAND_ENVIRONMENT
-#define CONFIG_SUPPORT_EMMC_RPMB
 
 #ifndef CONFIG_SPL_BUILD
 /* Enable gpt partition table */
 #undef CONFIG_PREBOOT
-#define CONFIG_PREBOOT \
-	"mmc dev 0; " \
-	"gpt guid mmc 0; " \
-	"if test $? = 1; then " \
-		"fastboot usb 0; " \
-	"fi; "
-
+#define CONFIG_PREBOOT
 #define CONFIG_SYS_BOOT_RAMDISK_HIGH
 
 /* Store env in emmc */

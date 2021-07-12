@@ -731,6 +731,10 @@ static void of_alias_add(struct alias_prop *ap, struct device_node *np,
 	mutex_lock(&of_mutex);
 	list_for_each_entry(oldap, &aliases_lookup, link) {
 		if (stem && !strcmp(stem, oldap->alias) && (id == oldap->id)) {
+			/* Always use from U-Boot aliase */
+			if (strcmp(stem, "mmc"))
+				continue;
+
 			list_del(&oldap->link);
 			break;
 		}
@@ -851,9 +855,11 @@ struct device_node *of_alias_dump(void)
 
 	mutex_lock(&of_mutex);
 	list_for_each_entry(app, &aliases_lookup, link) {
-		printf("%s: Alias %s%d: %s, phandle=%d\n", __func__,
+		printf("%10s%d: %20s, phandle=%d %4s\n",
 		       app->stem, app->id,
-		       app->np->full_name, app->np->phandle);
+		       app->np->full_name, app->np->phandle,
+		       of_get_property(app->np, "u-boot,dm-pre-reloc", NULL) ||
+		       of_get_property(app->np, "u-boot,dm-spl", NULL) ? "*" : "");
 	}
 	mutex_unlock(&of_mutex);
 
@@ -862,17 +868,5 @@ struct device_node *of_alias_dump(void)
 
 struct device_node *of_get_stdout(void)
 {
-	struct device_node *np;
-
-	if (gd && gd->serial.using_pre_serial) {
-		np = of_alias_get_dev("serial", gd->serial.id);
-		if (!np)
-			printf("Can't find alias serial%d\n", gd->serial.id);
-		else
-			debug("Find alias serial: %s\n", np->full_name);
-
-		of_stdout = np;
-	}
-
 	return of_stdout;
 }

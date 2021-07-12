@@ -6,8 +6,8 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#include <bouncebuf.h>
 #include <common.h>
+#include <bouncebuf.h>
 #include <errno.h>
 #include <malloc.h>
 #include <memalign.h>
@@ -158,25 +158,41 @@ static void dwmci_prepare_data(struct dwmci_host *host,
 	dwmci_writel(host, DWMCI_BYTCNT, data->blocksize * data->blocks);
 }
 
+static unsigned int dwmci_get_timeout(struct mmc *mmc, const unsigned int size)
+{
+	unsigned int timeout;
+
+	timeout = size * 8;	/* counting in bits */
+	timeout *= 10;		/* wait 10 times as long */
+	timeout /= mmc->clock;
+	timeout /= mmc->bus_width;
+	timeout *= 1000;	/* counting in msec */
+	timeout = (timeout < 10000) ? 10000 : timeout;
+
+	return timeout;
+}
+
 static int dwmci_data_transfer(struct dwmci_host *host, struct mmc_data *data)
 {
 	int ret = 0;
 	int reset_timeout = 100;
-	u32 timeout = 240000;
-	u32 status, ctrl, mask, size, i, len = 0;
+	u32 timeout, status, ctrl, mask, size, i, len = 0;
 	u32 *buf = NULL;
 	ulong start = get_timer(0);
 	u32 fifo_depth = (((host->fifoth_val & RX_WMARK_MASK) >>
 			    RX_WMARK_SHIFT) + 1) * 2;
 	bool stride;
 
-	size = data->blocksize * data->blocks / 4;
+	size = data->blocksize * data->blocks;
 	/* Still use legacy PIO mode if size < 512(128 * 4) Bytes */
 	stride = host->stride_pio && size > 128;
 	if (data->flags == MMC_DATA_READ)
 		buf = (unsigned int *)data->dest;
 	else
 		buf = (unsigned int *)data->src;
+
+	timeout = dwmci_get_timeout(host->mmc, size);
+	size /= 4;
 
 	for (;;) {
 		mask = dwmci_readl(host, DWMCI_RINTSTS);
@@ -437,6 +453,135 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 	return ret;
 }
 
+#ifdef CONFIG_SPL_BLK_READ_PREPARE
+#ifdef CONFIG_DM_MMC
+static int dwmci_send_cmd_prepare(struct udevice *dev, struct mmc_cmd *cmd,
+				  struct mmc_data *data)
+{
+	struct mmc *mmc = mmc_get_mmc_dev(dev);
+#else
+static int dwmci_send_cmd_prepare(struct mmc *mmc, struct mmc_cmd *cmd,
+				  struct mmc_data *data)
+{
+#endif
+	struct dwmci_host *host = mmc->priv;
+	struct dwmci_idmac *cur_idmac;
+	int ret = 0, flags = 0, i;
+	unsigned int timeout = 500;
+	u32 retry = 100000;
+	u32 mask;
+	ulong start = get_timer(0);
+	struct bounce_buffer bbstate;
+
+	cur_idmac = malloc(ROUND(DIV_ROUND_UP(data->blocks, 8) *
+			   sizeof(struct dwmci_idmac),
+			   ARCH_DMA_MINALIGN) + ARCH_DMA_MINALIGN - 1);
+	if (!cur_idmac)
+		return -ENODATA;
+
+	while (dwmci_readl(host, DWMCI_STATUS) & DWMCI_BUSY) {
+		if (get_timer(start) > timeout) {
+			debug("%s: Timeout on data busy\n", __func__);
+			return -ETIMEDOUT;
+		}
+	}
+
+	dwmci_writel(host, DWMCI_RINTSTS, DWMCI_INTMSK_ALL);
+
+	if (data) {
+		if (host->fifo_mode) {
+			dwmci_writel(host, DWMCI_BLKSIZ, data->blocksize);
+			dwmci_writel(host, DWMCI_BYTCNT,
+				     data->blocksize * data->blocks);
+			dwmci_wait_reset(host, DWMCI_CTRL_FIFO_RESET);
+		} else {
+			if (data->flags == MMC_DATA_READ) {
+				bounce_buffer_start(&bbstate, (void *)data->dest,
+						    data->blocksize *
+						    data->blocks, GEN_BB_WRITE);
+			} else {
+				bounce_buffer_start(&bbstate, (void *)data->src,
+						    data->blocksize *
+						    data->blocks, GEN_BB_READ);
+			}
+			dwmci_prepare_data(host, data, cur_idmac,
+					   bbstate.bounce_buffer);
+		}
+	}
+
+	dwmci_writel(host, DWMCI_CMDARG, cmd->cmdarg);
+
+	if (data)
+		flags = dwmci_set_transfer_mode(host, data);
+
+	if ((cmd->resp_type & MMC_RSP_136) && (cmd->resp_type & MMC_RSP_BUSY))
+		return -1;
+
+	if (cmd->cmdidx == MMC_CMD_STOP_TRANSMISSION)
+		flags |= DWMCI_CMD_ABORT_STOP;
+	else
+		flags |= DWMCI_CMD_PRV_DAT_WAIT;
+
+	if (cmd->resp_type & MMC_RSP_PRESENT) {
+		flags |= DWMCI_CMD_RESP_EXP;
+		if (cmd->resp_type & MMC_RSP_136)
+			flags |= DWMCI_CMD_RESP_LENGTH;
+	}
+
+	if (cmd->resp_type & MMC_RSP_CRC)
+		flags |= DWMCI_CMD_CHECK_CRC;
+
+	flags |= (cmd->cmdidx | DWMCI_CMD_START | DWMCI_CMD_USE_HOLD_REG);
+
+	debug("Sending CMD%d\n", cmd->cmdidx);
+
+	dwmci_writel(host, DWMCI_CMD, flags);
+
+	for (i = 0; i < retry; i++) {
+		mask = dwmci_readl(host, DWMCI_RINTSTS);
+		if (mask & DWMCI_INTMSK_CDONE) {
+			if (!data)
+				dwmci_writel(host, DWMCI_RINTSTS, mask);
+			break;
+		}
+	}
+
+	if (i == retry) {
+		debug("%s: Timeout.\n", __func__);
+		return -ETIMEDOUT;
+	}
+
+	if (mask & DWMCI_INTMSK_RTO) {
+		/*
+		 * Timeout here is not necessarily fatal. (e)MMC cards
+		 * will splat here when they receive CMD55 as they do
+		 * not support this command and that is exactly the way
+		 * to tell them apart from SD cards. Thus, this output
+		 * below shall be debug(). eMMC cards also do not favor
+		 * CMD8, please keep that in mind.
+		 */
+		debug("%s: Response Timeout.\n", __func__);
+		return -ETIMEDOUT;
+	} else if (mask & DWMCI_INTMSK_RE) {
+		debug("%s: Response Error.\n", __func__);
+		return -EIO;
+	}
+
+	if (cmd->resp_type & MMC_RSP_PRESENT) {
+		if (cmd->resp_type & MMC_RSP_136) {
+			cmd->response[0] = dwmci_readl(host, DWMCI_RESP3);
+			cmd->response[1] = dwmci_readl(host, DWMCI_RESP2);
+			cmd->response[2] = dwmci_readl(host, DWMCI_RESP1);
+			cmd->response[3] = dwmci_readl(host, DWMCI_RESP0);
+		} else {
+			cmd->response[0] = dwmci_readl(host, DWMCI_RESP0);
+		}
+	}
+
+	return ret;
+}
+#endif
+
 static int dwmci_setup_bus(struct dwmci_host *host, u32 freq)
 {
 	u32 div, status;
@@ -581,6 +726,7 @@ static int dwmci_init(struct mmc *mmc)
 {
 	struct dwmci_host *host = mmc->priv;
 	uint32_t use_dma;
+	uint32_t verid;
 
 	if (host->board_init)
 		host->board_init(host);
@@ -594,6 +740,10 @@ static int dwmci_init(struct mmc *mmc)
 #else
 	dwmci_writel(host, DWMCI_PWREN, 1);
 #endif
+
+	verid = dwmci_readl(host, DWMCI_VERID) & 0x0000ffff;
+	if (verid >= DW_MMC_240A)
+		dwmci_writel(host, DWMCI_CARDTHRCTL, DWMCI_CDTHRCTRL_CONFIG);
 
 	if (!dwmci_wait_reset(host, DWMCI_RESET_ALL)) {
 		debug("%s[%d] Fail-reset!!\n", __func__, __LINE__);
@@ -664,6 +814,9 @@ int dwmci_probe(struct udevice *dev)
 const struct dm_mmc_ops dm_dwmci_ops = {
 	.card_busy	= dwmci_card_busy,
 	.send_cmd	= dwmci_send_cmd,
+#ifdef CONFIG_SPL_BLK_READ_PREPARE
+	.send_cmd_prepare = dwmci_send_cmd_prepare,
+#endif
 	.set_ios	= dwmci_set_ios,
 	.get_cd         = dwmci_get_cd,
 	.execute_tuning	= dwmci_execute_tuning,

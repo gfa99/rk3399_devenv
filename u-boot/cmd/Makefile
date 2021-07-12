@@ -25,10 +25,12 @@ obj-$(CONFIG_CMD_BEDBUG) += bedbug.o
 obj-$(CONFIG_CMD_BLOCK_CACHE) += blkcache.o
 obj-$(CONFIG_CMD_BMP) += bmp.o
 obj-$(CONFIG_CMD_BOOT_ANDROID) += boot_android.o android.o
+obj-$(CONFIG_CMD_BOOT_FIT) += bootfit.o
 obj-$(CONFIG_CMD_BOOT_ROCKCHIP) += bootrkp.o
 obj-$(CONFIG_CMD_BOOTEFI) += bootefi.o
 obj-$(CONFIG_CMD_BOOTMENU) += bootmenu.o
 obj-$(CONFIG_CMD_BOOTSTAGE) += bootstage.o
+obj-$(CONFIG_CMD_BOOT_UIMAGE) += bootuimage.o
 obj-$(CONFIG_CMD_BOOTZ) += bootz.o
 obj-$(CONFIG_CMD_BOOTI) += booti.o
 obj-$(CONFIG_CMD_CACHE) += cache.o
@@ -39,6 +41,7 @@ obj-$(CONFIG_CMD_CONSOLE) += console.o
 obj-$(CONFIG_CMD_CPU) += cpu.o
 obj-$(CONFIG_CMD_CHARGE_DISPLAY) += charge.o
 obj-$(CONFIG_CMD_CRYPTO) += crypto.o
+obj-$(CONFIG_CMD_CRYPTO_SUM) += crypto_sum.o
 obj-$(CONFIG_DATAFLASH_MMC_SELECT) += dataflash_mmc_mux.o
 obj-$(CONFIG_CMD_DATE) += date.o
 obj-$(CONFIG_CMD_DEMO) += demo.o
@@ -116,6 +119,7 @@ obj-$(CONFIG_CMD_READ) += read.o
 obj-$(CONFIG_CMD_REGINFO) += reginfo.o
 obj-$(CONFIG_CMD_REISER) += reiser.o
 obj-$(CONFIG_CMD_REMOTEPROC) += remoteproc.o
+obj-$(CONFIG_CMD_RNG) += rng.o
 obj-$(CONFIG_SANDBOX) += host.o
 obj-$(CONFIG_CMD_SATA) += sata.o
 obj-$(CONFIG_CMD_NVME) += nvme.o
@@ -168,6 +172,9 @@ obj-$(CONFIG_CMD_REGULATOR) += regulator.o
 obj-$(CONFIG_CMD_DVFS) += dvfs.o
 
 obj-$(CONFIG_CMD_BLOB) += blob.o
+
+obj-$(CONFIG_ARCH_ROCKCHIP) += rkimgtest.o
+
 endif # !CONFIG_SPL_BUILD
 
 # core command
