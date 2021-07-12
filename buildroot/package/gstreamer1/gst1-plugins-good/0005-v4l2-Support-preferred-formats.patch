@@ -1,7 +1,7 @@
-From 4372aafd2ac45623851cf8d848e136316bf03ebc Mon Sep 17 00:00:00 2001
+From 72d189ef19263fd36eb11cf11d865943413733ab Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Wed, 6 Nov 2019 15:07:44 +0800
-Subject: [PATCH] v4l2: Support preferred formats
+Subject: [PATCH 5/6] v4l2: Support preferred formats
 
 Set env "GST_V4L2_PREFERRED_FOURCC" to specify preferred formats, for
 example:
@@ -13,7 +13,7 @@ Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
  1 file changed, 17 insertions(+)
 
 diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
-index 124c778..08706a7 100644
+index 124c778..e7a6032 100644
 --- a/sys/v4l2/gstv4l2object.c
 +++ b/sys/v4l2/gstv4l2object.c
 @@ -25,6 +25,7 @@
@@ -29,7 +29,7 @@ index 124c778..08706a7 100644
    }
  
 +  {
-+    char *buf = getenv ("GST_V4L2_PREFERRED_FOURCC");
++    char *buf = g_getenv ("GST_V4L2_PREFERRED_FOURCC");
 +    int max_rank = YUV_BASE_RANK * 2;
 +
 +    while (buf) {
@@ -48,5 +48,5 @@ index 124c778..08706a7 100644
     * will a) make all non-emulated formats larger
     * than emulated and b) will not overflow
 -- 
-2.11.0
+2.20.1
 

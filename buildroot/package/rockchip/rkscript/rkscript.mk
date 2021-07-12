@@ -10,6 +10,13 @@ RKSCRIPT_LICENSE = Apache V2.0
 RKSCRIPT_LICENSE_FILES = NOTICE
 RKSCRIPT_USB_CONFIG_FILE = $(TARGET_DIR)/etc/init.d/.usb_config
 
+ifeq ($(RK_OEM_FS_TYPE),ubi)
+RK_OEM_FS_TYPE := ubifs
+endif
+ifeq ($(RK_USERDATA_FS_TYPE),ubi)
+RK_USERDATA_FS_TYPE := ubifs
+endif
+
 define RKSCRIPT_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0644 -D $(@D)/61-partition-init.rules $(TARGET_DIR)/lib/udev/rules.d/
 	$(INSTALL) -m 0644 -D $(@D)/61-sd-cards-auto-mount.rules $(TARGET_DIR)/lib/udev/rules.d/
@@ -27,17 +34,43 @@ define RKSCRIPT_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0755 -D $(@D)/S21mountall.sh $(TARGET_DIR)/etc/init.d/
 #	$(INSTALL) -m 0755 -D $(@D)/S22resize-disk $(TARGET_DIR)/etc/init.d/
 	$(INSTALL) -m 0755 -D $(@D)/S50usbdevice $(TARGET_DIR)/etc/init.d/
+	$(INSTALL) -m 0755 -D $(@D)/S51n4 $(TARGET_DIR)/etc/init.d/
 	$(INSTALL) -m 0755 -D $(@D)/usbdevice $(TARGET_DIR)/usr/bin/
 	$(INSTALL) -m 0755 -D $(@D)/waylandtest.sh $(TARGET_DIR)/usr/bin/
 	echo -e "/dev/block/by-name/misc\t\t/misc\t\t\temmc\t\tdefaults\t\t0\t0" >> $(TARGET_DIR)/etc/fstab
-	echo -e "/dev/block/by-name/oem\t\t/oem\t\t\t$$RK_OEM_FS_TYPE\t\tdefaults\t\t0\t2" >> $(TARGET_DIR)/etc/fstab
-	echo -e "/dev/block/by-name/userdata\t/userdata\t\t$$RK_USERDATA_FS_TYPE\t\tdefaults\t\t0\t2" >> $(TARGET_DIR)/etc/fstab
-	cd $(TARGET_DIR) && rm -rf oem userdata data mnt udisk sdcard && mkdir -p oem userdata mnt/sdcard && ln -s userdata data && ln -s media/usb0 udisk && ln -s mnt/sdcard sdcard && cd -
+
+	if [ x${RK_OEM_NODE} != x ]; then \
+	    echo -e "$$RK_OEM_NODE\t\t/oem\t\t\t$$RK_OEM_FS_TYPE\t\tdefaults\t\t0\t2" >> $(TARGET_DIR)/etc/fstab; \
+	else \
+	    echo -e "/dev/block/by-name/oem\t\t/oem\t\t\t$$RK_OEM_FS_TYPE\t\tdefaults\t\t0\t2" >> $(TARGET_DIR)/etc/fstab; \
+	fi
+
+	if [ x${RK_USERDATA_NODE} != x ]; then \
+	    echo -e "$$RK_USERDATA_NODE\t/userdata\t\t$$RK_USERDATA_FS_TYPE\t\tdefaults\t\t0\t2" >> $(TARGET_DIR)/etc/fstab; \
+	else \
+	    echo -e "/dev/block/by-name/userdata\t/userdata\t\t$$RK_USERDATA_FS_TYPE\t\tdefaults\t\t0\t2" >> $(TARGET_DIR)/etc/fstab; \
+	fi
+
+	cd $(TARGET_DIR) && rm -rf userdata data mnt udisk sdcard && mkdir -p userdata mnt/sdcard && ln -s userdata data && ln -s media/usb0 udisk && ln -s mnt/sdcard sdcard && cd -
+	if echo $(BR2_PACKAGE_RK_OEM_INSTALL_TARGET_DIR) | grep $(TARGET_DIR); then echo "Found build oem into target...";else rm -rf $(TARGET_DIR)/oem && mkdir -p $(TARGET_DIR)/oem; fi
 	if test -e $(RKSCRIPT_USB_CONFIG_FILE) ; then \
 		rm $(RKSCRIPT_USB_CONFIG_FILE) ; \
 	fi
 	touch $(RKSCRIPT_USB_CONFIG_FILE)
 endef
+
+ifneq ($(call qstrip,$(BR2_PACKAGE_RKSCRIPT_DEFAULT_PCM)),none)
+PCM_ID=$(call qstrip,$(BR2_PACKAGE_RKSCRIPT_DEFAULT_PCM))
+define RKSCRIPT_INSTALL_TARGET_PCM_HOOK
+	$(SED) "s#\#PCM_ID#${PCM_ID}#g" $(@D)/asound.conf.in
+	$(INSTALL) -m 0644 -D $(@D)/asound.conf.in $(TARGET_DIR)/etc/asound.conf
+endef
+RKSCRIPT_POST_INSTALL_TARGET_HOOKS += RKSCRIPT_INSTALL_TARGET_PCM_HOOK
+endif
+
+
+
+ifeq ($(BR2_PACKAGE_USB_USER_CONFIG),)
 
 ifeq ($(BR2_PACKAGE_ANDROID_TOOLS_ADBD),y)
 define RKSCRIPT_ADD_ADBD_CONFIG
@@ -117,6 +150,13 @@ define RKSCRIPT_ADD_ACM_CONFIG
 endef
 RKSCRIPT_POST_INSTALL_TARGET_HOOKS += RKSCRIPT_ADD_ACM_CONFIG
 endif
+else
+RKSCRIPT_USB_CONFIG = $(call qstrip,$(BR2_PACKAGE_USB_USER_CONFIG_STRING))
+define RKSCRIPT_ADD_USER_CONFIG
+	echo "$(RKSCRIPT_USB_CONFIG)" | sed "s/\\\\n/\n/g" > $(RKSCRIPT_USB_CONFIG_FILE)
+endef
+RKSCRIPT_POST_INSTALL_TARGET_HOOKS += RKSCRIPT_ADD_USER_CONFIG
+endif
 
 ifeq ($(BR2_PACKAGE_USB_MODULE),y)
 RKSCRIPT_USB_MODULE = $(call qstrip,$(BR2_PACKAGE_USB_MODULE_NAME))
@@ -128,6 +168,22 @@ define RKSCRIPT_ADD_USB_MODULE_SUPPORT
 		$(TARGET_DIR)/etc/init.d/S50usbdevice
 endef
 RKSCRIPT_POST_INSTALL_TARGET_HOOKS += RKSCRIPT_ADD_USB_MODULE_SUPPORT
+endif
+
+ifeq ($(BR2_PACKAGE_RKSCRIPT_USE_BUSYBOX_MOUNT),y)
+define RKSCRIPT_FIXED_SD_MOUNT
+	$(SED) "s#users\,##g" $(TARGET_DIR)/lib/udev/rules.d/61-sd-cards-auto-mount.rules
+endef
+RKSCRIPT_POST_INSTALL_TARGET_HOOKS += RKSCRIPT_FIXED_SD_MOUNT
+endif
+
+ifeq ($(BR2_PACKAGE_RECOVERY),y)
+ifneq ($(BR2_PACKAGE_RECOVERY_USE_UPDATEENGINE),y)
+define RKSCRIPT_REMOVE_AUTO_MOUNTALL_RC_FILE
+	rm -f $(TARGET_DIR)/etc/init.d/S21mountall.sh
+endef
+endif
+RKSCRIPT_POST_INSTALL_TARGET_HOOKS += RKSCRIPT_REMOVE_AUTO_MOUNTALL_RC_FILE
 endif
 
 $(eval $(generic-package))

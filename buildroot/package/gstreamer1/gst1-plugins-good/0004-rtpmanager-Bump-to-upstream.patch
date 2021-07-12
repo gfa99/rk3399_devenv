@@ -1,7 +1,7 @@
-From 8710c98949d173df2027a402009709b694b43cec Mon Sep 17 00:00:00 2001
+From d76fca6e3f281a105d9ec11eb63414284726b021 Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Wed, 18 Sep 2019 18:06:14 +0800
-Subject: [PATCH] rtpmanager: Bump to upstream
+Subject: [PATCH 4/6] rtpmanager: Bump to upstream
 
 Bump to:
 8dd03042c rtpsession: add support for buffer lists on the recv path
@@ -9,29 +9,29 @@ Bump to:
 Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
  gst/rtpmanager/Makefile.am          |   7 +-
- gst/rtpmanager/gstrtpbin.c          | 370 ++++++++-------------------
+ gst/rtpmanager/gstrtpbin.c          | 370 ++++++---------------
  gst/rtpmanager/gstrtpbin.h          |   3 +-
  gst/rtpmanager/gstrtpdtmfmux.c      |   1 +
- gst/rtpmanager/gstrtpfunnel.c       | 491 ++++++++++++++++++++++++++++++++++++
- gst/rtpmanager/gstrtpfunnel.h       |  48 ++++
- gst/rtpmanager/gstrtpjitterbuffer.c | 282 +++++++++++++--------
+ gst/rtpmanager/gstrtpfunnel.c       | 491 ++++++++++++++++++++++++++++
+ gst/rtpmanager/gstrtpfunnel.h       |  48 +++
+ gst/rtpmanager/gstrtpjitterbuffer.c | 282 ++++++++++------
  gst/rtpmanager/gstrtpmanager.c      |   5 +
- gst/rtpmanager/gstrtpmux.c          |  53 ++--
+ gst/rtpmanager/gstrtpmux.c          |  53 +--
  gst/rtpmanager/gstrtpmux.h          |   4 +-
  gst/rtpmanager/gstrtpptdemux.c      |  20 +-
  gst/rtpmanager/gstrtpptdemux.h      |  10 +-
  gst/rtpmanager/gstrtprtxqueue.c     |  13 +-
  gst/rtpmanager/gstrtprtxreceive.c   |  14 +-
  gst/rtpmanager/gstrtprtxsend.c      |  23 +-
- gst/rtpmanager/gstrtpsession.c      | 219 +++++++++++-----
+ gst/rtpmanager/gstrtpsession.c      | 219 +++++++++----
  gst/rtpmanager/gstrtpsession.h      |   2 +
- gst/rtpmanager/gstrtpssrcdemux.c    | 166 ++++++------
+ gst/rtpmanager/gstrtpssrcdemux.c    | 166 +++++-----
  gst/rtpmanager/meson.build          |   3 +
- gst/rtpmanager/rtpjitterbuffer.c    | 119 +++++++--
+ gst/rtpmanager/rtpjitterbuffer.c    | 119 +++++--
  gst/rtpmanager/rtpjitterbuffer.h    |   6 +-
- gst/rtpmanager/rtpsession.c         | 484 +++++++++++++++++++++++++++--------
+ gst/rtpmanager/rtpsession.c         | 484 +++++++++++++++++++++------
  gst/rtpmanager/rtpsession.h         |  17 +-
- gst/rtpmanager/rtpsource.c          | 230 +++++++++++++----
+ gst/rtpmanager/rtpsource.c          | 230 +++++++++----
  gst/rtpmanager/rtpsource.h          |  12 +-
  gst/rtpmanager/rtpstats.c           |  13 +-
  gst/rtpmanager/rtpstats.h           |  11 +-
@@ -40,7 +40,7 @@ Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
  create mode 100644 gst/rtpmanager/gstrtpfunnel.h
 
 diff --git a/gst/rtpmanager/Makefile.am b/gst/rtpmanager/Makefile.am
-index 598e61f12..0defa2841 100644
+index 598e61f..0defa28 100644
 --- a/gst/rtpmanager/Makefile.am
 +++ b/gst/rtpmanager/Makefile.am
 @@ -14,7 +14,8 @@ libgstrtpmanager_la_SOURCES = gstrtpmanager.c \
@@ -65,7 +65,7 @@ index 598e61f12..0defa2841 100644
  libgstrtpmanager_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
  	$(GST_NET_CFLAGS) $(WARNING_CFLAGS) $(ERROR_CFLAGS)
 diff --git a/gst/rtpmanager/gstrtpbin.c b/gst/rtpmanager/gstrtpbin.c
-index ad99c5b85..39d2ab48c 100644
+index ad99c5b..39d2ab4 100644
 --- a/gst/rtpmanager/gstrtpbin.c
 +++ b/gst/rtpmanager/gstrtpbin.c
 @@ -19,6 +19,7 @@
@@ -397,10 +397,11 @@ index ad99c5b85..39d2ab48c 100644
     *
     * Since: 1.14
     */
-@@ -2126,6 +2043,22 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
+@@ -2125,6 +2042,22 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
+           get_internal_storage), NULL, NULL, g_cclosure_marshal_generic,
        G_TYPE_OBJECT, 1, G_TYPE_UINT);
  
-   /**
++  /**
 +   * GstRtpBin::get-storage:
 +   * @rtpbin: the object which received the signal
 +   * @id: the session id
@@ -416,10 +417,9 @@ index ad99c5b85..39d2ab48c 100644
 +          get_storage), NULL, NULL, g_cclosure_marshal_generic,
 +      GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
 +
-+  /**
+   /**
     * GstRtpBin::on-new-ssrc:
     * @rtpbin: the object which received the signal
-    * @session: the session
 @@ -2468,29 +2401,6 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
            on_sender_ssrc_active), NULL, NULL, g_cclosure_marshal_generic,
        G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
@@ -785,7 +785,7 @@ index ad99c5b85..39d2ab48c 100644
  pad_failed:
    {
 diff --git a/gst/rtpmanager/gstrtpbin.h b/gst/rtpmanager/gstrtpbin.h
-index aa93b0b49..c3c1fb572 100644
+index aa93b0b..c3c1fb5 100644
 --- a/gst/rtpmanager/gstrtpbin.h
 +++ b/gst/rtpmanager/gstrtpbin.h
 @@ -109,6 +109,7 @@ struct _GstRtpBinClass {
@@ -806,7 +806,7 @@ index aa93b0b49..c3c1fb572 100644
  
  GType gst_rtp_bin_get_type (void);
 diff --git a/gst/rtpmanager/gstrtpdtmfmux.c b/gst/rtpmanager/gstrtpdtmfmux.c
-index cc6d74756..cff68e518 100644
+index cc6d747..cff68e5 100644
 --- a/gst/rtpmanager/gstrtpdtmfmux.c
 +++ b/gst/rtpmanager/gstrtpdtmfmux.c
 @@ -27,6 +27,7 @@
@@ -819,7 +819,7 @@ index cc6d74756..cff68e518 100644
   * The RTP "DTMF" Muxer muxes multiple RTP streams into a valid RTP
 diff --git a/gst/rtpmanager/gstrtpfunnel.c b/gst/rtpmanager/gstrtpfunnel.c
 new file mode 100644
-index 000000000..155875bd5
+index 0000000..155875b
 --- /dev/null
 +++ b/gst/rtpmanager/gstrtpfunnel.c
 @@ -0,0 +1,491 @@
@@ -1316,7 +1316,7 @@ index 000000000..155875bd5
 +}
 diff --git a/gst/rtpmanager/gstrtpfunnel.h b/gst/rtpmanager/gstrtpfunnel.h
 new file mode 100644
-index 000000000..6fb16d07b
+index 0000000..6fb16d0
 --- /dev/null
 +++ b/gst/rtpmanager/gstrtpfunnel.h
 @@ -0,0 +1,48 @@
@@ -1369,7 +1369,7 @@ index 000000000..6fb16d07b
 +
 +#endif /* __GST_RTP_FUNNEL_H__ */
 diff --git a/gst/rtpmanager/gstrtpjitterbuffer.c b/gst/rtpmanager/gstrtpjitterbuffer.c
-index 678210be9..f57bef35f 100644
+index 678210b..f57bef3 100644
 --- a/gst/rtpmanager/gstrtpjitterbuffer.c
 +++ b/gst/rtpmanager/gstrtpjitterbuffer.c
 @@ -30,6 +30,7 @@
@@ -2002,7 +2002,7 @@ index 678210be9..f57bef35f 100644
      }
      return;
 diff --git a/gst/rtpmanager/gstrtpmanager.c b/gst/rtpmanager/gstrtpmanager.c
-index 426b0b79b..4ba624fba 100644
+index 426b0b7..4ba624f 100644
 --- a/gst/rtpmanager/gstrtpmanager.c
 +++ b/gst/rtpmanager/gstrtpmanager.c
 @@ -31,6 +31,7 @@
@@ -2025,7 +2025,7 @@ index 426b0b79b..4ba624fba 100644
  }
  
 diff --git a/gst/rtpmanager/gstrtpmux.c b/gst/rtpmanager/gstrtpmux.c
-index b96e570df..4d16d5d3c 100644
+index b96e570..4d16d5d 100644
 --- a/gst/rtpmanager/gstrtpmux.c
 +++ b/gst/rtpmanager/gstrtpmux.c
 @@ -27,13 +27,13 @@
@@ -2184,7 +2184,7 @@ index b96e570df..4d16d5d3c 100644
    GST_DEBUG_OBJECT (rtp_mux, "set timestamp-offset to %u", rtp_mux->ts_base);
  
 diff --git a/gst/rtpmanager/gstrtpmux.h b/gst/rtpmanager/gstrtpmux.h
-index 3de9f4186..65343da3a 100644
+index 3de9f41..65343da 100644
 --- a/gst/rtpmanager/gstrtpmux.h
 +++ b/gst/rtpmanager/gstrtpmux.h
 @@ -51,8 +51,7 @@ typedef struct
@@ -2206,7 +2206,7 @@ index 3de9f4186..65343da3a 100644
    GstPad *last_pad; /* protected by object lock */
  
 diff --git a/gst/rtpmanager/gstrtpptdemux.c b/gst/rtpmanager/gstrtpptdemux.c
-index 5e7759443..992177798 100644
+index 5e77594..9921777 100644
 --- a/gst/rtpmanager/gstrtpptdemux.c
 +++ b/gst/rtpmanager/gstrtpptdemux.c
 @@ -1,4 +1,4 @@
@@ -2270,7 +2270,7 @@ index 5e7759443..992177798 100644
  
  static void
 diff --git a/gst/rtpmanager/gstrtpptdemux.h b/gst/rtpmanager/gstrtpptdemux.h
-index 578e489fa..95d374e60 100644
+index 578e489..95d374e 100644
 --- a/gst/rtpmanager/gstrtpptdemux.h
 +++ b/gst/rtpmanager/gstrtpptdemux.h
 @@ -34,12 +34,12 @@ typedef struct _GstRtpPtDemuxPad GstRtpPtDemuxPad;
@@ -2292,7 +2292,7 @@ index 578e489fa..95d374e60 100644
  
  struct _GstRtpPtDemuxClass
 diff --git a/gst/rtpmanager/gstrtprtxqueue.c b/gst/rtpmanager/gstrtprtxqueue.c
-index a0d6cbe37..97678eb35 100644
+index a0d6cbe..97678eb 100644
 --- a/gst/rtpmanager/gstrtprtxqueue.c
 +++ b/gst/rtpmanager/gstrtprtxqueue.c
 @@ -22,10 +22,11 @@
@@ -2338,7 +2338,7 @@ index a0d6cbe37..97678eb35 100644
  
  #ifdef HAVE_CONFIG_H
 diff --git a/gst/rtpmanager/gstrtprtxreceive.c b/gst/rtpmanager/gstrtprtxreceive.c
-index 9a8a66697..4c97691cf 100644
+index 9a8a666..4c97691 100644
 --- a/gst/rtpmanager/gstrtprtxreceive.c
 +++ b/gst/rtpmanager/gstrtprtxreceive.c
 @@ -23,6 +23,7 @@
@@ -2398,7 +2398,7 @@ index 9a8a66697..4c97691cf 100644
   * In this example we are streaming two streams of the same type through the
   * same port. They, however, are using a different SSRC (ssrc is randomly
 diff --git a/gst/rtpmanager/gstrtprtxsend.c b/gst/rtpmanager/gstrtprtxsend.c
-index 58892f3cf..bf35f257e 100644
+index 58892f3..bf35f25 100644
 --- a/gst/rtpmanager/gstrtprtxsend.c
 +++ b/gst/rtpmanager/gstrtprtxsend.c
 @@ -23,9 +23,10 @@
@@ -2441,7 +2441,7 @@ index 58892f3cf..bf35f257e 100644
          GST_OBJECT_UNLOCK (rtx);
  
 diff --git a/gst/rtpmanager/gstrtpsession.c b/gst/rtpmanager/gstrtpsession.c
-index 847522c5f..acfcf68e9 100644
+index 847522c..acfcf68 100644
 --- a/gst/rtpmanager/gstrtpsession.c
 +++ b/gst/rtpmanager/gstrtpsession.c
 @@ -19,6 +19,7 @@
@@ -2782,10 +2782,11 @@ index 847522c5f..acfcf68e9 100644
          if (!gst_structure_get_uint (s, "ssrc", &ssrc))
            ssrc = -1;
          if (!gst_structure_get_uint (s, "seqnum", &seqnum))
-@@ -1944,6 +1985,60 @@ push_error:
+@@ -1943,6 +1984,60 @@ push_error:
+   }
  }
  
- static gboolean
++static gboolean
 +process_received_buffer_in_list (GstBuffer ** buffer, guint idx, gpointer data)
 +{
 +  gint ret;
@@ -2839,10 +2840,9 @@ index 847522c5f..acfcf68e9 100644
 +  return gst_pad_push_list (rtpsession->recv_rtp_src, processed_list);
 +}
 +
-+static gboolean
+ static gboolean
  gst_rtp_session_event_recv_rtcp_sink (GstPad * pad, GstObject * parent,
      GstEvent * event)
- {
 @@ -1986,6 +2081,7 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstObject * parent,
    GstRtpSession *rtpsession;
    GstRtpSessionPrivate *priv;
@@ -2905,7 +2905,7 @@ index 847522c5f..acfcf68e9 100644
          break;
  
 diff --git a/gst/rtpmanager/gstrtpsession.h b/gst/rtpmanager/gstrtpsession.h
-index 1c1c1094b..599ec9a39 100644
+index 1c1c109..599ec9a 100644
 --- a/gst/rtpmanager/gstrtpsession.h
 +++ b/gst/rtpmanager/gstrtpsession.h
 @@ -53,6 +53,8 @@ struct _GstRtpSession {
@@ -2918,7 +2918,7 @@ index 1c1c1094b..599ec9a39 100644
  };
  
 diff --git a/gst/rtpmanager/gstrtpssrcdemux.c b/gst/rtpmanager/gstrtpssrcdemux.c
-index c4a3c4301..6ed3f73c7 100644
+index c4a3c43..6ed3f73 100644
 --- a/gst/rtpmanager/gstrtpssrcdemux.c
 +++ b/gst/rtpmanager/gstrtpssrcdemux.c
 @@ -21,21 +21,21 @@
@@ -3273,7 +3273,7 @@ index c4a3c4301..6ed3f73c7 100644
    return it;
  }
 diff --git a/gst/rtpmanager/meson.build b/gst/rtpmanager/meson.build
-index 2a56f37ca..b800fecf9 100644
+index 2a56f37..b800fec 100644
 --- a/gst/rtpmanager/meson.build
 +++ b/gst/rtpmanager/meson.build
 @@ -14,6 +14,7 @@ rtpmanager_sources = [
@@ -3291,7 +3291,7 @@ index 2a56f37ca..b800fecf9 100644
 +pkgconfig.generate(gstrtpmanager, install_dir : plugins_pkgconfig_install_dir)
 +plugins += [gstrtpmanager]
 diff --git a/gst/rtpmanager/rtpjitterbuffer.c b/gst/rtpmanager/rtpjitterbuffer.c
-index f1187e2b6..defb2db3b 100644
+index f1187e2..defb2db 100644
 --- a/gst/rtpmanager/rtpjitterbuffer.c
 +++ b/gst/rtpmanager/rtpjitterbuffer.c
 @@ -103,8 +103,11 @@ rtp_jitter_buffer_finalize (GObject * object)
@@ -3515,7 +3515,7 @@ index f1187e2b6..defb2db3b 100644
 +      rtp_jitter_buffer_num_packets (jbuf) > 10000;
 +}
 diff --git a/gst/rtpmanager/rtpjitterbuffer.h b/gst/rtpmanager/rtpjitterbuffer.h
-index 16db64472..820e73d94 100644
+index 16db644..820e73d 100644
 --- a/gst/rtpmanager/rtpjitterbuffer.h
 +++ b/gst/rtpmanager/rtpjitterbuffer.h
 @@ -190,8 +190,12 @@ void                  rtp_jitter_buffer_get_sync         (RTPJitterBuffer *jbuf,
@@ -3533,7 +3533,7 @@ index 16db64472..820e73d94 100644
 +
  #endif /* __RTP_JITTER_BUFFER_H__ */
 diff --git a/gst/rtpmanager/rtpsession.c b/gst/rtpmanager/rtpsession.c
-index 3b8bd77fd..c194c7787 100644
+index 3b8bd77..c194c77 100644
 --- a/gst/rtpmanager/rtpsession.c
 +++ b/gst/rtpmanager/rtpsession.c
 @@ -54,6 +54,7 @@ enum
@@ -3734,10 +3734,11 @@ index 3b8bd77fd..c194c7787 100644
      default:
        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
        break;
-@@ -1062,6 +1125,47 @@ rtp_session_new (void)
+@@ -1061,6 +1124,47 @@ rtp_session_new (void)
+   return sess;
  }
  
- /**
++/**
 + * rtp_session_reset:
 + * @sess: an #RTPSession
 + *
@@ -3778,10 +3779,9 @@ index 3b8bd77fd..c194c7787 100644
 +  sess->conflicting_addresses = NULL;
 +}
 +
-+/**
+ /**
   * rtp_session_set_callbacks:
   * @sess: an #RTPSession
-  * @callbacks: callbacks to configure
 @@ -1350,6 +1454,12 @@ rtp_session_get_sdes_struct (RTPSession * sess)
    return result;
  }
@@ -4280,10 +4280,11 @@ index 3b8bd77fd..c194c7787 100644
    return result;
  }
  
-@@ -4350,6 +4606,35 @@ end:
+@@ -4349,6 +4605,35 @@ end:
+   return ret;
  }
  
- static gboolean
++static gboolean
 +rtp_session_send_rtcp_internal (RTPSession * sess, GstClockTime now,
 +    GstClockTime max_delay)
 +{
@@ -4312,10 +4313,9 @@ index 3b8bd77fd..c194c7787 100644
 +  return rtp_session_send_rtcp_internal (sess, now, max_delay);
 +}
 +
-+static gboolean
+ static gboolean
  rtp_session_send_rtcp (RTPSession * sess, GstClockTime max_delay)
  {
-   GstClockTime now;
 @@ -4359,11 +4644,7 @@ rtp_session_send_rtcp (RTPSession * sess, GstClockTime max_delay)
  
    now = sess->callbacks.request_time (sess, sess->request_time_user_data);
@@ -4386,7 +4386,7 @@ index 3b8bd77fd..c194c7787 100644
  
    /* ERRORS */
 diff --git a/gst/rtpmanager/rtpsession.h b/gst/rtpmanager/rtpsession.h
-index a378e8d26..7ab229ad5 100644
+index a378e8d..7ab229a 100644
 --- a/gst/rtpmanager/rtpsession.h
 +++ b/gst/rtpmanager/rtpsession.h
 @@ -56,11 +56,11 @@ typedef GstFlowReturn (*RTPSessionProcessRTP) (RTPSession *sess, RTPSource *src,
@@ -4454,7 +4454,7 @@ index a378e8d26..7ab229ad5 100644
  
  /* processing packets for sending */
 diff --git a/gst/rtpmanager/rtpsource.c b/gst/rtpmanager/rtpsource.c
-index d726408c6..1f9ffb102 100644
+index d726408..1f9ffb1 100644
 --- a/gst/rtpmanager/rtpsource.c
 +++ b/gst/rtpmanager/rtpsource.c
 @@ -44,6 +44,7 @@ enum
@@ -4578,10 +4578,11 @@ index d726408c6..1f9ffb102 100644
      default:
        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
        break;
-@@ -994,6 +1018,28 @@ no_clock_rate:
+@@ -993,6 +1017,28 @@ no_clock_rate:
+   }
  }
  
- static void
++static void
 +update_queued_stats (GstBuffer * buffer, RTPSource * src)
 +{
 +  GstRTPBuffer rtp = { NULL };
@@ -4603,10 +4604,9 @@ index d726408c6..1f9ffb102 100644
 +  gst_rtp_buffer_unmap (&rtp);
 +}
 +
-+static void
+ static void
  init_seq (RTPSource * src, guint16 seq)
  {
-   src->stats.base_seq = seq;
 @@ -1008,6 +1054,9 @@ init_seq (RTPSource * src, guint16 seq)
    src->stats.recv_pli_count = 0;
    src->stats.recv_fir_count = 0;
@@ -4898,7 +4898,7 @@ index d726408c6..1f9ffb102 100644
 +  }
  }
 diff --git a/gst/rtpmanager/rtpsource.h b/gst/rtpmanager/rtpsource.h
-index 282267eda..dff7b313f 100644
+index 282267e..dff7b31 100644
 --- a/gst/rtpmanager/rtpsource.h
 +++ b/gst/rtpmanager/rtpsource.h
 @@ -198,9 +198,12 @@ struct _RTPSource {
@@ -4937,7 +4937,7 @@ index 282267eda..dff7b313f 100644
  
  #endif /* __RTP_SOURCE_H__ */
 diff --git a/gst/rtpmanager/rtpstats.c b/gst/rtpmanager/rtpstats.c
-index 73bd189b7..27063ee9c 100644
+index 73bd189..27063ee 100644
 --- a/gst/rtpmanager/rtpstats.c
 +++ b/gst/rtpmanager/rtpstats.c
 @@ -46,15 +46,13 @@ gst_rtp_packet_rate_ctx_update (RTPPacketRateCtx * ctx, guint16 seqnum,
@@ -4986,7 +4986,7 @@ index 73bd189b7..27063ee9c 100644
    }
  
 diff --git a/gst/rtpmanager/rtpstats.h b/gst/rtpmanager/rtpstats.h
-index b0fbddb48..bd3a54efe 100644
+index b0fbddb..bd3a54e 100644
 --- a/gst/rtpmanager/rtpstats.h
 +++ b/gst/rtpmanager/rtpstats.h
 @@ -27,6 +27,9 @@
@@ -5016,5 +5016,5 @@ index b0fbddb48..bd3a54efe 100644
   * @max_seqnr: highest sequence number received
   * @transit: previous transit time used for calculating @jitter
 -- 
-2.11.0
+2.20.1
 

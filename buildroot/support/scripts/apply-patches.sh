@@ -124,7 +124,7 @@ function apply_patch {
     if [ -n "$BR2_GEN_GIT" ]; then
         if [ ! -d .git ]; then
             git init
-            echo -e ".*" >> .gitignore
+            echo -e "*" >> .gitignore
             git add -f .gitignore *
             git commit --no-edit -m "init"
         fi
@@ -144,6 +144,10 @@ function apply_patch {
 
         git add -f *
         git commit --allow-empty --amend --no-edit
+        rm -rf .git/rebase-apply/
+
+        # Wait for auto gc
+        while [ -f .git/gc.pid ]; do sleep 1;done
     fi
 }
 

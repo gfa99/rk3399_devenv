@@ -1,7 +1,7 @@
-From 4cad15491de472a169892e381a02bda6cdca35f4 Mon Sep 17 00:00:00 2001
+From 88e9a67c51f56582bbb87a5635ea11e275ecd814 Mon Sep 17 00:00:00 2001
 From: Niels De Graef <niels.degraef@barco.com>
 Date: Fri, 1 Mar 2019 10:17:23 +0100
-Subject: [PATCH 15/30] waylandsink: prefix wl_shell-specific variables with
+Subject: [PATCH 15/68] waylandsink: prefix wl_shell-specific variables with
  wl_
 
 ---
@@ -12,7 +12,7 @@ Subject: [PATCH 15/30] waylandsink: prefix wl_shell-specific variables with
  4 files changed, 22 insertions(+), 21 deletions(-)
 
 diff --git a/ext/wayland/wldisplay.c b/ext/wayland/wldisplay.c
-index cf7036167..079901979 100644
+index cf70361..0799019 100644
 --- a/ext/wayland/wldisplay.c
 +++ b/ext/wayland/wldisplay.c
 @@ -87,8 +87,8 @@ gst_wl_display_finalize (GObject * gobject)
@@ -45,7 +45,7 @@ index cf7036167..079901979 100644
       * wl_shell, zwp_fullscreen_shell are not used.
       * In this case is correct to continue.
 diff --git a/ext/wayland/wldisplay.h b/ext/wayland/wldisplay.h
-index 89bedee5a..020ed6ea3 100644
+index 89bedee..020ed6e 100644
 --- a/ext/wayland/wldisplay.h
 +++ b/ext/wayland/wldisplay.h
 @@ -24,6 +24,7 @@
@@ -66,7 +66,7 @@ index 89bedee5a..020ed6ea3 100644
    struct wl_shm *shm;
    struct wp_viewporter *viewporter;
 diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
-index add15d9b6..547917baa 100644
+index add15d9..547917b 100644
 --- a/ext/wayland/wlwindow.c
 +++ b/ext/wayland/wlwindow.c
 @@ -36,14 +36,14 @@ G_DEFINE_TYPE (GstWlWindow, gst_wl_window, G_TYPE_OBJECT);
@@ -156,7 +156,7 @@ index add15d9b6..547917baa 100644
  
  static void
 diff --git a/ext/wayland/wlwindow.h b/ext/wayland/wlwindow.h
-index 547ed55e0..ce2fa939a 100644
+index 547ed55..ce2fa93 100644
 --- a/ext/wayland/wlwindow.h
 +++ b/ext/wayland/wlwindow.h
 @@ -52,7 +52,7 @@ struct _GstWlWindow
@@ -169,5 +169,5 @@ index 547ed55e0..ce2fa939a 100644
    /* the size and position of the area_(sub)surface */
    GstVideoRectangle render_rectangle;
 -- 
-2.11.0
+2.20.1
 

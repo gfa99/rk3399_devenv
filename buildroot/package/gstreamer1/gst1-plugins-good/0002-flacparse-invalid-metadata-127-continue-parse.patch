@@ -1,7 +1,7 @@
-From 508c5cbd1976e30ed67ffe7558cfbd9af3e161c8 Mon Sep 17 00:00:00 2001
+From 7cd7adc813d15952450ec15d481454cc27512384 Mon Sep 17 00:00:00 2001
 From: "james.lin" <james.lin@rock-chips.com>
 Date: Tue, 23 Jan 2018 19:19:36 +0800
-Subject: [PATCH 2/2] flacparse: invalid metadata 127 continue parse
+Subject: [PATCH 2/6] flacparse: invalid metadata 127 continue parse
 
 Signed-off-by: james.lin <james.lin@rock-chips.com>
 ---
@@ -27,5 +27,5 @@ index 90176af..9bdfcab 100644
      GST_DEBUG_OBJECT (flacparse, "Handling metadata block of type %u", type);
  
 -- 
-2.11.0
+2.20.1
 

@@ -1,7 +1,7 @@
-From 839eaf211699a3c0c89c7fae270667693c46dc35 Mon Sep 17 00:00:00 2001
+From a0b7373cbc7b15cfefa0b589bd0978c324a68719 Mon Sep 17 00:00:00 2001
 From: Nicolas Dufresne <nicolas.dufresne@collabora.com>
 Date: Mon, 25 Mar 2019 22:21:09 -0400
-Subject: [PATCH 17/30] waylandsink: Wait for the surface to be configured
+Subject: [PATCH 17/68] waylandsink: Wait for the surface to be configured
 
 With latest XDG shell, we need to fait for the surface to have been
 configured before we can attach a buffer to it. This is being enforce by
@@ -14,7 +14,7 @@ Fixes #933
  2 files changed, 23 insertions(+), 3 deletions(-)
 
 diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
-index afb598878..0a1c15601 100644
+index afb5988..0a1c156 100644
 --- a/ext/wayland/wlwindow.c
 +++ b/ext/wayland/wlwindow.c
 @@ -87,7 +87,13 @@ static void
@@ -71,7 +71,7 @@ index afb598878..0a1c15601 100644
      /* go toplevel */
      window->wl_shell_surface = wl_shell_get_shell_surface (display->wl_shell,
 diff --git a/ext/wayland/wlwindow.h b/ext/wayland/wlwindow.h
-index 861e324ad..c3f017216 100644
+index 861e324..c3f0172 100644
 --- a/ext/wayland/wlwindow.h
 +++ b/ext/wayland/wlwindow.h
 @@ -55,6 +55,9 @@ struct _GstWlWindow
@@ -85,5 +85,5 @@ index 861e324ad..c3f017216 100644
    /* the size and position of the area_(sub)surface */
    GstVideoRectangle render_rectangle;
 -- 
-2.11.0
+2.20.1
 

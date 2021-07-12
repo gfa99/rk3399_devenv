@@ -80,6 +80,10 @@ $$(BINARIES_DIR)/rootfs.$(1): target-finalize $$(ROOTFS_$(2)_DEPENDENCIES)
 	echo '#!/bin/sh' > $$(FAKEROOT_SCRIPT)
 	echo "set -e" >> $$(FAKEROOT_SCRIPT)
 	echo "chown -h -R 0:0 $$(TARGET_DIR)" >> $$(FAKEROOT_SCRIPT)
+ifeq ($$(BR2_PACKAGE_IPCWEB_BACKEND), y)
+	echo "[ -d $$(TARGET_DIR)/usr/www ] && chown -R www-data:www-data $$(TARGET_DIR)/usr/www" >>  $$(FAKEROOT_SCRIPT)
+	echo "[ -d $$(TARGET_DIR)/oem/www ] && chown -R www-data:www-data $$(TARGET_DIR)/oem/www" >>  $$(FAKEROOT_SCRIPT)
+endif
 ifneq ($$(ROOTFS_USERS_TABLES),)
 	cat $$(ROOTFS_USERS_TABLES) >> $$(USERS_TABLE)
 endif
@@ -105,6 +109,10 @@ endif
 	$$(foreach hook,$$(ROOTFS_POST_CMD_HOOKS),\
 		$$(call PRINTF,$$($$(hook))) >> $$(FAKEROOT_SCRIPT)$$(sep))
 	chmod a+x $$(FAKEROOT_SCRIPT)
+
+ifeq ($$(BR2_TARGET_ROOTFS_UBI), y)
+	cp -f $$(FAKEROOT_SCRIPT) $$(BINARIES_DIR)/fakeroot-ubi.fs
+endif
 	rm -f $$(TARGET_DIR_WARNING_FILE)
 	PATH=$$(BR_PATH) $$(HOST_DIR)/bin/fakeroot -- $$(FAKEROOT_SCRIPT)
 	$$(INSTALL) -m 0644 support/misc/target-dir-warning.txt $$(TARGET_DIR_WARNING_FILE)

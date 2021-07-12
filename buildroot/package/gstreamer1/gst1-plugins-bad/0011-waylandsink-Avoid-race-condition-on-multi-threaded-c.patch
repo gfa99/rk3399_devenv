@@ -1,7 +1,7 @@
-From 045395777741a0f28d87d33c2fcb8842b9319678 Mon Sep 17 00:00:00 2001
+From d5ecfbc03bf14b50a44dc19ee50a1715ac7c215d Mon Sep 17 00:00:00 2001
 From: Wonchul Lee <w.lee@lge.com>
 Date: Mon, 3 Dec 2018 16:18:32 +0900
-Subject: [PATCH 11/30] waylandsink: Avoid race condition on multi-threaded
+Subject: [PATCH 11/68] waylandsink: Avoid race condition on multi-threaded
  client
 
 When waylandsink is used on some other thread than the main wayland
@@ -19,14 +19,14 @@ Wayland 1.11 introduced new API that allows creating a proxy
 wrappper which can help to avoid this race condition.
 ---
  configure.ac            |  2 +-
- ext/wayland/wldisplay.c | 47 ++++++++++-------------------------------------
+ ext/wayland/wldisplay.c | 47 +++++++++--------------------------------
  ext/wayland/wldisplay.h |  1 +
- ext/wayland/wlwindow.c  | 39 +++++++++++++++++++++++----------------
+ ext/wayland/wlwindow.c  | 39 ++++++++++++++++++++--------------
  ext/wayland/wlwindow.h  |  2 ++
  5 files changed, 37 insertions(+), 54 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index 1a39f168c..d8ba08ca5 100644
+index 943412c..e415912 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -1319,7 +1319,7 @@ dnl **** Wayland ****
@@ -39,7 +39,7 @@ index 1a39f168c..d8ba08ca5 100644
        HAVE_WAYLAND="yes"
        AC_SUBST(WAYLAND_PROTOCOLS_DATADIR, `$PKG_CONFIG --variable=pkgdatadir wayland-protocols`)
 diff --git a/ext/wayland/wldisplay.c b/ext/wayland/wldisplay.c
-index 90a57fbf8..cf7036167 100644
+index 90a57fb..cf70361 100644
 --- a/ext/wayland/wldisplay.c
 +++ b/ext/wayland/wldisplay.c
 @@ -102,6 +102,9 @@ gst_wl_display_finalize (GObject * gobject)
@@ -52,10 +52,11 @@ index 90a57fbf8..cf7036167 100644
    if (self->queue)
      wl_event_queue_destroy (self->queue);
  
-@@ -114,37 +117,6 @@ gst_wl_display_finalize (GObject * gobject)
+@@ -113,37 +116,6 @@ gst_wl_display_finalize (GObject * gobject)
+   G_OBJECT_CLASS (gst_wl_display_parent_class)->finalize (gobject);
  }
  
- static void
+-static void
 -sync_callback (void *data, struct wl_callback *callback, uint32_t serial)
 -{
 -  gboolean *done = data;
@@ -86,10 +87,9 @@ index 90a57fbf8..cf7036167 100644
 -  return ret;
 -}
 -
--static void
+ static void
  shm_format (void *data, struct wl_shm *wl_shm, uint32_t format)
  {
-   GstWlDisplay *self = data;
 @@ -271,10 +243,10 @@ gst_wl_display_thread_run (gpointer data)
          break;
        else
@@ -126,7 +126,7 @@ index 90a57fbf8..cf7036167 100644
            "Error communicating with the wayland display");
        g_object_unref (self);
 diff --git a/ext/wayland/wldisplay.h b/ext/wayland/wldisplay.h
-index 5bab5edcd..89bedee5a 100644
+index 5bab5ed..89bedee 100644
 --- a/ext/wayland/wldisplay.h
 +++ b/ext/wayland/wldisplay.h
 @@ -46,6 +46,7 @@ struct _GstWlDisplay
@@ -138,7 +138,7 @@ index 5bab5edcd..89bedee5a 100644
  
    /* globals */
 diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
-index 0c2e92937..e1efb75ed 100644
+index 0c2e929..e1efb75 100644
 --- a/ext/wayland/wlwindow.c
 +++ b/ext/wayland/wlwindow.c
 @@ -92,6 +92,7 @@ gst_wl_window_finalize (GObject * gobject)
@@ -243,7 +243,7 @@ index 0c2e92937..e1efb75ed 100644
    if (window->video_width != 0)
      wl_subsurface_set_desync (window->video_subsurface);
 diff --git a/ext/wayland/wlwindow.h b/ext/wayland/wlwindow.h
-index 10b49fd67..547ed55e0 100644
+index 10b49fd..547ed55 100644
 --- a/ext/wayland/wlwindow.h
 +++ b/ext/wayland/wlwindow.h
 @@ -45,9 +45,11 @@ struct _GstWlWindow
@@ -259,5 +259,5 @@ index 10b49fd67..547ed55e0 100644
    struct wp_viewport *video_viewport;
    struct wl_shell_surface *shell_surface;
 -- 
-2.11.0
+2.20.1
 

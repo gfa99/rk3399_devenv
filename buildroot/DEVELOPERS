@@ -167,7 +167,6 @@ N:	Arnout Vandecappelle <arnout@mind.be>
 F:	package/arp-scan/
 F:	package/freescale-imx/firmware-imx/
 F:	package/freescale-imx/imx-lib/
-F:	package/gstreamer/gst-fsl-plugins/
 F:	package/lua-bit32/
 F:	package/owfs/
 F:	package/python-bottle/
@@ -1480,6 +1479,9 @@ F:	package/subversion/
 
 N:	RJ Ascani <rj.ascani@gmail.com>
 F:	package/azmq/
+
+N:	Robert Rose <robertroyrose@gmail.com>
+F:	package/grpc/
 
 N:	Rodrigo Rebello <rprebello@gmail.com>
 F:	package/chocolate-doom/

@@ -29,7 +29,6 @@ FFMPEG_CONF_OPTS = \
 	--enable-network \
 	--disable-gray \
 	--enable-swscale-alpha \
-	--disable-small \
 	--enable-dct \
 	--enable-fft \
 	--enable-mdct \
@@ -68,6 +67,18 @@ ifeq ($(BR2_PACKAGE_FFMPEG_NONFREE),y)
 FFMPEG_CONF_OPTS += --enable-nonfree
 else
 FFMPEG_CONF_OPTS += --disable-nonfree
+endif
+
+ifeq ($(BR2_PACKAGE_FFMPEG_DEBUG),y)
+FFMPEG_CONF_OPTS += --enable-debug
+else
+FFMPEG_CONF_OPTS += --disable-debug
+endif
+
+ifeq ($(BR2_PACKAGE_FFMPEG_SMALL),y)
+FFMPEG_CONF_OPTS += --enable-small
+else
+FFMPEG_CONF_OPTS += --disable-small
 endif
 
 ifeq ($(BR2_PACKAGE_FFMPEG_FFMPEG),y)
@@ -146,7 +157,7 @@ endif
 
 ifneq ($(call qstrip,$(BR2_PACKAGE_FFMPEG_BSFS)),all)
 FFMPEG_CONF_OPTS += --disable-bsfs \
-	$(foreach x,$(call qstrip,$(BR2_PACKAGE_FFMPEG_BSFS)),--enable-bsfs=$(x))
+	$(foreach x,$(call qstrip,$(BR2_PACKAGE_FFMPEG_BSFS)),--enable-bsf=$(x))
 endif
 
 ifneq ($(call qstrip,$(BR2_PACKAGE_FFMPEG_PROTOCOLS)),all)
@@ -241,6 +252,11 @@ FFMPEG_CONF_OPTS += --enable-libdrm
 FFMPEG_DEPENDENCIES += libdrm
 else
 FFMPEG_CONF_OPTS += --disable-libdrm
+
+ifeq ($(BR2_PACKAGE_LIBION),y)
+FFMPEG_CONF_OPTS += --enable-libion
+FFMPEG_DEPENDENCIES += libion
+endif
 endif
 
 ifeq ($(BR2_PACKAGE_LIBOPENH264),y)

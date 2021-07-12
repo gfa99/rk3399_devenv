@@ -1,7 +1,7 @@
-From 50c4401626aa03add3663af116cf00cdd82cc934 Mon Sep 17 00:00:00 2001
+From 898dc0f11c84fb3a81e1bb8df534b687aab4a831 Mon Sep 17 00:00:00 2001
 From: Nicolas Dufresne <nicolas.dufresne@collabora.com>
 Date: Wed, 29 Aug 2018 11:53:13 -0400
-Subject: [PATCH 08/30] kmssink: Escape DRM property names
+Subject: [PATCH 08/68] kmssink: Escape DRM property names
 
 This allow setting properties that contains spaces. The spaces are
 replaced with '-'. As an example, one can set the connector proper
@@ -15,7 +15,7 @@ https://bugzilla.gnome.org/show_bug.cgi?id=797027
  1 file changed, 6 insertions(+)
 
 diff --git a/sys/kms/gstkmssink.c b/sys/kms/gstkmssink.c
-index 651a8eb77..bc85ffe0f 100644
+index 651a8eb..bc85ffe 100644
 --- a/sys/kms/gstkmssink.c
 +++ b/sys/kms/gstkmssink.c
 @@ -573,6 +573,12 @@ set_drm_property (gint fd, guint32 object, guint32 object_type,
@@ -32,5 +32,5 @@ index 651a8eb77..bc85ffe0f 100644
        drmModeObjectSetProperty (fd, object, object_type,
            property->prop_id, value);
 -- 
-2.11.0
+2.20.1
 

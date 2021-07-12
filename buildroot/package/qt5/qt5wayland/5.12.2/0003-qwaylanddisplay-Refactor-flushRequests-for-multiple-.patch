@@ -1,20 +1,19 @@
-From 084748587dd4e24ab512671ef7937e56460b706f Mon Sep 17 00:00:00 2001
+From 8112f5bfc3e1722764f6ab68ce0270c18ae912a5 Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Wed, 28 Nov 2018 17:04:59 +0800
-Subject: [PATCH 3/5] qwaylanddisplay: Refactor flushRequests() for multiple
+Subject: [PATCH 03/16] qwaylanddisplay: Refactor flushRequests() for multiple
  readers
 
-Conflicts:
-    src/client/qwaylanddisplay.cpp
+Cancel reading when no events polled, since the other clients, e.g.
+waylandsink, might already read the events before us.
 
 Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-Signed-off-by: Ziyuan Xu <xzy.xu@rock-chips.com>
 ---
  src/client/qwaylanddisplay.cpp | 17 +++++++++++++++--
  1 file changed, 15 insertions(+), 2 deletions(-)
 
 diff --git a/src/client/qwaylanddisplay.cpp b/src/client/qwaylanddisplay.cpp
-index a2957e0..dbebc52 100644
+index 5a4ec7c..bee46a8 100644
 --- a/src/client/qwaylanddisplay.cpp
 +++ b/src/client/qwaylanddisplay.cpp
 @@ -74,6 +74,7 @@
@@ -25,7 +24,7 @@ index a2957e0..dbebc52 100644
  
  QT_BEGIN_NAMESPACE
  
-@@ -179,11 +180,23 @@ void QWaylandDisplay::checkError() const
+@@ -183,11 +184,23 @@ void QWaylandDisplay::checkError() const
  
  void QWaylandDisplay::flushRequests()
  {
@@ -52,5 +51,5 @@ index a2957e0..dbebc52 100644
          exitWithError();
      }
 -- 
-2.7.4
+2.20.1
 

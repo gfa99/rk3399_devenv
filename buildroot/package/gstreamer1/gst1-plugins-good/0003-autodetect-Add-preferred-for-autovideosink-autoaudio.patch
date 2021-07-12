@@ -1,7 +1,7 @@
-From 82b5a6376781f88f1dafb5579c9c5ee9922745af Mon Sep 17 00:00:00 2001
+From 5f90be29e41300f5bdd6707d3ebf54bcf588f4b8 Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Tue, 11 Jun 2019 10:19:22 +0800
-Subject: [PATCH] autodetect: Add preferred for autovideosink/autoaudiosink
+Subject: [PATCH 3/6] autodetect: Add preferred for autovideosink/autoaudiosink
 
 Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
@@ -12,7 +12,7 @@ Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
  4 files changed, 21 insertions(+)
 
 diff --git a/gst/autodetect/gstautoaudiosink.c b/gst/autodetect/gstautoaudiosink.c
-index 1edf6d8..e71c348 100644
+index 1edf6d8..31f130f 100644
 --- a/gst/autodetect/gstautoaudiosink.c
 +++ b/gst/autodetect/gstautoaudiosink.c
 @@ -39,6 +39,8 @@
@@ -28,7 +28,7 @@ index 1edf6d8..e71c348 100644
  
    autodetect->media_klass = "Audio";
    autodetect->flag = GST_ELEMENT_FLAG_SINK;
-+  autodetect->preferred = getenv("AUTOAUDIOSINK_PREFERRED");
++  autodetect->preferred = g_getenv ("AUTOAUDIOSINK_PREFERRED");
  
    sink->ts_offset = DEFAULT_TS_OFFSET;
  }
@@ -70,7 +70,7 @@ index 05ae89f..f12a31e 100644
    GstElementFlags flag; /* GST_ELEMENT_FLAG_{SINK/SOURCE} */
  
 diff --git a/gst/autodetect/gstautovideosink.c b/gst/autodetect/gstautovideosink.c
-index e4fd91e..fc4775d 100644
+index e4fd91e..904cac0 100644
 --- a/gst/autodetect/gstautovideosink.c
 +++ b/gst/autodetect/gstautovideosink.c
 @@ -39,6 +39,8 @@
@@ -86,10 +86,10 @@ index e4fd91e..fc4775d 100644
  
    autodetect->media_klass = "Video";
    autodetect->flag = GST_ELEMENT_FLAG_SINK;
-+  autodetect->preferred = getenv("AUTOVIDEOSINK_PREFERRED");
++  autodetect->preferred = g_getenv ("AUTOVIDEOSINK_PREFERRED");
  
    sink->ts_offset = DEFAULT_TS_OFFSET;
  }
 -- 
-2.11.0
+2.20.1
 

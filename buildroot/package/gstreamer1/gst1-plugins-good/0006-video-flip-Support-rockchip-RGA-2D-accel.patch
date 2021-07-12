@@ -1,41 +1,65 @@
-From 96df2bb2c4394330b39dc5534000dee1dfcf0ff2 Mon Sep 17 00:00:00 2001
+From c8bf972dd92f7c3f76767bd3eac7605242104387 Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Fri, 8 Nov 2019 17:36:20 +0800
-Subject: [PATCH] video-flip: Support rockchip RGA 2D accel
+Subject: [PATCH 6/6] video-flip: Support rockchip RGA 2D accel
 
 Disabled by default, set env GST_VIDEO_FLIP_USE_RGA=1 to enable.
 
 Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
- configure.ac                   |  12 +++
- gst/videofilter/gstvideoflip.c | 197 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 209 insertions(+)
+ configure.ac                   |  15 +++
+ gst/videofilter/Makefile.am    |   2 +-
+ gst/videofilter/gstvideoflip.c | 225 +++++++++++++++++++++++++++++++++
+ 3 files changed, 241 insertions(+), 1 deletion(-)
 
 diff --git a/configure.ac b/configure.ac
-index bb49f336b..9b33267dd 100644
+index deb74f1..aa45ccb 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -293,6 +293,18 @@ AC_SUBST(GLIB_PREFIX)
+@@ -285,6 +285,14 @@ fi
+ 
+ AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
+ 
++dnl checks for GST_VIDEO_FORMAT_NV12_10LE40
++SAVED_CFLAGS="$CFLAGS"
++CFLAGS="$CFLAGS $GST_CFLAGS"
++AC_CHECK_DECL(GST_VIDEO_FORMAT_NV12_10LE40,
++  AC_DEFINE(HAVE_NV12_10LE40, 1, [Have NV12_10LE40]), [],
++  [#include <gst/video/video-format.h>])
++CFLAGS="$SAVED_CFLAGS"
++
+ dnl Check for documentation xrefs
+ GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
+ GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
+@@ -293,6 +301,13 @@ AC_SUBST(GLIB_PREFIX)
  AC_SUBST(GST_PREFIX)
  AC_SUBST(GSTPB_PREFIX)
  
 +dnl check for rockchip RGA
-+RGA_LIBS=
-+RGA_HEADER=
-+
-+AC_CHECK_LIB([rga], [c_RkRgaInit], RGA_LIBS="-lrga")
-+AC_CHECK_HEADERS([rga/RgaApi.h], RGA_HEADER="yes")
-+
-+if test "x$RGA_LIBS" != "x" && test "x$RGA_HEADER" = "xyes"; then
-+  AC_SUBST(RGA_LIBS)
-+  AC_DEFINE(HAVE_RGA, 1, [Have rockchip RGA])
-+fi
++PKG_CHECK_MODULES(RGA, [librga],
++                  AC_DEFINE(HAVE_RGA, 1, [Have rockchip RGA])],
++                  AC_MSG_NOTICE([Without rockchip RGA]))
++AC_SUBST(RGA_CFLAGS)
++AC_SUBST(RGA_LIBS)
 +
  dnl GTK is optional and used in examples
  HAVE_GTK=no
  GTK_REQ=3.0.0
+diff --git a/gst/videofilter/Makefile.am b/gst/videofilter/Makefile.am
+index cb517fe..daf6721 100644
+--- a/gst/videofilter/Makefile.am
++++ b/gst/videofilter/Makefile.am
+@@ -15,7 +15,7 @@ libgstvideofilter_la_CFLAGS = $(GST_CFLAGS) \
+ 			$(GST_PLUGINS_BASE_CFLAGS)
+ libgstvideofilter_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
+ 			-lgstvideo-@GST_API_VERSION@ \
+-			$(GST_BASE_LIBS) $(GST_LIBS)
++			$(GST_BASE_LIBS) $(GST_LIBS) $(RGA_LIBS)
+ libgstvideofilter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
+ 
+ gstvideoexample.c: $(srcdir)/make_filter $(srcdir)/gstvideotemplate.c
 diff --git a/gst/videofilter/gstvideoflip.c b/gst/videofilter/gstvideoflip.c
-index c6132f587..71ddaf6a8 100644
+index c6132f5..39344c0 100644
 --- a/gst/videofilter/gstvideoflip.c
 +++ b/gst/videofilter/gstvideoflip.c
 @@ -48,6 +48,11 @@
@@ -50,8 +74,28 @@ index c6132f587..71ddaf6a8 100644
  /* GstVideoFlip properties */
  enum
  {
-@@ -1118,6 +1123,189 @@ gst_video_flip_before_transform (GstBaseTransform * trans, GstBuffer * in)
-     gst_object_sync_values (GST_OBJECT (videoflip), stream_time);
+@@ -69,6 +74,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
+     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
+             "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, xBGR, BGRx, "
+             "RGB, BGR, I420, YV12, IYUV, YUY2, UYVY, YVYU, NV12, NV21, "
++#ifdef HAVE_NV12_10LE40
++            "NV12_10LE40, "
++#endif
+             "GRAY8, GRAY16_BE, GRAY16_LE }"))
+     );
+ 
+@@ -79,6 +87,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
+     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
+             "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, xBGR, BGRx, "
+             "RGB, BGR, I420, YV12, IYUV, YUY2, UYVY, YVYU, NV12, NV21, "
++#ifdef HAVE_NV12_10LE40
++            "NV12_10LE40, "
++#endif
+             "GRAY8, GRAY16_BE, GRAY16_LE }"))
+     );
+ 
+@@ -959,6 +970,197 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, GstVideoFrame * dest,
+   }
  }
  
 +#ifdef HAVE_RGA
@@ -88,6 +132,10 @@ index c6132f587..71ddaf6a8 100644
 +      return RK_FORMAT_YCrCb_422_SP;
 +    case GST_VIDEO_FORMAT_Y42B:
 +      return RK_FORMAT_YCbCr_422_P;
++#ifdef HAVE_NV12_10LE40
++    case GST_VIDEO_FORMAT_NV12_10LE40:
++      return RK_FORMAT_YCbCr_420_SP_10B;
++#endif
 +    default:
 +      return RK_FORMAT_UNKNOWN;
 +  }
@@ -142,6 +190,7 @@ index c6132f587..71ddaf6a8 100644
 +    case RK_FORMAT_RGB_565:
 +      hstride /= 2;
 +      break;
++    case RK_FORMAT_YCbCr_420_SP_10B:
 +    case RK_FORMAT_YCbCr_422_SP:
 +    case RK_FORMAT_YCrCb_422_SP:
 +    case RK_FORMAT_YCbCr_422_P:
@@ -155,10 +204,6 @@ index c6132f587..71ddaf6a8 100644
 +      y = (y + 1) & ~1;
 +      w &= ~1;
 +      h &= ~1;
-+
-+      /* RGA requires yuv image stride align to 8 */
-+      if (hstride % 8)
-+        return FALSE;
 +
 +      if (vstride0 % 2)
 +        return FALSE;
@@ -176,7 +221,7 @@ index c6132f587..71ddaf6a8 100644
 +
 +static gboolean
 +video_flip_try_rga (GstVideoFlip * videoflip,
-+    GstVideoFrame * in_frame, GstVideoFrame * out_frame)
++    GstVideoFrame * out_frame, GstVideoFrame * in_frame)
 +{
 +  gint sw = GST_VIDEO_FRAME_WIDTH (in_frame);
 +  gint sh = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -189,7 +234,7 @@ index c6132f587..71ddaf6a8 100644
 +  static int rga_inited = 0;
 +  const char *buf;
 +
-+  buf = getenv ("GST_VIDEO_FLIP_USE_RGA");
++  buf = g_getenv ("GST_VIDEO_FLIP_USE_RGA");
 +  if (!buf || strcmp (buf, "1"))
 +    return FALSE;
 +
@@ -204,11 +249,15 @@ index c6132f587..71ddaf6a8 100644
 +    rga_inited = 1;
 +  }
 +
-+  if (!get_rga_info (in_frame, &src_info, 0, 0, sw, sh))
++  if (!get_rga_info (in_frame, &src_info, 0, 0, sw, sh)) {
++    GST_DEBUG ("unsupported src info for RGA");
 +    return FALSE;
++  }
 +
-+  if (!get_rga_info (out_frame, &dst_info, 0, 0, dw, dh))
++  if (!get_rga_info (out_frame, &dst_info, 0, 0, dw, dh)) {
++    GST_DEBUG ("unsupported dst info for RGA");
 +    return FALSE;
++  }
 +
 +  switch (videoflip->active_method) {
 +    case GST_VIDEO_ORIENTATION_90R:
@@ -227,29 +276,53 @@ index c6132f587..71ddaf6a8 100644
 +      src_info.rotation = HAL_TRANSFORM_FLIP_V;
 +      break;
 +    default:
++      GST_DEBUG ("unsupported rotation for RGA");
 +      return FALSE;
 +  }
 +
-+  if (c_RkRgaBlit (&src_info, &dst_info, NULL) < 0)
++  if (c_RkRgaBlit (&src_info, &dst_info, NULL) < 0) {
++    GST_DEBUG ("failed to blit with RGA");
 +    return FALSE;
++  }
 +
++  GST_DEBUG ("flipped with RGA");
 +  return TRUE;
 +}
 +#endif
-+
- static GstFlowReturn
- gst_video_flip_transform_frame (GstVideoFilter * vfilter,
-     GstVideoFrame * in_frame, GstVideoFrame * out_frame)
-@@ -1136,6 +1324,15 @@ gst_video_flip_transform_frame (GstVideoFilter * vfilter,
+ 
+ static gboolean
+ gst_video_flip_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+@@ -1038,6 +1240,14 @@ gst_video_flip_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+     case GST_VIDEO_FORMAT_NV21:
+       vf->process = gst_video_flip_semi_planar_yuv;
+       break;
++#ifdef HAVE_NV12_10LE40
++#ifdef HAVE_RGA
++    case GST_VIDEO_FORMAT_NV12_10LE40:
++      /* Not supported by the official videoflip */
++      vf->process = video_flip_try_rga;
++      break;
++#endif
++#endif
+     default:
+       break;
+   }
+@@ -1136,6 +1346,21 @@ gst_video_flip_transform_frame (GstVideoFilter * vfilter,
    g_type_class_unref (enum_class);
  
    GST_OBJECT_LOCK (videoflip);
 +
 +#ifdef HAVE_RGA
 +  /* Accel flip with rockchip RGA */
-+  if (video_flip_try_rga (videoflip, in_frame, out_frame)) {
++  if (video_flip_try_rga (videoflip, out_frame, in_frame)) {
 +    GST_OBJECT_UNLOCK (videoflip);
 +    return GST_FLOW_OK;
++  }
++
++  /* Not supported by the official videoflip */
++  if (G_UNLIKELY (videoflip->process == video_flip_try_rga)) {
++    GST_OBJECT_UNLOCK (videoflip);
++    goto not_negotiated;
 +  }
 +#endif
 +
@@ -257,5 +330,5 @@ index c6132f587..71ddaf6a8 100644
    GST_OBJECT_UNLOCK (videoflip);
  
 -- 
-2.11.0
+2.20.1
 

@@ -1,7 +1,7 @@
-From 655ba90090e8d8853c98f386ec98ef4d83bc5eac Mon Sep 17 00:00:00 2001
+From 59d12010df5389fe46d6828b8299d9cf3c6df480 Mon Sep 17 00:00:00 2001
 From: Daniel Stone <daniels@collabora.com>
 Date: Wed, 9 May 2018 13:16:15 +0100
-Subject: [PATCH 14/30] waylandsink: Don't create throwaway empty regions
+Subject: [PATCH 14/68] waylandsink: Don't create throwaway empty regions
 
 Instead of creating a region, adding nothing to it, setting that as the
 input region and destroying the region, you can instead just pass NULL
@@ -13,7 +13,7 @@ Fixes #702
  1 file changed, 2 insertions(+), 8 deletions(-)
 
 diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
-index e1efb75ed..add15d9b6 100644
+index e1efb75..add15d9 100644
 --- a/ext/wayland/wlwindow.c
 +++ b/ext/wayland/wlwindow.c
 @@ -114,7 +114,6 @@ static GstWlWindow *
@@ -41,5 +41,5 @@ index e1efb75ed..add15d9b6 100644
    return window;
  }
 -- 
-2.11.0
+2.20.1
 

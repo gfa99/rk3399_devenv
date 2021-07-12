@@ -1,7 +1,7 @@
-From de4dbca1c33af4952016dc2172271368187ac47d Mon Sep 17 00:00:00 2001
+From e2b9237fc3a3db529d6c7c81ee3192346e6a2622 Mon Sep 17 00:00:00 2001
 From: Nicolas Dufresne <nicolas.dufresne@collabora.com>
 Date: Thu, 8 Mar 2018 20:23:05 +0000
-Subject: [PATCH 01/30] kmssink: Add 24bit RGB support
+Subject: [PATCH 01/68] kmssink: Add 24bit RGB support
 
 https://bugzilla.gnome.org/show_bug.cgi?id=794186
 ---
@@ -9,7 +9,7 @@ https://bugzilla.gnome.org/show_bug.cgi?id=794186
  1 file changed, 8 insertions(+)
 
 diff --git a/sys/kms/gstkmsutils.c b/sys/kms/gstkmsutils.c
-index 838cddd38..90311f3fa 100644
+index 838cddd..90311f3 100644
 --- a/sys/kms/gstkmsutils.c
 +++ b/sys/kms/gstkmsutils.c
 @@ -47,11 +47,15 @@ static const struct
@@ -40,5 +40,5 @@ index 838cddd38..90311f3fa 100644
        bpp = 32;
        break;
 -- 
-2.11.0
+2.20.1
 
