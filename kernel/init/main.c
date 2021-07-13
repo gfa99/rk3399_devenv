@@ -534,7 +534,6 @@ asmlinkage __visible void __init start_kernel(void)
 	build_all_zonelists(NULL, NULL);
 	page_alloc_init();
 
-	pr_notice("*** RoboTemi kernel Starting... ***\n");
 #ifdef CONFIG_ARCH_ROCKCHIP
 	{
 		const char *s = boot_command_line;
