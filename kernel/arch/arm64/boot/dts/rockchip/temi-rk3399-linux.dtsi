@@ -198,8 +198,20 @@
 	//allocator = <0>;
 };
 
+&uart1 {
+	status = "okay";
+};
+
 &uart2 {
 	status = "disabled";
+};
+
+&uart3 {
+	status = "okay";
+};
+
+&uart4 {
+	status = "okay";
 };
 
 &vpu {
