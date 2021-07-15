@@ -5,9 +5,9 @@ export RK_ARCH=arm64
 # Uboot defconfig
 export RK_UBOOT_DEFCONFIG=rk3399
 # Kernel defconfig
-export RK_KERNEL_DEFCONFIG=firefly_linux_defconfig
+export RK_KERNEL_DEFCONFIG=temi_rk3399_linux_defconfig
 # Kernel dts
-export RK_KERNEL_DTS=rk3399-temi-sapphire-excavator-lp4-linux
+export RK_KERNEL_DTS=temi-rk3399-sapphire-excavator-lp4-linux
 # boot image type
 export RK_BOOT_IMG=boot.img
 # kernel image path

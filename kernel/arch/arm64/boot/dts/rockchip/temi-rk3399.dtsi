@@ -51,7 +51,7 @@
 #include <dt-bindings/suspend/rockchip-rk3399.h>
 #include <dt-bindings/thermal/thermal.h>
 
-#include "rk3399-dram-default-timing.dtsi"
+#include "temi-rk3399-dram-default-timing.dtsi"
 
 / {
 	compatible = "rockchip,rk3399";

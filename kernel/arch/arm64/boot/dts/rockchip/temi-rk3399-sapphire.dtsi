@@ -42,8 +42,8 @@
 
 #include "dt-bindings/pwm/pwm.h"
 #include <dt-bindings/soc/rockchip-io-domain.h>
-#include "rk3399.dtsi"
-#include "rk3399-opp.dtsi"
+#include "temi-rk3399.dtsi"
+#include "temi-rk3399-opp.dtsi"
 
 / {
 	compatible = "rockchip,rk3399-sapphire", "rockchip,rk3399";
