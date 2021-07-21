@@ -400,7 +400,6 @@ function build_save(){
 	echo "UBOOT:  defconfig: $RK_UBOOT_DEFCONFIG" >> $STUB_PATH/build_cmd_info
 	echo "KERNEL: defconfig: $RK_KERNEL_DEFCONFIG, dts: $RK_KERNEL_DTS" >> $STUB_PATH/build_cmd_info
 	echo "BUILDROOT: $RK_CFG_BUILDROOT" >> $STUB_PATH/build_cmd_info
-
 }
 
 function build_allsave(){
@@ -408,6 +407,52 @@ function build_allsave(){
 	build_firmware
 	build_updateimg
 	build_save
+}
+
+function build_temifw() {
+	echo "Start make temi fireware"
+	
+	build_uboot
+	build_kernel
+	
+	IMAGE_PATH=$TOP_DIR/rockdev
+	IMAGE_NAME=new_update.img
+
+	PACK_TOOL_DIR=$TOP_DIR/tools/linux/Linux_Pack_Firmware
+	cd $PACK_TOOL_DIR/temidev && ./pack.sh $IMAGE_NAME && cd -
+	mv $PACK_TOOL_DIR/temidev/$IMAGE_NAME $IMAGE_PATH/$IMAGE_NAME
+	if [ $? -eq 0 ]; then
+		echo "Make update image ok!"
+		echo "Please check [$IMAGE_PATH/$IMAGE_NAME]"
+	else
+		echo "Make update image failed!"
+		exit 1
+	fi
+
+	DATE=$(date  +%Y%m%d.%H%M)
+	STUB_PATH=Image/"$RK_KERNEL_DTS"_"$DATE"_RELEASE
+	STUB_PATH="$(echo $STUB_PATH | tr '[:lower:]' '[:upper:]')"
+	export STUB_PATH=$TOP_DIR/$STUB_PATH
+	export STUB_PATCH_PATH=$STUB_PATH/PATCHES
+	mkdir -p $STUB_PATH/IMAGES/{Linux_Repack_Tool,Linux_Upgrade_Tool,Windows_Upgrade_Tool}
+	rsync -vaL $PACK_TOOL_DIR/temidev/{bin,pack.sh,unpack.sh,Readme.md} $STUB_PATH/IMAGES/Linux_Repack_Tool
+	echo "remove upgrade_tool's log" && sudo rm -rf $TOP_DIR/tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/log
+	rsync -vaL $TOP_DIR/tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/*     $STUB_PATH/IMAGES/Linux_Upgrade_Tool
+	rsync -vaL $TOP_DIR/tools/windows/AndroidTool/AndroidTool_Release/*         $STUB_PATH/IMAGES/Windows_Upgrade_Tool
+	mv $IMAGE_PATH/$IMAGE_NAME $STUB_PATH/IMAGES
+	echo "How to burn update.img (Test under Ubuntu, ps: Only first burn need to step 1 and 2)" >> $STUB_PATH/IMAGES/Readme
+	echo "1. sudo ./Linux_Upgrade_Tool/upgrade_tool_v1.24 ef $IMAGE_NAME" >> $STUB_PATH/IMAGES/Readme
+	echo "2. sudo ./Linux_Upgrade_Tool/upgrade_tool       ef $IMAGE_NAME" >> $STUB_PATH/IMAGES/Readme
+	echo "3. sudo ./Linux_Upgrade_Tool/upgrade_tool       uf $IMAGE_NAME" >> $STUB_PATH/IMAGES/Readme
+	mkdir -p $STUB_PATCH_PATH/kernel
+	cp $TOP_DIR/kernel/.config    $STUB_PATCH_PATH/kernel
+	cp $TOP_DIR/kernel/vmlinux    $STUB_PATCH_PATH/kernel
+	cp $TOP_DIR/kernel/System.map $STUB_PATCH_PATH/kernel
+	#Save build command info
+	echo "UBOOT:  defconfig: $RK_UBOOT_DEFCONFIG" >> $STUB_PATH/build_cmd_info
+	echo "KERNEL: defconfig: $RK_KERNEL_DEFCONFIG, dts: $RK_KERNEL_DTS" >> $STUB_PATH/build_cmd_info
+
+	echo "make temi fireware ok!"
 }
 
 #=========================

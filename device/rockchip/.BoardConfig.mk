@@ -1,1 +1,1 @@
-rk3399/BoardConfig.mk
+rk3399/BoardConfig_temi.mk
