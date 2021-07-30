@@ -433,7 +433,7 @@
 };
 
 &rkisp1_0 {
-	status = "okay";
+	status = "disabled";
 
 	port {
 		#address-cells = <1>;
@@ -447,7 +447,7 @@
 };
 
 &rkisp1_1 {
-	status = "okay";
+	status = "disabled";
 
 	port {
 		#address-cells = <1>;
