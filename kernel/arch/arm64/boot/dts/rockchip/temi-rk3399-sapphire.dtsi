@@ -226,7 +226,7 @@
 	pinctrl-0 = <&rgmii_pins>;
 	tx_delay = <0x28>;
 	rx_delay = <0x11>;
-	status = "okay";
+	status = "disabled";
 };
 
 &gpu {
