@@ -33,8 +33,9 @@ function usage()
 	echo "otapackage         -pack ab update otapackage image"
 	echo "save               -save images, patches, commands used to debug"
 	echo "allsave            -build all & firmware & updateimg & save"
+	echo "temifw             -build temi fireware and packaging it"
 	echo ""
-	echo "Default option is 'allsave'."
+	echo "Default option is 'temifw'."
 }
 
 function build_uboot(){
@@ -434,16 +435,18 @@ function build_temifw() {
 	STUB_PATH="$(echo $STUB_PATH | tr '[:lower:]' '[:upper:]')"
 	export STUB_PATH=$TOP_DIR/$STUB_PATH
 	export STUB_PATCH_PATH=$STUB_PATH/PATCHES
-	mkdir -p $STUB_PATH/IMAGES/{Linux_Repack_Tool,Linux_Upgrade_Tool,Windows_Upgrade_Tool}
-	rsync -vaL $PACK_TOOL_DIR/temidev/{bin,pack.sh,unpack.sh,Readme.md} $STUB_PATH/IMAGES/Linux_Repack_Tool
+	mkdir -p $STUB_PATH/IMAGES
+	mkdir -p $STUB_PATH/TOOLS/{Linux_Repack_Tool,Linux_Upgrade_Tool,Windows_Upgrade_Tool}
+	rsync -vaL $PACK_TOOL_DIR/temidev/{bin,pack.sh,unpack.sh,Readme.md} $STUB_PATH/TOOLS/Linux_Repack_Tool
 	echo "remove upgrade_tool's log" && sudo rm -rf $TOP_DIR/tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/log
-	rsync -vaL $TOP_DIR/tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/*     $STUB_PATH/IMAGES/Linux_Upgrade_Tool
-	rsync -vaL $TOP_DIR/tools/windows/AndroidTool/AndroidTool_Release/*         $STUB_PATH/IMAGES/Windows_Upgrade_Tool
-	mv $IMAGE_PATH/$IMAGE_NAME $STUB_PATH/IMAGES
-	echo "How to burn update.img (Test under Ubuntu, ps: Only first burn need to step 1 and 2)" >> $STUB_PATH/IMAGES/Readme
-	echo "1. sudo ./Linux_Upgrade_Tool/upgrade_tool_v1.24 ef $IMAGE_NAME" >> $STUB_PATH/IMAGES/Readme
-	echo "2. sudo ./Linux_Upgrade_Tool/upgrade_tool       ef $IMAGE_NAME" >> $STUB_PATH/IMAGES/Readme
-	echo "3. sudo ./Linux_Upgrade_Tool/upgrade_tool       uf $IMAGE_NAME" >> $STUB_PATH/IMAGES/Readme
+	rsync -vaL $TOP_DIR/tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/*     $STUB_PATH/TOOLS/Linux_Upgrade_Tool
+	rsync -vaL $TOP_DIR/tools/windows/AndroidTool/AndroidTool_Release/*         $STUB_PATH/TOOLS/Windows_Upgrade_Tool
+	cp $IMAGE_PATH/{MiniLoaderAll.bin,uboot.img,trust.img,boot.img,rootfs.img}  $STUB_PATH/IMAGES
+	mv $IMAGE_PATH/$IMAGE_NAME $STUB_PATH/
+	echo "How to burn update.img (Test under Ubuntu, ps: Only first burn need to step 1 and 2)" >> $STUB_PATH/Readme
+	echo "1. sudo ./TOOLS/Linux_Upgrade_Tool/upgrade_tool_v1.24 ef $IMAGE_NAME" >> $STUB_PATH/Readme
+	echo "2. sudo ./TOOLS/Linux_Upgrade_Tool/upgrade_tool       ef $IMAGE_NAME" >> $STUB_PATH/Readme
+	echo "3. sudo ./TOOLS/Linux_Upgrade_Tool/upgrade_tool       uf $IMAGE_NAME" >> $STUB_PATH/Readme
 	mkdir -p $STUB_PATCH_PATH/kernel
 	cp $TOP_DIR/kernel/.config    $STUB_PATCH_PATH/kernel
 	cp $TOP_DIR/kernel/vmlinux    $STUB_PATCH_PATH/kernel
@@ -465,7 +468,7 @@ if echo $@|grep -wqE "help|-h"; then
 fi
 
 OPTIONS="$@"
-for option in ${OPTIONS:-allsave}; do
+for option in ${OPTIONS:-temifw}; do
 	echo "processing option: $option"
 	case $option in
 		BoardConfig*.mk)
