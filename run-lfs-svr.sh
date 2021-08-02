@@ -1,6 +1,5 @@
 #!/bin/bash
 
-topdir=$(dirname "$0")
+topdir=$(dirname $(realpath "$0"))
 cd $topdir/.git/lfs-server
-nohup bash ./bin/run-lfs-server.sh &
-
+nohup bash ./bin/run-lfs-server.sh $topdir &
