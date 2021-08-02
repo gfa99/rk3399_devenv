@@ -47,6 +47,8 @@
 	access = basic
 ```
 
+> 服务端一键配置脚本: init-mirror-repo-of-this.sh
+
 ## git-lfs 安装配置及使用
 1.  (仅首次需要)安装git-lfs
     1) download git-lfs from https://github.com/git-lfs/git-lfs/releases
