@@ -63,7 +63,7 @@
 			press-threshold-microvolt = <17000>;
 		};
 	};
-
+/*
 	gpio_keys: gpio-keys {
 		compatible = "gpio-keys";
 		#address-cells = <1>;
@@ -81,7 +81,7 @@
 			gpio-key,wakeup = <1>;
 			debounce-interval = <100>;
 		};
-	};
+	};*/
 
 	panel: panel {
 		compatible = "simple-panel";
