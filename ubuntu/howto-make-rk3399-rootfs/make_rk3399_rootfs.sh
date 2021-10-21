@@ -71,9 +71,6 @@ function main() {
         if [ ! -s "$2/usr/bin/qemu-aarch64-static" ]; then
             sudo cp -b /etc/resolv.conf $2/etc/resolv.conf
             sudo cp /usr/bin/qemu-aarch64-static $2/usr/bin/
-        else
-            echo "You must first install qemu-user-static"
-            exit 1
         fi
 
         mnt $1 $2

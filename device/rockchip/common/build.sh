@@ -33,7 +33,7 @@ function usage()
 	echo "otapackage         -pack ab update otapackage image"
 	echo "save               -save images, patches, commands used to debug"
 	echo "allsave            -build all & firmware & updateimg & save"
-	echo "temifw             -build temi fireware and packaging it"
+	echo "temifw version     -build temi fireware and packaging it"
 	echo ""
 	echo "Default option is 'temifw'."
 }
@@ -431,7 +431,10 @@ function build_temifw() {
 	fi
 
 	DATE=$(date  +%Y%m%d.%H%M)
-	STUB_PATH=Image/"$RK_KERNEL_DTS"_"$DATE"_RELEASE
+	VERSION=v0
+	[ -n "$1" ] && VERSION="$1"
+	#STUB_PATH=Image/"$RK_KERNEL_DTS"_"$DATE"_RELEASE
+	STUB_PATH=Image/"TEMI-RK3399-LINUX"_"$DATE"_RELEASE_$VERSION
 	STUB_PATH="$(echo $STUB_PATH | tr '[:lower:]' '[:upper:]')"
 	export STUB_PATH=$TOP_DIR/$STUB_PATH
 	export STUB_PATCH_PATH=$STUB_PATH/PATCHES
@@ -439,21 +442,33 @@ function build_temifw() {
 	mkdir -p $STUB_PATH/TOOLS/{Linux_Repack_Tool,Linux_Upgrade_Tool,Windows_Upgrade_Tool}
 	rsync -vaL $PACK_TOOL_DIR/temidev/{bin,pack.sh,unpack.sh,Readme.md} $STUB_PATH/TOOLS/Linux_Repack_Tool
 	echo "remove upgrade_tool's log" && sudo rm -rf $TOP_DIR/tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/log
-	rsync -vaL $TOP_DIR/tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/*     $STUB_PATH/TOOLS/Linux_Upgrade_Tool
-	rsync -vaL $TOP_DIR/tools/windows/AndroidTool/AndroidTool_Release/*         $STUB_PATH/TOOLS/Windows_Upgrade_Tool
-	cp $IMAGE_PATH/{MiniLoaderAll.bin,uboot.img,trust.img,boot.img,rootfs.img}  $STUB_PATH/IMAGES
+	rsync -vaL $TOP_DIR/tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/*        $STUB_PATH/TOOLS/Linux_Upgrade_Tool
+	rsync -vaL $TOP_DIR/tools/windows/AndroidTool/AndroidTool_Release/*            $STUB_PATH/TOOLS/Windows_Upgrade_Tool
+	cp $IMAGE_PATH/{MiniLoaderAll.bin,parameter.txt,uboot.img,trust.img,boot.img}  $STUB_PATH/IMAGES
 	mv $IMAGE_PATH/$IMAGE_NAME $STUB_PATH/
 	echo "How to burn update.img (Test under Ubuntu, ps: Only first burn need to step 1 and 2)" >> $STUB_PATH/Readme
 	echo "1. sudo ./TOOLS/Linux_Upgrade_Tool/upgrade_tool_v1.24 ef $IMAGE_NAME" >> $STUB_PATH/Readme
 	echo "2. sudo ./TOOLS/Linux_Upgrade_Tool/upgrade_tool       ef $IMAGE_NAME" >> $STUB_PATH/Readme
 	echo "3. sudo ./TOOLS/Linux_Upgrade_Tool/upgrade_tool       uf $IMAGE_NAME" >> $STUB_PATH/Readme
-	mkdir -p $STUB_PATCH_PATH/kernel
+	mkdir -p $STUB_PATCH_PATH/{u-boot,kernel}
+	cp $TOP_DIR/u-boot/.config    $STUB_PATCH_PATH/u-boot
+	cp $TOP_DIR/u-boot/u-boot     $STUB_PATCH_PATH/u-boot
+	cp $TOP_DIR/u-boot/System.map $STUB_PATCH_PATH/u-boot
 	cp $TOP_DIR/kernel/.config    $STUB_PATCH_PATH/kernel
 	cp $TOP_DIR/kernel/vmlinux    $STUB_PATCH_PATH/kernel
 	cp $TOP_DIR/kernel/System.map $STUB_PATCH_PATH/kernel
 	#Save build command info
 	echo "UBOOT:  defconfig: $RK_UBOOT_DEFCONFIG" >> $STUB_PATH/build_cmd_info
 	echo "KERNEL: defconfig: $RK_KERNEL_DEFCONFIG, dts: $RK_KERNEL_DTS" >> $STUB_PATH/build_cmd_info
+
+	cd $STUB_PATH
+	md5sum $IMAGE_NAME > ${IMAGE_NAME}.md5sum
+	7z a PRODUCTION_FIREWARE.7z Readme ${IMAGE_NAME}* TOOLS/{Linux_Upgrade_Tool,Windows_Upgrade_Tool}
+	fwsum=`md5sum PRODUCTION_FIREWARE.7z | cut -d ' ' -f1`
+	mv PRODUCTION_FIREWARE.7z PRODUCTION_FIREWARE_${VERSION}_${fwsum}.7z
+	rm ${IMAGE_NAME}.md5sum
+	mv ${IMAGE_NAME} $IMAGE_PATH/${IMAGE_NAME}.${VERSION}
+	cd -
 
 	echo "make temi fireware ok!"
 }
@@ -487,6 +502,12 @@ for option in ${OPTIONS:-temifw}; do
 		recovery)
 			build_kernel
 			;&
+		temifw)
+			[ $# -ne 2 ] && echo "Parameter error!" && usage && exit 1
+			shift 1
+			build_temifw $@
+			break
+			;;
 		*)
 			eval build_$option || usage
 			;;
