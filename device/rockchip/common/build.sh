@@ -16,6 +16,7 @@ function usage()
 	echo "kernel             -build kernel"
 	echo "dtb                -build kernel dtb"
 	echo "modules            -build kernel modules"
+	echo "tools              -build kernel tools (eg. perf)"
 	echo "rootfs             -build default rootfs, currently build buildroot as default"
 	echo "buildroot          -build buildroot rootfs"
 	echo "ramboot            -build ramboot image"
@@ -103,6 +104,20 @@ function build_modules(){
 		echo "====Build modules ok!===="
 	else
 		echo "====Build modules failed!===="
+		exit 1
+	fi
+}
+
+function build_tools(){
+	echo "============Start build kernel tools============"
+	echo "TARGET_ARCH =$RK_ARCH"
+	echo "================================================"
+	C_C=$TOP_DIR/prebuilts/gcc/linux-x86/aarch64/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
+	cd $TOP_DIR/kernel/tools && make ARCH=$RK_ARCH CROSS_COMPILE=$C_C LDFLAGS=-static -j$RK_JOBS perf && cd -
+	if [ $? -eq 0 ]; then
+		echo "====Build tools ok!===="
+	else
+		echo "====Build tools failed!===="
 		exit 1
 	fi
 }
