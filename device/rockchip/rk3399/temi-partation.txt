@@ -8,7 +8,7 @@ MACHINE: 3399
 CHECK_MASK: 0x80
 PWR_HLD: 0,0,A,0,1
 TYPE: GPT
-CMDLINE: console=ttyFIQ0 root=/dev/mmcblk1p10 rw rootfstype=ext4 init=/sbin/init mtdparts=rk29xxnand:0x00002000@0x00004000(uboot),0x00002000@0x00006000(trust),0x00002000@0x00008000(misc),0x00010000@0x0000a000(boot),0x00010000@0x0001a000(recovery),0x00010000@0x0002a000(backup),0x00020000@0x0003a000(oem),0x00300000@0x0005a000(system),0x02000000@0x0035a000(userdata),-@0x0235a000(rootfs:grow)
+CMDLINE: console=ttyFIQ0 root=/dev/mmcblk1p10 rw rootfstype=ext4 init=/sbin/init mtdparts=rk29xxnand:0x00002000@0x00004000(uboot),0x00002000@0x00006000(trust),0x00002000@0x00008000(misc),0x00022000@0x0000a000(boot),0x00010000@0x0002c000(recovery),0x00010000@0x0003c000(backup),0x00020000@0x0004c000(oem),0x00300000@0x0006c000(system),0x01300000@0x0036c000(userdata),-@0x0166c000(rootfs:grow)
 uuid:rootfs=614e0000-0000-4b53-8000-1d28000054a9
 
 {Size     @Addr      (Name)} (Unit: sector, 512Bytes)
@@ -16,14 +16,14 @@ uuid:rootfs=614e0000-0000-4b53-8000-1d28000054a9
 0x00002000@0x00006000(trust)         4M @   12M
 0x00002000@0x00008000(misc)          4M @   16M
 
-0x00010000@0x0000a000(boot)         32M @   20M
+0x00022000@0x0000a000(boot)         68M @   20M
 
-0x00010000@0x0001a000(recovery)     32M @   52M
-0x00010000@0x0002a000(backup)       32M @   84M
-0x00020000@0x0003a000(oem)          64M @  116M
-0x00300000@0x0005a000(system)      1.5G @  180M
-0x01300000@0x0035a000(userdata)    9.5G @ 1720M
--@0x0165a000(rootfs:grow)
+0x00010000@0x0002c000(recovery)     32M @   88M
+0x00010000@0x0003c000(backup)       32M @  120M
+0x00020000@0x0004c000(oem)          64M @  152M
+0x00300000@0x0006c000(system)      1.5G @  216M
+0x01300000@0x0036c000(userdata)    9.5G @ 1756M
+-@0x0166c000(rootfs:grow)
 
 =======================================================
 
