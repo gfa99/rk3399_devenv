@@ -1,0 +1,629 @@
+<!DOCTYPE html> <html class=client-js dir=ltr style lang=en><!--
+ Page saved with SingleFile 
+ url: https://wiki.archlinux.org/index.php/Bluetooth_headset 
+ saved date: Fri Apr 02 2021 14:31:54 GMT+0800 (China Standard Time)
+--><meta charset=utf-8>
+<title>Bluetooth headset - ArchWiki</title>
+<style>:root{--sf-img-8:url("data:image/png;base64,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");--sf-img-9:url("data:image/png;base64,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")}.toctogglecheckbox:checked~ul{display:none}@media screen{:not(:checked)>.toctogglecheckbox{display:inline!important;position:absolute;opacity:0;z-index:-1}.toctogglespan{font-size:94%}:not(:checked)>.toctogglespan:before{content:' ['}:not(:checked)>.toctogglespan:after{content:']'}.toctogglelabel{cursor:pointer;color:#0645ad}.toctogglelabel:hover{text-decoration:underline}.toctogglecheckbox:focus+.toctitle .toctogglelabel{text-decoration:underline;outline:dotted 1px;outline:auto -webkit-focus-ring-color}.toctogglecheckbox:checked+.toctitle .toctogglelabel:after{content:'show'}.toctogglecheckbox:not(:checked)+.toctitle .toctogglelabel:after{content:'hide'}}@media screen{html,body{height:100%}body{margin:0;padding:0}:focus{outline-color:#3366cc}body{background-color:#f6f6f6;overflow-y:scroll}.mw-body{background-color:#ffffff;color:#202122;direction:ltr;padding:1em}#p-personal{position:absolute;top:6px;right:0.75em;z-index:100}#p-personal ul{padding-left:10em}#p-personal li{float:left}.mw-body{margin-left:10em}.mw-body{margin-top:-1px;border:1px solid #a7d7f9;border-right-width:0}.mw-body .firstHeading{overflow:visible}.mw-indicators{float:right}.mw-body-content{position:relative;z-index:0}.mw-body-content:after{clear:both;content:'';display:block}#mw-page-base{background-color:#fbfbfb;background-image:-webkit-gradient(linear,right top,right bottom,color-stop(50%,#ffffff),color-stop(100%,#f6f6f6));background-image:-webkit-linear-gradient(top,#ffffff 50%,#f6f6f6 100%);background-image:-moz-linear-gradient(top,#ffffff 50%,#f6f6f6 100%);background-image:linear-gradient(to bottom,#ffffff 50%,#f6f6f6 100%);background-position:bottom left;height:5em}#mw-head-base{margin-top:-5em;margin-left:10em;height:5em}#mw-navigation h2{position:absolute;top:-9999px}#mw-head{position:absolute;top:0;right:0;width:100%}#left-navigation{float:left;margin-left:10em;margin-top:2.5em;margin-bottom:-2.5em}#right-navigation{float:right;margin-top:2.5em}#mw-panel{position:absolute;top:0;width:10em;left:0}.mw-footer{margin-left:10em;margin-top:0}html{font-size:100%}html,body{font-family:sans-serif}ul{list-style-image:url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjEzIj4KCTxjaXJjbGUgY3g9IjIuNSIgY3k9IjkiIHI9IjIuNSIgZmlsbD0iIzIwMjEyMiIvPgo8L3N2Zz4K)}pre{line-height:1.3}.mw-jump-link:not(:focus){display:block;position:absolute!important;clip:rect(1px,1px,1px,1px);width:1px;height:1px;margin:-1px;border:0;padding:0;overflow:hidden}#p-personal li{font-size:0.75em}.mw-body h1,.mw-body-content h2{margin-bottom:0.25em;padding:0;font-family:'Linux Libertine','Georgia','Times',serif;line-height:1.3}.mw-body h1:lang(ja),.mw-body-content h1:lang(ja),.mw-body-content h2:lang(ja),.mw-body h1:lang(he),.mw-body-content h1:lang(he),.mw-body-content h2:lang(he),.mw-body h1:lang(ko),.mw-body-content h1:lang(ko),.mw-body-content h2:lang(ko){font-family:sans-serif}.mw-body h1:lang(my),.mw-body-content h1:lang(my),.mw-body-content h2:lang(my){line-height:normal}.mw-body h1{font-size:1.8em}.mw-body-content{font-size:calc(1em * 0.875);line-height:1.6}.mw-body-content h2{margin-top:1em;font-size:1.5em}.mw-body-content h3,.mw-body-content h4{margin-top:0.3em;margin-bottom:0;padding-bottom:0;line-height:1.6}.mw-body-content h3{font-size:1.2em}.mw-body-content h3,.mw-body-content h4{font-weight:bold}.mw-body-content h4{font-size:100%}.mw-body-content .toc h2{font-family:sans-serif;font-size:100%}.mw-body-content p{margin:0.5em 0}.mw-parser-output .external{background-position:center right;background-repeat:no-repeat;background-image:linear-gradient(transparent,transparent),url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMiIgaGVpZ2h0PSIxMiI+Cgk8cGF0aCBmaWxsPSIjZmZmIiBzdHJva2U9IiMzNmMiIGQ9Ik0xLjUgNC41MThoNS45ODJWMTAuNUgxLjV6Ii8+Cgk8cGF0aCBmaWxsPSIjMzZjIiBkPSJNNS43NjUgMUgxMXY1LjM5TDkuNDI3IDcuOTM3bC0xLjMxLTEuMzFMNS4zOTMgOS4zNWwtMi42OS0yLjY4OCAyLjgxLTIuODA4TDQuMiAyLjU0NHoiLz4KCTxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik05Ljk5NSAyLjAwNGwuMDIyIDQuODg1TDguMiA1LjA3IDUuMzIgNy45NSA0LjA5IDYuNzIzbDIuODgyLTIuODgtMS44NS0xLjg1MnoiLz4KPC9zdmc+Cg==);padding-right:13px}.mw-body .mw-indicators{font-size:0.875em;line-height:1.6;position:relative}#siteNotice{font-size:0.8em}#p-personal ul{list-style:none none;margin:0}.vector-menu li,#p-personal li{margin-left:0.75em;padding-top:0.5em;line-height:1.16666667}#p-search{float:left;margin-right:0.5em;margin-left:0.5em}#p-search h3{display:block;position:absolute!important;clip:rect(1px,1px,1px,1px);width:1px;height:1px;margin:-1px;border:0;padding:0;overflow:hidden}#p-search form{margin:0.5em 0 0}#simpleSearch{position:relative;min-width:5em;width:20vw;max-width:20em;height:100%}#simpleSearch input{margin:0}#searchInput{background-color:rgba(255,255,255,0.5);color:#000000;width:100%;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;border:1px solid #a2a9b1;border-radius:2px;padding:0.4em 1.84615385em 0.4em 0.4em;-webkit-box-shadow:inset 0 0 0 1px transparent;box-shadow:inset 0 0 0 1px transparent;font-size:0.8125em;direction:ltr;-webkit-transition:border-color 250ms,box-shadow 250ms;-moz-transition:border-color 250ms,box-shadow 250ms;transition:border-color 250ms,box-shadow 250ms;-webkit-appearance:none;-moz-appearance:textfield}#simpleSearch:hover #searchInput{border-color:#72777d}#searchInput:focus,#simpleSearch:hover #searchInput:focus{outline:0;border-color:#3366cc;-webkit-box-shadow:inset 0 0 0 1px #3366cc,inset 0 0 0 2px #ffffff;box-shadow:inset 0 0 0 1px #3366cc,inset 0 0 0 2px #ffffff}#searchInput::-webkit-input-placeholder{color:#72777d;opacity:1}#searchInput::-moz-placeholder{color:#72777d;opacity:1}#searchInput:-moz-placeholder{color:#72777d;opacity:1}#searchInput::placeholder{color:#72777d;opacity:1}#searchInput::-webkit-search-decoration,#searchInput::-webkit-search-cancel-button,#searchInput::-webkit-search-results-button,#searchInput::-webkit-search-results-decoration{display:none}#searchButton,#mw-searchButton{background-color:transparent;position:absolute;top:1px;bottom:1px;right:1px;min-width:24px;width:1.84615385em;border:0;padding:0;cursor:pointer;font-size:0.8125em;direction:ltr;text-indent:-99999px;white-space:nowrap;overflow:hidden;z-index:1}#searchButton{background-image:linear-gradient(transparent,transparent),url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMiIgaGVpZ2h0PSIxMyI+Cgk8ZyBmaWxsPSJub25lIiBzdHJva2U9IiM1NDU5NWQiIHN0cm9rZS13aWR0aD0iMiI+CgkJPHBhdGggZD0iTTExLjI5IDExLjcxbC00LTQiLz4KCQk8Y2lyY2xlIGN4PSI1IiBjeT0iNSIgcj0iNCIvPgoJPC9nPgo8L3N2Zz4K);background-position:center center;background-repeat:no-repeat}.vector-menu-tabs{background-position:left bottom;float:left;height:2.5em;padding-left:1px}.vector-menu-tabs ul{float:left;height:100%;list-style:none none;margin:0;padding:0}.vector-menu-tabs li{background-image:linear-gradient(to top,#77c1f6 0,#e8f2f8 1px,#ffffff 100%);background-position:left bottom;background-repeat:repeat-x;float:left;display:block;height:100%;margin:0;padding:0;line-height:1.125em;white-space:nowrap}.vector-menu-tabs li a{background-position:right bottom;color:#0645ad;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;display:block;float:left;height:3.07692308em;position:relative;padding-top:1.25em;padding-left:8px;padding-right:8px;font-size:0.8125em;cursor:pointer}.vector-menu-tabs .selected{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAABkAQAAAABvV2fNAAAADElEQVR4AWNoGB4QAInlMgFKeRKBAAAAAElFTkSuQmCC);background:#ffffff}.vector-menu-tabs .selected a,.vector-menu-tabs .selected a:visited{color:#202122;text-decoration:none}@-webkit-keyframes rotate{from{-webkit-transform:rotate(0deg);-moz-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(360deg);-moz-transform:rotate(360deg);transform:rotate(360deg)}}@-moz-keyframes rotate{from{-webkit-transform:rotate(0deg);-moz-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(360deg);-moz-transform:rotate(360deg);transform:rotate(360deg)}}@keyframes rotate{from{-webkit-transform:rotate(0deg);-moz-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(360deg);-moz-transform:rotate(360deg);transform:rotate(360deg)}}.vector-menu-tabs,.vector-menu-tabs a{background-image:linear-gradient(to bottom,rgba(167,215,249,0) 0,#a7d7f9 100%);background-repeat:no-repeat;background-size:1px 100%}.portal{margin:0 0.6em 0 0.7em;padding:0.25em 0;direction:ltr}.portal h3{display:block;background-image:linear-gradient(to right,rgba(200,204,209,0) 0,#c8ccd1 33%,#c8ccd1 66%,rgba(200,204,209,0) 100%);background-position:center bottom;background-repeat:no-repeat;background-size:100% 1px;color:#54595d;margin:0.5em 0 0 0.66666667em;border:0;padding:0.25em 0;font-size:0.75em;font-weight:normal;cursor:default}.portal .body{margin-left:0.5em;padding-top:0}.portal .body ul{list-style:none none;margin:0;padding-top:0.3em}.portal .body li{margin:0;padding:0.25em 0;font-size:0.75em;line-height:1.125em;word-wrap:break-word}.portal .body li a{color:#0645ad}.portal .body li a:visited,.vector-menu-portal .body li a:visited{color:#0b0080}#mw-panel{font-size:inherit}#mw-panel .portal-first{background-image:none}#mw-panel .portal-first .body{margin-left:0.5em}.mw-footer{padding:0.75em;direction:ltr}.mw-footer ul{list-style:none none;margin:0;padding:0}.mw-footer li{color:#202122;margin:0;padding:0.5em 0;font-size:0.75em}#footer-info li{line-height:1.4}#footer-places li{float:left;margin-right:1em;line-height:2}}@media screen and (min-width:982px){.mw-body,#mw-head-base,#left-navigation,.mw-footer{margin-left:11em}.mw-body{padding:1.25em 1.5em 1.5em 1.5em}.mw-footer{padding:1.25em}#mw-panel{padding-left:0.5em}#p-search{margin-right:1em}#p-personal{right:1em}}@media screen{body{margin:0}@supports (text-decoration:underline dotted){abbr[title]{border-bottom:0;text-decoration:underline dotted}}button::-moz-focus-inner,[type='button']::-moz-focus-inner,[type='reset']::-moz-focus-inner,[type='submit']::-moz-focus-inner{border-style:none;padding:0}a{text-decoration:none;color:#0645ad;background:none}a:not([href]){cursor:pointer}a:visited{color:#0b0080}a:active{color:#faa700}a:hover,a:focus{text-decoration:underline}a:lang(ar),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}.mw-parser-output a.extiw,.mw-parser-output a.external{color:#36b}.mw-parser-output a.extiw:visited,.mw-parser-output a.external:visited{color:#636}.mw-parser-output a.extiw:active,.mw-parser-output a.external:active{color:#b63}img{border:0;vertical-align:middle}h1,h2,h3,h4{color:#000;margin:0;padding-top:0.5em;padding-bottom:0.17em;overflow:hidden}h1,h2{margin-bottom:0.6em;border-bottom:1px solid #a2a9b1}h3,h4{margin-bottom:0.3em}h1{font-size:188%;font-weight:normal}h2{font-size:150%;font-weight:normal}h3{font-size:128%}h4{font-size:116%}p{margin:0.4em 0 0.5em 0}p img{margin:0}ul{margin:0.3em 0 0 1.6em;padding:0}li{margin-bottom:0.1em}pre,code{font-family:monospace,monospace}code{color:#000;background-color:#f8f9fa;border:1px solid #eaecf0;border-radius:2px;padding:1px 4px}pre{color:#000;background-color:#f8f9fa;border:1px solid #eaecf0;padding:1em;white-space:pre-wrap;overflow-x:hidden;word-wrap:break-word}form{border:0;margin:0}.toc{border:1px solid #a2a9b1;background-color:#f8f9fa;font-size:95%}.toc{display:table;padding:7px}.toc h2{display:inline;border:0;padding:0;font-size:100%;font-weight:bold}.toc .toctitle{text-align:center}.toc ul{list-style-type:none;list-style-image:none;margin-left:0}.tocnumber,.toctext{display:table-cell;text-decoration:inherit}.tocnumber{color:#202122}.mw-content-ltr .tocnumber{padding-left:0;padding-right:0.5em}.catlinks{border:1px solid #a2a9b1;background-color:#f8f9fa;padding:5px;margin-top:1em;clear:both}#siteNotice{position:relative;text-align:center;margin:0}#contentSub,#contentSub2{font-size:84%;line-height:1.2em;margin:0 0 1.4em 1em;color:#54595d;width:auto}.mw-content-ltr{direction:ltr}.sitedir-ltr input{direction:ltr}input[type='submit']{direction:ltr}@supports (text-decoration:underline dotted){abbr[title],.explain[title]{border-bottom:0;text-decoration:underline dotted}}#catlinks{text-align:left}.catlinks ul{display:inline;margin:0;padding:0;list-style:none none}.catlinks li{display:inline-block;line-height:1.25em;border-left:1px solid #a2a9b1;margin:0.125em 0;padding:0 0.5em}.catlinks li:first-child{padding-left:0.25em;border-left:0}.plainlinks a.external{background:none!important;padding:0!important}.mw-content-ltr ul{margin:0.3em 0 0 1.6em;padding:0}h1:lang(anp),h1:lang(as),h1:lang(bh),h1:lang(bho),h1:lang(bn),h1:lang(gu),h1:lang(hi),h1:lang(kn),h1:lang(ks),h1:lang(ml),h1:lang(mr),h1:lang(my),h1:lang(mai),h1:lang(ne),h1:lang(new),h1:lang(or),h1:lang(pa),h1:lang(pi),h1:lang(sa),h1:lang(ta),h1:lang(te){line-height:1.6em!important}h2:lang(anp),h3:lang(anp),h4:lang(anp),h5:lang(anp),h6:lang(anp),h2:lang(as),h3:lang(as),h4:lang(as),h5:lang(as),h6:lang(as),h2:lang(bho),h3:lang(bho),h4:lang(bho),h5:lang(bho),h6:lang(bho),h2:lang(bh),h3:lang(bh),h4:lang(bh),h5:lang(bh),h6:lang(bh),h2:lang(bn),h3:lang(bn),h4:lang(bn),h5:lang(bn),h6:lang(bn),h2:lang(gu),h3:lang(gu),h4:lang(gu),h5:lang(gu),h6:lang(gu),h2:lang(hi),h3:lang(hi),h4:lang(hi),h5:lang(hi),h6:lang(hi),h2:lang(kn),h3:lang(kn),h4:lang(kn),h5:lang(kn),h6:lang(kn),h2:lang(ks),h3:lang(ks),h4:lang(ks),h5:lang(ks),h6:lang(ks),h2:lang(ml),h3:lang(ml),h4:lang(ml),h5:lang(ml),h6:lang(ml),h2:lang(mr),h3:lang(mr),h4:lang(mr),h5:lang(mr),h6:lang(mr),h2:lang(my),h3:lang(my),h4:lang(my),h5:lang(my),h6:lang(my),h2:lang(mai),h3:lang(mai),h4:lang(mai),h5:lang(mai),h6:lang(mai),h2:lang(ne),h3:lang(ne),h4:lang(ne),h5:lang(ne),h6:lang(ne),h2:lang(new),h3:lang(new),h4:lang(new),h5:lang(new),h6:lang(new),h2:lang(or),h3:lang(or),h4:lang(or),h5:lang(or),h6:lang(or),h2:lang(pa),h3:lang(pa),h4:lang(pa),h5:lang(pa),h6:lang(pa),h2:lang(pi),h3:lang(pi),h4:lang(pi),h5:lang(pi),h6:lang(pi),h2:lang(sa),h3:lang(sa),h4:lang(sa),h5:lang(sa),h6:lang(sa),h2:lang(ta),h3:lang(ta),h4:lang(ta),h5:lang(ta),h6:lang(ta),h2:lang(te),h3:lang(te),h4:lang(te),h5:lang(te),h6:lang(te){line-height:1.2em}.toc ul{margin:0.3em 0}.mw-content-ltr .toc ul{text-align:left}.mw-content-ltr .toc ul ul{margin:0 0 0 2em}.toc .toctitle{direction:ltr}sup{line-height:1}}@media screen and (max-width:720px){#mw-head{position:static!important;margin-top:0.5em}#mw-navigation #mw-panel{display:table;position:static;table-layout:fixed;width:100%;overflow:hidden;font-size:150%}#mw-navigation #mw-panel .portal{display:block;width:100%}#mw-navigation #mw-panel ul li{list-style:none}body .mw-footer{margin-left:0;padding-top:0}body .mw-footer #footer-info-lastmod{display:none}#p-personal{display:table;position:relative;width:100%;top:inherit;left:inherit;right:inherit}#p-personal ul{padding-left:0}#right-navigation{position:absolute;top:inherit;right:0;margin-top:0}#left-navigation{position:absolute;top:inherit;margin:0;display:block}#p-namespaces,#p-views{position:relative;top:2.5em}#p-namespaces{padding-left:0}#p-search{position:absolute;right:0;width:100vw;margin:0}#simpleSearch{margin:0 3em;width:80vw;padding:0}.mw-body{border-left:0;margin-left:0}}#archnavbar{height:40px!important;padding:10px 15px!important;background:#333!important;border-bottom:5px #08c solid!important}#archnavbarlogo{float:left!important;margin:0!important;padding:0!important;height:40px!important;width:190px!important}html>body #archnavbarlogo{background:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEiIHdpZHRoPSI2MDAiIGhlaWdodD0iMTI2Ij48cGF0aCBkPSJNMTU5LjU2OCAzNC40MjdjLTguODktLjAxNC0xNi4yNjcgMS44MDktMTkuMTIgMi44MDNsLTIuOTM3IDE1Ljg1N2MtLjAwNy4wNTggMTQuNjE3LTMuOSAyMS4wNTktMy42NjcgMTAuNjY1LjM4MyAxMS42NDYgNC4wNzYgMTEuNDYgOS4wNi4xODIuMjkyLTIuNzUyLTQuNTAzLTExLjk3OS00LjY2NC0xMS42NC0uMi0yOC4wNjkgNC4xMjItMjguMDQ2IDIxLjY5Mi0uMzE0IDE5Ljc2NSAxNC43NjQgMjUuNTc5IDI1LjAzMiAyNS42ODYgOS4yMzItLjE2OCAxMy41NjMtMy40OTYgMTUuOTM0LTUuMjggMy4xMTUtMy4yNTcgNi42NzktNi41MzIgMTAuMDc4LTEwLjQ2Mi0zLjIxNiA1Ljg0NC02LjAwNSA5Ljg4NC04LjkwNyAxMi45Nzd2Mi42MTFsMTQuMDMzLTIuMzYxLjA5Ni0zOC4xNDRjLS4xNDMtNS4zOTkgMy4wOTYtMjYuMDU3LTI2LjcwMy0yNi4xMDh6bS0yLjAxNiAzMy4yMWM1LjgxNy4wOCAxMi40ODggMi45NDggMTIuNDk3IDkuODQ5LjAzIDYuMjc3LTcuODYzIDkuNjUxLTEyLjk5NiA5LjU5OC01LjEzNS0uMDUzLTExLjk0OS00LjAzNi0xMS45NzktMTAuMTU1LjA5OS01LjQ3IDYuNDI2LTkuNDMyIDEyLjQ3OC05LjI5MXptMzcuOTcyLTI5LjY4NWwtLjA5NSA2My4xNjYgMTYuMzQ4LTMuMTUuMDI3LTM1LjgxNGMuMDA0LTUuMzMzIDcuNjItMTEuNTY0IDE3LjE3OC0xMS40NjQgMi4wMjgtMy42NyA1Ljg0LTEzLjA1IDYuNzctMTUuMTgzLTIxLjM1MS0uMDUxLTIxLjYyMyA2LjEzNy0yNS4zMzYgOS4xOC0uMDQtNS44MDYtLjAxMy05LjI5Mi0uMDEzLTkuMjkybC0xNC44NzkgMi41NTd6bTkyLjAwMiA4LjI5MmMtLjE1OC0uMDc0LTguNTI2LTkuNzg4LTI1LjM1LTkuODY0LTE1Ljc1OC0uMjYyLTMzLjQzMyA1Ljg0Ny0zMy43MTYgMzIuMjcuMTM4IDIzLjIzMiAxNi45NzkgMzIuMzExIDMzLjgwNSAzMi40ODggMTguMDA3LjE4NyAyNS4xNzItMTEuMjYgMjUuNjAyLTExLjU0My0yLjE0OS0xLjg2My0xMC4xOTYtOS44MzctMTAuMTk2LTkuODM3cy01LjAyNyA3LjE1Ny0xNC43NzkgNy4yNDhjLTkuNzU1LjA5My0xOC4yMzQtNy41NC0xOC4zNTQtMTguMTg5LS4xMjUtMTAuNjUgNy43OTUtMTYuNDE5IDE4LjQyNy0xNi44ODUgOS4yMDUtLjAwMiAxNC41MTYgNS45NDMgMTQuNTE2IDUuOTQzem0yMC42MDYtMzAuMzk5bC0xNS40MzQgMy42MjguMTE1IDgyLjI3NyAxNS4yMDQtMi43NDUuMTcyLTM4LjcyYy4wMzMtNC4wNiA1Ljg3NC0xMC4yOTUgMTUuNjI2LTEwLjA5NyA5LjMyNS4wOTcgMTEuNDEgNi4yMTUgMTEuMzg0IDYuOTg4bC4yNjkgNDQuODI0IDE0Ljk5My0yLjY1LjA1Ny00Ny41M2MuMDk5LTQuNTc0LTEwLjAxOC0xNC4yMzMtMjYuMjgtMTQuMzAyLTcuNzI5LjAxMi0xMi4wMDkgMS43NjItMTQuMTg3IDMuMDUyLTMuNzI2IDIuODc5LTcuOTg1IDUuNjM3LTEyLjE3IDkuMTU3IDMuODY5LTQuOTcgNy4xMTctOC40MDcgMTAuMjktMTAuOTYxbC0uMDQtMjIuOTIxeiIgZmlsbD0iI2ZmZiIgZmlsbC1ydWxlPSJldmVub2RkIi8+PHBhdGggZD0iTTM2MC4xMzYgMTcuMjE4bDYuOTYyLTEuNzQyLjMzIDgyLjk1LTcuMDc0IDEuMjA0em0xOC45MjggMjQuNzU3bDYuMTAxLTIuNzE2LjA1MiA1OS40NzgtNS44OTIgMS4yMTd6bS0xLjQ1LTIxLjQ0OGw0LjkyLTQuMDE1IDQuMDg2IDQuNTQ3LTQuOTIxIDQuMTIxem0xOS4wMjQgMjAuMzY1bDYuOTYyLTEuNDIxLjAzMyAxMi40MzRjLjAwMS41MzQgMy44MjMtMTMuODkgMjIuMjU4LTEzLjU3IDE3LjkuMSAyMC44MjcgMTMuOTU3IDIwLjczIDE3LjA2NGwuMjIxIDQzLjcyNS02LjEwMiAxLjMyNC0uMDM1LTQzLjE4OWMuMDctMS4yNjEtMi43OS0xMS45MjctMTUuNDM5LTExLjk2Ni0xMi42NDYtLjAzNy0yMS40MDkgOS4xODYtMjEuMzkzIDE1LjA3OGwuMSAzOC4wNDctNy4wNyAxLjg0N3ptMTEwLjk1NCA1OC41NDZsLTYuOTYyIDEuNDItLjAzMy0xMi40MzNjLS4wMDEtLjUzNC0zLjgyNSAxMy44OS0yMi4yNTggMTMuNTctMTcuOS0uMS0yMC44MjctMTMuOTU3LTIwLjczLTE3LjA2NGwtLjIyMS00My43MjUgNy4zOTctMS40OTQuMTE0IDQzLjE5Yy4wMDMgMS4xOCAxLjQxNiAxMi4wOTYgMTQuMDY1IDEyLjEzNSAxMi42NDYuMDM3IDIxLjUwNi03LjYxNiAyMS41NjktMTkuMTM5bC0uMDktMzQuMDc2IDYuODg1LTEuNzU3em0xMy42NDUtNTkuMDM3bC00Ljg4MiAzLjgyIDE4LjcxNyAyNC40OTQtMTkuOTYzIDI4LjMgNS4xNzkgMy44NDMgMTguNzY2LTI2LjI4IDE5LjM2OCAyNi45MDIgNC43OTEtMy44Mi0yMC43NTctMjguNzY1IDE2LjU2LTIzLjI2Mi01LjA5Mi00LjMwNS0xNS4wODUgMjEuNTI1ek02MS44OCAxLjc3OGMtNS4zODUgMTMuMjAzLTguNjMzIDIxLjgzOS0xNC42MjkgMzQuNjQ5IDMuNjc2IDMuODk2IDguMTg4IDguNDM0IDE1LjUxNiAxMy41NTktNy44NzgtMy4yNDItMTMuMjUyLTYuNDk3LTE3LjI2Ny05Ljg3NC03LjY3MyAxNi4wMTEtMTkuNjk1IDM4LjgxOC00NC4wOSA4Mi42NSAxOS4xNzQtMTEuMDY4IDM0LjAzNy0xNy44OTMgNDcuODg5LTIwLjQ5N2EzNS4xMDMgMzUuMTAzIDAgMCAxLS45MS04LjIxM2wuMDIzLS42MTRjLjMwNC0xMi4yODQgNi42OTQtMjEuNzMgMTQuMjY0LTIxLjA5IDcuNTcuNjQyIDEzLjQ1NCAxMS4xMjYgMTMuMTUgMjMuNDEtLjA1OCAyLjMxMi0uMzE5IDQuNTM2LS43NzQgNi41OTggMTMuNzAxIDIuNjggMjguNDA1IDkuNDg3IDQ3LjMyIDIwLjQwNy0zLjczLTYuODY2LTcuMDU5LTEzLjA1Ni0xMC4yMzgtMTguOTUtNS4wMDctMy44ODItMTAuMjMtOC45MzMtMjAuODg0LTE0LjQwMiA3LjMyMyAxLjkwMyAxMi41NjYgNC4wOTkgMTYuNjUzIDYuNTUyQzc1LjU4IDM1Ljc4NiA3Mi45NjMgMjcuNzkgNjEuODggMS43Nzh6IiBmaWxsPSIjMTc5M2QxIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48cGF0aCBkPSJNNTc2Ljc3MSA5My4yNjVWODAuNjAzaC00Ljczdi0xLjY5NWgxMS4zOHYxLjY5NWgtNC43NXYxMi42NjJoLTEuOW04LjYyOSAwVjc4LjkwOGgyLjg1OWwzLjM5OCAxMC4xNjZjLjMxNC45NDcuNTQyIDEuNjU1LjY4NiAyLjEyNS4xNjMtLjUyMi40MTgtMS4yOS43NjQtMi4zMDFsMy40MzctOS45OWgyLjU1NnYxNC4zNTdoLTEuODMxVjgxLjI1bC00LjE3MiAxMi4wMTZoLTEuNzE0bC00LjE1Mi0xMi4yMjJ2MTIuMjIyaC0xLjgzMiIgZm9udC13ZWlnaHQ9IjQwMCIgZm9udC1zaXplPSI4LjQ0MSIgZm9udC1mYW1pbHk9IkRlamFWdSBTYW5zIE1vbm8iIGZpbGw9ImdyYXkiLz48L3N2Zz4=) no-repeat!important;background-size:190px 40px!important}#archnavbarlogo p{margin:0!important;padding:0!important;text-indent:-9999px!important}#archnavbarlogo a{display:block!important;height:40px!important;width:190px!important}#archnavbar ul{display:inline!important;float:right!important;list-style:none!important;margin:0!important;padding:0!important}#archnavbar ul li{float:left!important;font-size:14px!important;font-family:sans-serif!important;line-height:45px!important;padding-right:15px!important;padding-left:15px!important}#archnavbar ul#archnavbarlist li a{color:#999;font-weight:bold!important;text-decoration:none!important}#archnavbar ul li a:hover{color:white!important;text-decoration:underline!important}#archnavbar ul li.anb-selected a{color:white!important}@media (max-width:600px){#anb-wiki{display:none}}@media (max-width:680px){html>body #archnavbarlogo{width:40px!important;margin-right:5px!important;background:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjEyMDAiIHZlcnNpb249IjEiPjxwYXRoIGQ9Ik02MDAgMGMtNTMuNDE2IDEzMC45NjItODUuNjcxIDIxNi43NC0xNDUuMTQzIDM0My44MSAzNi40NjQgMzguNjUxIDgxLjIyIDgzLjQ0OSAxNTMuOTA1IDEzNC4yODUtNzguMTQ1LTMyLjE1Ni0xMzEuNDAzLTY0LjIxMy0xNzEuMjM4LTk3LjcxNEMzNjEuNDEgNTM5LjIgMjQxLjk4OSA3NjUuMTk0IDAgMTIwMGMxOTAuMTYxLTEwOS43ODQgMzM3LjY2NS0xNzcuMzk3IDQ3NS4wNDgtMjAzLjIzOC01Ljg5NS0yNS4zNjctOS4xOC01Mi44OTYtOC45NTMtODEuNTI0bC4xOS01LjkwNUM0NjkuMzA1IDc4Ny40OCA1MzIuNzIgNjkzLjYzOCA2MDcuODEgNzAwYzc1LjA4OSA2LjM2MiAxMzMuNDk0IDExMC41MjggMTMwLjQ3NiAyMzIuMzgxLS41NjggMjIuOTE2LTMuMTA1IDQ0Ljg4NS03LjYyIDY1LjMzM0M4NjYuNTI4IDEwMjQuMzI1IDEwMTIuNDYyIDEwOTEuNzMgMTIwMCAxMjAwYy0zNi45OTUtNjguMTExLTcwLjE4LTEyOS4zMzUtMTAxLjcxNC0xODcuODEtNDkuNjcyLTM4LjQ5OS0xMDEuMzY1LTg4LjYxMy0yMDcuMDQ4LTE0Mi44NTcgNzIuNjQgMTguODc1IDEyNC43OTMgNDAuNjEyIDE2NS4zMzMgNjQuOTUzQzczNS45NTIgMzM3LjM0OCA3MDkuOTQ4IDI1OC4wMTYgNjAwIDB6IiBmaWxsPSIjMTc5M2QxIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L3N2Zz4=) no-repeat!important;background-size:40px 40px!important}#archnavbar ul{display:flex!important;justify-content:space-between;flex-wrap:nowrap;overflow:hidden;float:none!important}#archnavbar ul li{padding:0!important;float:none!important}}@media (max-width:830px){#anb-home{display:none}html>body #archnavbarlogo{padding-right:15px!important}#archnavbar{padding-left:5px!important;padding-right:5px!important}#archnavbar ul li{padding-left:5px!important;padding-right:5px!important}}body{background:#f6f9fc}#content{background:#ffffff;border:1px solid #cccccc}#content h1,#content h2,#content h3,#content h4,#content pre,#content code{color:#222222}#content ul{list-style-image:none}#content pre{border:1px solid #bbccdd;overflow:auto;word-break:break-all;white-space:pre-wrap!important}#content pre,#content code{background-color:#ebf1f5;font-family:monospace}#content code{display:inline-block;padding:0 0.3em;border-width:0;border-radius:0}#footer{color:#333333}#toc{background-color:#f9faff;border:1px solid #d7dfe3}#bodyContent>div.mw-content-ltr a{font-weight:bold}#bodyContent #toc a{font-weight:normal}#content a:not(.new),#mw-navigation li:not(.new) a:not(.new),#mw-panel li:not(.new) a:not(.new),#column-one li:not(.new) a:not(.new),#footer a:not(.new){text-decoration:none;color:#0077bb!important}#content a:not(.new):hover,#mw-navigation li:not(.new) a:not(.new):hover,#mw-panel li:not(.new) a:not(.new):hover,#column-one li:not(.new) a:not(.new):hover,#footer a:not(.new):hover{text-decoration:underline;background-color:transparent;color:#999999!important}#content a:active,#mw-navigation li:not(.new) a:active,#mw-panel li:not(.new) a:active,#column-one li:not(.new) a:active,#footer a:active,#content a:focus,#mw-navigation li:not(.new) a:focus,#mw-panel li:not(.new) a:focus,#column-one li:not(.new) a:focus,#footer a:focus,#content a:active:hover,#mw-navigation li:not(.new) a:active:hover,#mw-panel li:not(.new) a:active:hover,#column-one li:not(.new) a:active:hover,#footer a:active:hover,#content a:focus:hover,#mw-navigation li:not(.new) a:focus:hover,#mw-panel li:not(.new) a:focus:hover,#column-one li:not(.new) a:focus:hover,#footer a:focus:hover{color:#ee9900!important}#content a:not(.new):visited,#mw-panel li:not(.new) a:not(.new):visited,#p-navigation li:not(.new) a:not(.new):visited,#p-tb li:not(.new) a:not(.new):visited{color:#666666!important}.mw-body-content a.external,.mw-body-content a.extiw{background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+R8AAAAs0lEQVR4AWP4//8/yRiroHH6njrjtN1/sGGYJpwajdJ2bXNI2M8BE8PQhMXUv0B8yThtMxeGJgyBmf9ZDRO3iRqn775rmL5NCyQG0giyEacm0WWvVstNvnNXt+hYNogP0giyEeRUnJpkVj3mBGqcC8SvNGrOVIJsBDkV5EecmmBYZOnrbqmZD1+CnAqTA2nEq4lh/38W0aWv9gGxF4YcpiYEFlz1jh+kGa8m3BhTE1GYYk0A08+9f1lXOBcAAAAASUVORK5CYII=) center right no-repeat;padding-right:13px}.mw-body h1,.mw-body-content h2{font-family:sans-serif}div#mw-head{top:65px}div#mw-panel{top:65px;margin-top:1em}#mw-page-base{background:none}nav.vector-menu-tabs,nav.vector-menu{margin-top:-2px}nav.vector-menu-tabs{padding-left:0}nav.vector-menu-tabs ul,nav.vector-menu-tabs ul li{background:none}nav.vector-menu-tabs ul li{border:1px}nav.vector-menu-tabs li.selected{border:1px solid #cccccc;border-bottom-color:#ffffff;background-color:#ffffff}nav.vector-menu-tabs li.selected a{background:none!important}nav.vector-menu-tabs li:not(:first-child).selected{margin-left:-2px}@media screen and (max-width:720px){div#mw-panel{padding-top:0}}</style>
+<meta name=ResourceLoaderDynamicStyles content>
+<style>#bodyContent a.external[href^="https://wiki.archlinux.org"]{background:none;padding-right:0}span.archwiki-template-pkg{font-family:monospace}div.archwiki-template-box{padding:5px;border:thin solid black;margin:0.5em 0;overflow:hidden}div.archwiki-template-box.archwiki-template-box-note{background-color:#ddf;border-color:#bbd}div.archwiki-template-message{position:relative;overflow:hidden;min-height:4.6em;margin-bottom:1em;background-color:#f9faff;border:1px solid #d7dfe3;padding:0 100px;text-align:center}div.archwiki-template-message>p>a{display:block;position:absolute;top:5px}div.archwiki-template-message>p>a:first-of-type{left:26px}div.archwiki-template-message>p>a:last-of-type{right:26px}div.archwiki-template-message>div{font-size:90%}div.archwiki-template-meta-related-articles-start{float:right;clear:right;width:25%;margin:0 0 0.5em 0.5em}div.archwiki-template-meta-related-articles-start>p{background:#333;color:white;padding:0.2em;border-bottom:5px #08c solid;margin:0;text-align:center;font-weight:bold}div.archwiki-template-meta-related-articles-start>ul{list-style-type:none;margin:0;padding:0.3em}div.archwiki-template-meta-related-articles-start>ul>li{padding:0.4em 0;line-height:1}</style>
+<meta name=generator content="MediaWiki 1.35.0">
+<meta name=referrer content=no-referrer-when-downgrade>
+<meta name=viewport content="width=device-width, initial-scale=1">
+<link rel=search type=application/opensearchdescription+xml href=https://wiki.archlinux.org/opensearch_desc.php title="ArchWiki (en)">
+<link rel=EditURI type=application/rsd+xml href="https://wiki.archlinux.org/api.php?action=rsd">
+<link rel=license href=http://www.gnu.org/copyleft/fdl.html>
+<link rel=alternate type=application/atom+xml title="ArchWiki Atom feed" href="https://wiki.archlinux.org/index.php?title=Special:RecentChanges&amp;feed=atom">
+<link rel=canonical href=https://wiki.archlinux.org/index.php/Bluetooth_headset>
+<!--[if lt IE 9]><script src="/resources/lib/html5shiv/html5shiv.js"></script><![endif]-->
+<link rel="shortcut icon" href=data:image/vnd.microsoft.icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABvElEQVQ4jY2TP4gTQRTGfzM7ybp35mBX8LY4GxM5OI4UiqDWtoKIjWhl4QmmEQwIhzZaa3GLlYWgjViI+AcUrrASUYTbQ0UxepwpFj1EDCSXuLNj4QYSLxP8mnm8972P3wyMMMZgUxjF+ycLUjUW5l/YPMq6/VfnHCEmAGuAsBHsurG6QwiaRUeq2cCdfXy88nmUT9qSJ4tywVNyGxjVSbPzNp81wFNyt6cknpJ00uzk2Wfr/n8HHLrz4ajriFeuEsuekvS08Zu/eoujvFveYN+t98XAUw1jmEmN+ZEZfG2M8BzZKhVl+f6x8vexBIGn6hMFOeMqgTEEXZ2J39qwqbNSR5tLYwnmbr6b2hO4axvt1P/a6tHTw3SuI1pTrlNZPT33bSTBps7qb5K23/jZ7S8/AO72511tShud9MJIgjCKdwINYHs+e5TUqkfy2W3gVN5vA+WkVk3+Jbg8sAzwcKB+mp8G+ALUh64QRnEZOMOwPg3Ub/vEgAvcGwoArgKFvF4DrgEfBwKawHVgHagAy2EUnwAQ00sre4HXwBPgSlKrvmSMwig+CCwCh4F5Mb20chF4ntSq1h83JujAH3Eom+H9uAq8AAAAAElFTkSuQmCC><style>.sf-hidden{display:none!important}</style></head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Bluetooth_headset rootpage-Bluetooth_headset skin-vector action-view skin-vector-legacy"><div id=archnavbar class=noprint>
+ <div id=archnavbarlogo>
+ <p><a id=logo href=https://www.archlinux.org/></a></p>
+ </div>
+ <div id=archnavbarmenu>
+ <ul id=archnavbarlist>
+ <li id=anb-home><a href=https://www.archlinux.org/>Home</a></li> <li id=anb-packages><a href=https://www.archlinux.org/packages/>Packages</a></li> <li id=anb-forums><a href=https://bbs.archlinux.org/>Forums</a></li> <li id=anb-wiki class=anb-selected><a href=https://wiki.archlinux.org/>Wiki</a></li> <li id=anb-bugs><a href=https://bugs.archlinux.org/>Bugs</a></li> <li id=anb-security><a href=https://security.archlinux.org/>Security</a></li> <li id=anb-aur><a href=https://aur.archlinux.org/>AUR</a></li> <li id=anb-download><a href=https://www.archlinux.org/download/>Download</a></li> </ul>
+ </div>
+</div>
+<div id=mw-page-base class=noprint></div>
+<div id=mw-head-base class=noprint></div>
+<div id=content class=mw-body role=main>
+ <a id=top></a>
+ <div id=siteNotice class=mw-body-content></div>
+ <div class="mw-indicators mw-body-content">
+ </div>
+ <h1 id=firstHeading class=firstHeading lang=en>Bluetooth headset</h1>
+ <div id=bodyContent class=mw-body-content>
+ <div id=siteSub class="noprint sf-hidden">From ArchWiki</div>
+ <div id=contentSub><span class=mw-redirectedfrom>(Redirected from <a href="https://wiki.archlinux.org/index.php?title=Bluetooth_Headset&amp;redirect=no" class=mw-redirect title="Bluetooth Headset">Bluetooth Headset</a>)</span></div>
+ <div id=contentSub2></div>
+ 
+ <div id=jump-to-nav></div>
+ <a class=mw-jump-link href=#mw-head>Jump to navigation</a>
+ <a class=mw-jump-link href=#searchInput>Jump to search</a>
+ <div id=mw-content-text dir=ltr class=mw-content-ltr lang=en><div class=mw-parser-output><div class=archwiki-template-meta-related-articles-start><p>Related articles<ul>
+<li><a href=https://wiki.archlinux.org/index.php/Bluetooth title=Bluetooth>Bluetooth</a></li>
+</ul></div>
+<p>Currently, Arch Linux supports the A2DP profile (Audio Sink) for remote audio playback with the default installation.
+</p>
+<div id=toc class=toc role=navigation aria-labelledby=mw-toc-heading><input type=checkbox role=button id=toctogglecheckbox class=toctogglecheckbox style=display:none><div class=toctitle dir=ltr lang=en><h2 id=mw-toc-heading>Contents</h2><span class=toctogglespan><label class=toctogglelabel for=toctogglecheckbox></label></span></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href=#Headset_via_Pipewire><span class=tocnumber>1</span> <span class=toctext>Headset via Pipewire</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href=#Headset_via_Bluez5/PulseAudio><span class=tocnumber>2</span> <span class=toctext>Headset via Bluez5/PulseAudio</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href=#Configuration_via_CLI><span class=tocnumber>2.1</span> <span class=toctext>Configuration via CLI</span></a>
+<ul>
+<li class="toclevel-3 tocsection-4"><a href=#Setting_up_auto_connection><span class=tocnumber>2.1.1</span> <span class=toctext>Setting up auto connection</span></a></li>
+<li class="toclevel-3 tocsection-5"><a href=#Media_controls><span class=tocnumber>2.1.2</span> <span class=toctext>Media controls</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-6"><a href=#Configuration_via_GNOME_Bluetooth><span class=tocnumber>2.2</span> <span class=toctext>Configuration via GNOME Bluetooth</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href=#LDAC/aptX><span class=tocnumber>2.3</span> <span class=toctext>LDAC/aptX</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href=#Troubleshooting><span class=tocnumber>2.4</span> <span class=toctext>Troubleshooting</span></a>
+<ul>
+<li class="toclevel-3 tocsection-9"><a href=#Bad_sound_/_Static_noise_/_%22Muddy%22_sound><span class=tocnumber>2.4.1</span> <span class=toctext>Bad sound / Static noise / "Muddy" sound</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href=#Selected_audio_profile,_but_headset_inactive_and_audio_cannot_be_redirected><span class=tocnumber>2.4.2</span> <span class=toctext>Selected audio profile, but headset inactive and audio cannot be redirected</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href=#Pairing_fails_with_AuthenticationFailed><span class=tocnumber>2.4.3</span> <span class=toctext>Pairing fails with AuthenticationFailed</span></a></li>
+<li class="toclevel-3 tocsection-12"><a href=#Pairing_works,_but_connecting_does_not><span class=tocnumber>2.4.4</span> <span class=toctext>Pairing works, but connecting does not</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href=#Connecting_works,_but_there_are_sound_glitches_all_the_time><span class=tocnumber>2.4.5</span> <span class=toctext>Connecting works, but there are sound glitches all the time</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href=#Connecting_works,_but_I_cannot_play_sound><span class=tocnumber>2.4.6</span> <span class=toctext>Connecting works, but I cannot play sound</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href=#Connecting_works,_sound_plays_fine_until_headphones_become_idle,_then_stutters><span class=tocnumber>2.4.7</span> <span class=toctext>Connecting works, sound plays fine until headphones become idle, then stutters</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href=#UUIDs_has_unsupported_type><span class=tocnumber>2.4.8</span> <span class=toctext>UUIDs has unsupported type</span></a></li>
+<li class="toclevel-3 tocsection-17"><a href=#PC_shows_device_as_paired,_but_is_not_recognized_by_device><span class=tocnumber>2.4.9</span> <span class=toctext>PC shows device as paired, but is not recognized by device</span></a></li>
+<li class="toclevel-3 tocsection-18"><a href=#Device_connects,_then_disconnects_after_a_few_moments><span class=tocnumber>2.4.10</span> <span class=toctext>Device connects, then disconnects after a few moments</span></a></li>
+<li class="toclevel-3 tocsection-19"><a href=#Apple_AirPods_have_low_volume><span class=tocnumber>2.4.11</span> <span class=toctext>Apple AirPods have low volume</span></a></li>
+<li class="toclevel-3 tocsection-20"><a href=#HSP_problem:_the_bluetooth_sink_and_source_are_created,_but_no_audio_is_being_transmitted><span class=tocnumber>2.4.12</span> <span class=toctext>HSP problem: the bluetooth sink and source are created, but no audio is being transmitted</span></a></li>
+<li class="toclevel-3 tocsection-21"><a href=#Error:_Failed_to_start_discovery_org.bluez.Error.InProgress><span class=tocnumber>2.4.13</span> <span class=toctext>Error: Failed to start discovery org.bluez.Error.InProgress</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-22"><a href=#Switch_between_HSP/HFP_and_A2DP_setting><span class=tocnumber>3</span> <span class=toctext>Switch between HSP/HFP and A2DP setting</span></a>
+<ul>
+<li class="toclevel-2 tocsection-23"><a href=#A2DP_not_working_with_PulseAudio><span class=tocnumber>3.1</span> <span class=toctext>A2DP not working with PulseAudio</span></a>
+<ul>
+<li class="toclevel-3 tocsection-24"><a href=#Socket_interface_problem><span class=tocnumber>3.1.1</span> <span class=toctext>Socket interface problem</span></a></li>
+<li class="toclevel-3 tocsection-25"><a href=#A2DP_sink_profile_is_unavailable><span class=tocnumber>3.1.2</span> <span class=toctext>A2DP sink profile is unavailable</span></a></li>
+<li class="toclevel-3 tocsection-26"><a href=#Gnome_with_GDM><span class=tocnumber>3.1.3</span> <span class=toctext>Gnome with GDM</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-27"><a href=#HFP_not_working_with_PulseAudio><span class=tocnumber>3.2</span> <span class=toctext>HFP not working with PulseAudio</span></a></li>
+<li class="toclevel-2 tocsection-28"><a href=#Disable_auto_switching_headset_to_HSP/HFP><span class=tocnumber>3.3</span> <span class=toctext>Disable auto switching headset to HSP/HFP</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2><span class=mw-headline id=Headset_via_Pipewire>Headset via Pipewire</span></h2>
+<p><a href=https://wiki.archlinux.org/index.php/PipeWire title=PipeWire>PipeWire</a> acts as a drop-in replacement for <a href=https://wiki.archlinux.org/index.php/PulseAudio title=PulseAudio>PulseAudio</a> and offers an easy way to set up Bluetooth headsets. It includes out-of-the-box support for A2DP sink profiles using SBC/SBC-XQ, AptX, LDAC or AAC codecs, and HFP/HSP.
+<p>Install <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=pipewire-pulse">pipewire-pulse</a></span> (which replaces <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=pulseaudio">pulseaudio</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=pulseaudio-bluetooth">pulseaudio-bluetooth</a></span>).
+<p>The daemon will be started automatically as a <a href=https://wiki.archlinux.org/index.php/Systemd/User title=Systemd/User>systemd/User</a> service. Use <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=pavucontrol">pavucontrol</a></span> or your desktop environment's settings for configuration. For more information, see <a href=https://wiki.archlinux.org/index.php/PipeWire#Bluetooth_devices title=PipeWire>PipeWire#Bluetooth devices</a>.
+</p>
+<h2><span id=Headset_via_Bluez5.2FPulseAudio></span><span class=mw-headline id=Headset_via_Bluez5/PulseAudio>Headset via Bluez5/PulseAudio</span></h2>
+<div class="noprint archwiki-template-message">
+<p><a href=https://wiki.archlinux.org/index.php/File:Merge-arrows-2.png class=image><img alt=Merge-arrows-2.png src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect fill-opacity="0"/></svg>' decoding=async style="background-blend-mode:normal!important;background-clip:content-box!important;background-position:50% 50%!important;background-color:rgba(0,0,0,0)!important;background-image:var(--sf-img-8)!important;background-size:100% 100%!important;background-origin:content-box!important;background-repeat:no-repeat!important" width=48 height=48></a><b>This article or section is a candidate for merging with <a href=https://wiki.archlinux.org/index.php/Bluetooth title=Bluetooth>Bluetooth</a>.</b><a href=https://wiki.archlinux.org/index.php/File:Merge-arrows-2.png class=image><img alt=Merge-arrows-2.png src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect fill-opacity="0"/></svg>' decoding=async style="background-blend-mode:normal!important;background-clip:content-box!important;background-position:50% 50%!important;background-color:rgba(0,0,0,0)!important;background-image:var(--sf-img-8)!important;background-size:100% 100%!important;background-origin:content-box!important;background-repeat:no-repeat!important" width=48 height=48></a></p>
+<div><b>Notes:</b> Significant redundancy with general setup on Bluetooth page. Should be merged there. Headset-specific info would stay on this page. (Discuss in <a rel=nofollow class="external text" href=https://wiki.archlinux.org/index.php/Talk:Bluetooth#Merging_general_setup_from_Keyboard,_Mouse,_Headset_pages>Talk:Bluetooth#Merging general setup from Keyboard, Mouse, Headset pages</a>)</div>
+</div>
+<p><a href=https://wiki.archlinux.org/index.php/Install class=mw-redirect title=Install>Install</a> <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=pulseaudio-alsa">pulseaudio-alsa</a></span>, <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=pulseaudio-bluetooth">pulseaudio-bluetooth</a></span> and <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=bluez-utils">bluez-utils</a></span> providing the <code>bluetoothctl</code> utility.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note"><strong>Note:</strong> Before continuing, ensure that the bluetooth device is not blocked by <a href=https://wiki.archlinux.org/index.php/Rfkill class=mw-redirect title=Rfkill>rfkill</a>.</div>
+<h3><span class=mw-headline id=Configuration_via_CLI>Configuration via CLI</span></h3>
+<p><a href=https://wiki.archlinux.org/index.php/Start class=mw-redirect title=Start>Start</a> the <code>bluetooth.service</code> systemd unit.
+<p>Now we can use the <i>bluetoothctl</i> command line utility to pair and connect. For troubleshooting and more detailed explanations of <i>bluetoothctl</i> see the <a href=https://wiki.archlinux.org/index.php/Bluetooth title=Bluetooth>Bluetooth</a> article. Run
+</p>
+<pre>$ bluetoothctl
+</pre>
+<p>to be greeted by its internal command prompt. Then enter:
+</p>
+<pre>[bluetooth]# power on
+[bluetooth]# agent on
+[bluetooth]# default-agent
+[bluetooth]# scan on
+</pre>
+<p>Now make sure that your headset is in pairing mode. It should be discovered shortly. For example,
+</p>
+<pre>[NEW] Device 00:1D:43:6D:03:26 Lasmex LBT10
+</pre>
+<p>shows a device that calls itself <i>"Lasmex LBT10"</i> and has MAC address <i>"00:1D:43:6D:03:26"</i>. We will now use that MAC address to initiate the pairing:
+</p>
+<pre>[bluetooth]# pair 00:1D:43:6D:03:26
+</pre>
+<p>After pairing, you also need to explicitly connect the device (if this does not work, try the <code>trust</code> command below <i>before</i> attempting to connect):
+</p>
+<pre>[bluetooth]# connect 00:1D:43:6D:03:26
+</pre>
+<p>If you are getting a connection error <code>org.bluez.Error.Failed</code> retry by killing existing PulseAudio daemon first:
+</p>
+<pre>$ pulseaudio -k
+[bluetooth]# connect 00:1D:43:6D:03:26
+</pre>
+<p>Finally, if you want to automatically connect to this device in the future:
+</p>
+<pre>[bluetooth]# trust 00:1D:43:6D:03:26
+</pre>
+<p>If everything works correctly, you now have a separate output device in <a href=https://wiki.archlinux.org/index.php/PulseAudio title=PulseAudio>PulseAudio</a>.
+</p>
+<div class="archwiki-template-box archwiki-template-box-note"><strong>Note:</strong> The device may be off by default. Select its audio profile (<code>OFF</code>, <code>A2DP</code>, <code>HFP</code>) in the "Configuration" tab of <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=pavucontrol">pavucontrol</a></span>.</div>
+<p>You can now redirect any audio through that device using the "Playback" and "Recording" tabs of <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=pavucontrol">pavucontrol</a></span>.
+<p>You can now disable scanning again and exit the program:
+</p>
+<pre>[bluetooth]# scan off
+[bluetooth]# exit
+</pre>
+<h4><span class=mw-headline id=Setting_up_auto_connection>Setting up auto connection</span></h4>
+<p>To make your headset auto connect you need to enable PulseAudio's switch-on-connect module. Do this by adding the following lines to <code>/etc/pulse/default.pa</code>:
+</p>
+<pre style=margin-bottom:0;border-bottom:none;padding-bottom:0.8em>/etc/pulse/default.pa</pre>
+<pre style=margin-top:0;border-top-style:dashed;padding-top:0.8em>### Automatically switch to newly-connected devices
+load-module module-switch-on-connect
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note"><strong>Note:</strong> 
+<ul><li>Make sure that your bluetooth audio device is <i>trusted</i>, otherwise repeated pairing will fail. See <a href=https://wiki.archlinux.org/index.php/Bluetooth#Pairing title=Bluetooth>Bluetooth#Pairing</a> for details.</li>
+<li>By default, your Bluetooth adapter will not power on after boot. See <a href=https://wiki.archlinux.org/index.php/Bluetooth#Auto_power-on_after_boot title=Bluetooth>Bluetooth#Auto power-on after boot</a> for details.</ul>
+</div>
+<h4><span class=mw-headline id=Media_controls>Media controls</span></h4>
+<p>To use the media controls they may be forwarded to MPRIS, where they can be picked up by media players that support MPRIS for external control. See <a href=https://wiki.archlinux.org/index.php/MPRIS#Bluetooth title=MPRIS>MPRIS#Bluetooth</a> for details.
+</p>
+<h3><span class=mw-headline id=Configuration_via_GNOME_Bluetooth>Configuration via GNOME Bluetooth</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note"><strong>Note:</strong> The A2DP profile will not activate using this method with pulseaudio 9/10 due to an ongoing bug, leading to possible low quality mono sound. See <a href=#A2DP_not_working_with_PulseAudio>#A2DP not working with PulseAudio</a> for a possible solution.</div>
+<p>You can use <a href=https://wiki.archlinux.org/index.php/Bluetooth#Graphical title=Bluetooth>GNOME Bluetooth</a> graphical front-end to easily configure your bluetooth headset. 
+<p>First, you need to be sure that <code>bluetooth.service</code> systemd unit is running. 
+<p>Open GNOME Bluetooth and activate the bluetooth. After scanning for devices, you can connect to your headset selecting it on the device list. You can directly access to sound configuration panel from the device menu. On the sound panel, a new sink should appear when your device is connected.
+</p>
+<h3><span id=LDAC.2FaptX></span><span class=mw-headline id=LDAC/aptX>LDAC/aptX</span></h3>
+<p><a href=https://en.wikipedia.org/wiki/LDAC_(codec) class=extiw title="wikipedia:LDAC (codec)">LDAC</a>/<a href=https://en.wikipedia.org/wiki/aptX class=extiw title=wikipedia:aptX>aptX</a> codec support can be enabled by installing <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/pulseaudio-modules-bt/>pulseaudio-modules-bt</a></span><sup><small>AUR</small></sup> and <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=libldac">libldac</a></span>, and restarting PulseAudio. See its <a rel=nofollow class="external text" href=https://github.com/EHfive/pulseaudio-modules-bt>project page</a> for configuration tips.
+You can verify the codec you are using for connection by executing: 
+</p>
+<pre>pactl list | grep a2dp_codec
+</pre>
+<h3><span class=mw-headline id=Troubleshooting>Troubleshooting</span></h3>
+<div class="archwiki-template-box archwiki-template-box-note"><strong>Note:</strong> Many users report frustration with getting A2DP/Bluetooth Headsets to work. see <a href=#Switch_between_HSP/HFP_and_A2DP_setting>#Switch between HSP/HFP and A2DP setting</a> for additional information.</div>
+<h4><span id=Bad_sound_.2F_Static_noise_.2F_.22Muddy.22_sound></span><span class=mw-headline id='Bad_sound_/_Static_noise_/_"Muddy"_sound'>Bad sound / Static noise / "Muddy" sound</span></h4>
+<p>If you experience bad sound quality with your headset, it could in all likelihood be because your headset is not set to the correct profile.
+See <a href=#Switch_between_HSP/HFP_and_A2DP_setting>#Switch between HSP/HFP and A2DP setting</a> to solve the problem.
+</p>
+<h4><span id=Selected_audio_profile.2C_but_headset_inactive_and_audio_cannot_be_redirected></span><span class=mw-headline id=Selected_audio_profile,_but_headset_inactive_and_audio_cannot_be_redirected>Selected audio profile, but headset inactive and audio cannot be redirected</span></h4>
+<p>Deceptively, this menu is available before the device has been connected; annoyingly it will have no effect. The menu seems to be created as soon as the receiver recognizes the device.
+<p>Make sure to run bluetoothctl (with sudo/as root) and connect the device manually. There may be configuration options to remove the need to do this each time, but neither pairing nor trusting induce automatic connecting for me.
+</p>
+<h4><span class=mw-headline id=Pairing_fails_with_AuthenticationFailed>Pairing fails with AuthenticationFailed</span></h4>
+<p>If pairing fails, you can try enabling or <a rel=nofollow class="external text" href=https://stackoverflow.com/questions/12888589/linux-command-line-howto-accept-pairing-for-bluetooth-device-without-pin>disabling SSPMode</a> with:
+</p>
+<pre># btmgmt ssp off
+</pre>
+<p>or
+</p>
+<pre># btmgmt ssp on
+</pre>
+<p>You may need to turn off BlueTooth while you run this command.
+</p>
+<h4><span id=Pairing_works.2C_but_connecting_does_not></span><span class=mw-headline id=Pairing_works,_but_connecting_does_not>Pairing works, but connecting does not</span></h4>
+<p>You might see the following error in <i>bluetoothctl</i>:
+</p>
+<pre>[bluetooth]# connect 00:1D:43:6D:03:26
+Attempting to connect to 00:1D:43:6D:03:26
+Failed to connect: org.bluez.Error.Failed
+</pre>
+<p>To further investigate, have a look at the log via one of the following commands:
+</p>
+<pre># systemctl status bluetooth
+# journalctl -n 20
+</pre>
+<p>You might see a message like this:
+</p>
+<pre>bluetoothd[5556]: a2dp-sink profile connect failed for 00:1D:43:6D:03:26: Protocol not available
+</pre>
+<p>This may be due to the <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=pulseaudio-bluetooth">pulseaudio-bluetooth</a></span> package not being installed (or <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/pulseaudio-modules-bt-git/>pulseaudio-modules-bt-git</a></span><sup><small>AUR</small></sup> <a rel=nofollow class="external text" href=https://github.com/EHfive/pulseaudio-modules-bt/issues/140>needing a clean reinstall</a>). Install it if it missing, then restart pulseaudio.
+<p>It can also be due to permission, especially if starting pulseaudio as root allows you to connect. Add your user to the <i>lp</i> group, then restart pulseaudio.
+See <code>/etc/dbus-1/system.d/bluetooth.conf</code> for reference.
+<p>If the issue is not due to the missing package, the problem in this case is that PulseAudio is not catching up. A common solution to this problem is to restart PulseAudio. Note that it is perfectly fine to run <i>bluetoothctl</i> as root while PulseAudio runs as user. After restarting PulseAudio, retry to connect. It is not necessary to repeat the pairing.
+<p>If restarting PulseAudio does not work, you need to load module-bluetooth-discover.
+</p>
+<pre># pactl load-module module-bluetooth-discover
+</pre>
+<p>The same load-module command can be added to <code>/etc/pulse/default.pa</code>.
+<p>If that still does not work, or you are using PulseAudio's system-wide mode, also load the following PulseAudio modules (again these can be loaded via your <code>default.pa</code> or <code>system.pa</code>):
+</p>
+<pre>module-bluetooth-policy
+module-bluez5-device
+module-bluez5-discover
+</pre>
+<p>It's also possible there are no write permissions for the owner of /var/lib/bluetooth. If this is the case, you may get the device to work by removing and re-pairing it, but the issue will return after rebooting. Restoring write permissions fixes this issue:
+</p>
+<pre>chmod -R u+w /var/lib/bluetooth
+</pre>
+<h4><span id=Connecting_works.2C_but_there_are_sound_glitches_all_the_time></span><span class=mw-headline id=Connecting_works,_but_there_are_sound_glitches_all_the_time>Connecting works, but there are sound glitches all the time</span></h4>
+<p>This is very likely to occur when the Bluetooth and the WiFi share the same chip as they share the same physical antenna and possibly band range (2.4GHz). Although this works seamlessly on Windows, this is not the case on Linux.
+<p>A possible solution is to move your WiFi network to 5GHz so that there will be no interference. If your card/router does not support this, you can upgrade your WiFi drivers/firmware. This approach works on Realtek 8723BE and latest rtl drivers for this chip from AUR.
+<p>If nothing of the previous is possible, a less effective mitigation is to tweak the fragment size and the latency on PulseAudio output port, trying to compensate interference. Reasonable values must be chosen, because these settings can make the audio out of sync (e.g. when playing videos). To change the latency of the bluetooth headset's port (e.g. to 125000 microseconds in the following example):
+</p>
+<pre>$ pactl set-port-latency-offset &lt;bluez_card&gt; headset-output <b>125000</b>
+</pre>
+<p>where the identifier of the card can be found with
+</p>
+<pre>$ pacmd list-sinks | egrep -o 'bluez_card[^&gt;]*'
+</pre>
+<p>The fragment size can be set in the config file <code>/etc/pulse/daemon.conf</code> and takes effect after a restart of PulseAudio (for more details please see <a href=https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting#Setting_the_default_fragment_number_and_buffer_size_in_PulseAudio title=PulseAudio/Troubleshooting>PulseAudio/Troubleshooting#Setting the default fragment number and buffer size in PulseAudio</a>).
+<p>Perhaps it will help to add "options ath9k btcoex_enable = 1" to the <code>/etc/modprobe.d/ath9k.conf</code> (with the appropriate bluetooth adapter):
+</p>
+<pre style=margin-bottom:0;border-bottom:none;padding-bottom:0.8em>/etc/modprobe.d/ath9k.conf</pre>
+<pre style=margin-top:0;border-top-style:dashed;padding-top:0.8em># possibly fix for sound glitches
+options ath9k btcoex_enable = 1</pre>
+<p>Then restart.
+</p>
+<h4><span id=Connecting_works.2C_but_I_cannot_play_sound></span><span class=mw-headline id=Connecting_works,_but_I_cannot_play_sound>Connecting works, but I cannot play sound</span></h4>
+<p>Make sure that you see the following messages in your system log:
+</p>
+<pre>bluetoothd[5556]: Endpoint registered: sender=:1.83 path=/MediaEndpoint/A2DPSource
+bluetoothd[5556]: Endpoint registered: sender=:1.83 path=/MediaEndpoint/A2DPSink
+</pre>
+<p>If you see a message similar to this, you can go on and investigate your PulseAudio configuration. Otherwise, go back and ensure the connection is successful.
+</p>
+<div class="noprint archwiki-template-message">
+<p><a href=https://wiki.archlinux.org/index.php/File:Tango-go-next.png class=image><img alt=Tango-go-next.png src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect fill-opacity="0"/></svg>' decoding=async style="background-blend-mode:normal!important;background-clip:content-box!important;background-position:50% 50%!important;background-color:rgba(0,0,0,0)!important;background-image:var(--sf-img-9)!important;background-size:100% 100%!important;background-origin:content-box!important;background-repeat:no-repeat!important" width=48 height=48></a><b>This article or section is a candidate for moving to <a href=https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting title=PulseAudio/Troubleshooting>PulseAudio/Troubleshooting</a>.</b><a href=https://wiki.archlinux.org/index.php/File:Tango-go-next.png class=image><img alt=Tango-go-next.png src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect fill-opacity="0"/></svg>' decoding=async style="background-blend-mode:normal!important;background-clip:content-box!important;background-position:50% 50%!important;background-color:rgba(0,0,0,0)!important;background-image:var(--sf-img-9)!important;background-size:100% 100%!important;background-origin:content-box!important;background-repeat:no-repeat!important" width=48 height=48></a></p>
+<div><b>Notes:</b> The following seems to be general issue: <a rel=nofollow class="external autonumber" href="https://wiki.archlinux.org/index.php?title=PulseAudio/Troubleshooting&amp;diff=next&amp;oldid=421986">[1]</a> (Discuss in <a rel=nofollow class="external text" href=https://wiki.archlinux.org/index.php/Talk:Bluetooth_headset>Talk:Bluetooth headset#</a>)</div>
+</div>
+<p>When using <a href=https://wiki.archlinux.org/index.php/GDM title=GDM>GDM</a>, another instance of PulseAudio is started, which "captures" your bluetooth device connection. This can be prevented by <a href=https://wiki.archlinux.org/index.php/Mask class=mw-redirect title=Mask>masking</a> the pulseaudio socket for the GDM user by doing the following:
+</p>
+<pre># mkdir -p  /var/lib/gdm/.config/systemd/user
+# ln -s /dev/null  /var/lib/gdm/.config/systemd/user/pulseaudio.socket
+</pre>
+<p>On next reboot the second instance of PulseAudio will not be started.
+<p>It may happen that bluez wrongly considers an headset as not a2dp capable. In this case, search the index of the bluetooth device with
+</p>
+<pre>$ pacmd ls
+</pre>
+<p>Among the output there should be a section related to the bluetooth headset, containing something similar to
+</p>
+<pre style=margin-bottom:0;border-bottom:none;padding-bottom:0.8em>pacmd ls</pre>
+<pre style=margin-top:0;border-top-style:dashed;padding-top:0.8em>index: 2
+        name: &lt;bluez_card.XX_XX_XX_XX_XX_XX&gt;
+        driver: &lt;module-bluez5-device.c&gt;
+        owner module: 27
+        properties:
+                device.description = "SONY MDR-100ABN"
+                device.string = "XX:XX:XX:XX:XX:XX"
+                device.api = "bluez"
+                device.class = "sound"
+                ...</pre>
+<p>To manually set the profile, run
+</p>
+<pre>$ pacmd set-card-profile 2 a2dp_sink
+</pre>
+<p>where 2 is the index of the device retrieved through <code>pacmd ls</code>.
+</p>
+<h4><span id=Connecting_works.2C_sound_plays_fine_until_headphones_become_idle.2C_then_stutters></span><span class=mw-headline id=Connecting_works,_sound_plays_fine_until_headphones_become_idle,_then_stutters>Connecting works, sound plays fine until headphones become idle, then stutters</span></h4>
+<p>If the headphones play sound correctly until they become idle and then stutter on resume (e.g. because the sound is paused, or because no sound is played for a while), try disabling PulseAudio's automatic sink/source suspension on idle.
+<p>Some user <a rel=nofollow class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=117420">reports</a> huge delays or even no sound when the Bluetooth connection does not send any data. This is due to the <code>module-suspend-on-idle</code> module, which automatically suspends sinks/sources on idle. As this can cause problems with headset, the responsible module can be deactivated.
+<p>To disable loading of the <code>module-suspend-on-idle</code> module, comment out the following line in the configuration file in use (<code>~/.config/pulse/default.pa</code> or <code>/etc/pulse/default.pa</code>):
+</p>
+<pre style=margin-bottom:0;border-bottom:none;padding-bottom:0.8em>~/.config/pulse/default.pa</pre>
+<pre style=margin-top:0;border-top-style:dashed;padding-top:0.8em>### Automatically suspend sinks/sources that become idle for too long
+#load-module module-suspend-on-idle
+</pre>
+<p>Finally restart PulseAudio to apply the changes.
+</p>
+<h4><span class=mw-headline id=UUIDs_has_unsupported_type>UUIDs has unsupported type</span></h4>
+<p>During pairing you might see this output in <i>bluetoothctl</i>:
+</p>
+<pre>[CHG] Device 00:1D:43:6D:03:26 UUIDs has unsupported type
+</pre>
+<p>This message is a very common one and can be ignored.
+</p>
+<h4><span id=PC_shows_device_as_paired.2C_but_is_not_recognized_by_device></span><span class=mw-headline id=PC_shows_device_as_paired,_but_is_not_recognized_by_device>PC shows device as paired, but is not recognized by device</span></h4>
+<p>This might be due to the device not supporting bluetooth LE for pairing. 
+<p>Try setting <code>ControllerMode = bredr</code> in <code>/etc/bluetooth/main.conf</code>. See <a rel=nofollow class="external autonumber" href=https://unix.stackexchange.com/questions/292189/pairing-bose-qc-35-over-bluetooth-on-fedora>[2]</a>.
+</p>
+<h4><span id=Device_connects.2C_then_disconnects_after_a_few_moments></span><span class=mw-headline id=Device_connects,_then_disconnects_after_a_few_moments>Device connects, then disconnects after a few moments</span></h4>
+<p>If you see messages like the following in <code>journalctl</code> output, and your device fails to connect or disconnects shortly after connecting:
+</p>
+<pre>bluetoothd: Unable to get connect data for Headset Voice gateway: getpeername: Transport endpoint is not connected (107)
+bluetoothd: connect error: Connection refused (111)
+</pre>
+<p>This may be because you have already paired the device with another operating system using the same bluetooth adapter (e.g., dual-booting). Some devices cannot handle multiple pairings associated with the same MAC address (i.e., bluetooth adapter). You can fix this by re-pairing the device. Start by removing the device:
+</p>
+<pre>$ bluetoothctl
+[bluetooth]# devices
+Device XX:XX:XX:XX:XX:XX My Device
+[bluetooth]# remove XX:XX:XX:XX:XX:XX
+</pre>
+<p>Then <a href=https://wiki.archlinux.org/index.php/Restart class=mw-redirect title=Restart>restart</a> <code>bluetooth.service</code>, turn on your bluetooth adapter, make your device discoverable, re-scan for devices, and re-pair your device. Depending on your bluetooth manager, you may need to perform a full reboot in order to re-discover the device.
+</p>
+<h4><span class=mw-headline id=Apple_AirPods_have_low_volume>Apple AirPods have low volume</span></h4>
+<p>Edit <code>bluetooth.service</code> by running <code>systemctl edit --full bluetooth.service</code> and change the line:
+</p>
+<pre>ExecStart=/usr/lib/bluetooth/bluetoothd
+</pre>
+<p>to:
+</p>
+<pre>ExecStart=/usr/lib/bluetooth/bluetoothd --noplugin=avrcp
+</pre>
+<p>Finally <a href=https://wiki.archlinux.org/index.php/Restart class=mw-redirect title=Restart>restart</a> <code>bluetooth.service</code>, <a href=https://wiki.archlinux.org/index.php/Reload class=mw-redirect title=Reload>reload</a> systemd manager configuration
+<p>Reconnect your headset.
+</p>
+<h4><span id=HSP_problem:_the_bluetooth_sink_and_source_are_created.2C_but_no_audio_is_being_transmitted></span><span class=mw-headline id=HSP_problem:_the_bluetooth_sink_and_source_are_created,_but_no_audio_is_being_transmitted>HSP problem: the bluetooth sink and source are created, but no audio is being transmitted</span></h4>
+<p>You may be missing firmware or the SCO (audio protocol of HSP and HFP) routing might be wrong. See <a rel=nofollow class="external autonumber" href=https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/Bluetooth/#index10h3>[3]</a> - the firmware for BCM20702 can be installed via <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/bcm20702a1-firmware/>bcm20702a1-firmware</a></span><sup><small>AUR</small></sup> or <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/bcm20702b0-firmware/>bcm20702b0-firmware</a></span><sup><small>AUR</small></sup>.
+</p>
+<h4><span class=mw-headline id=Error:_Failed_to_start_discovery_org.bluez.Error.InProgress>Error: Failed to start discovery org.bluez.Error.InProgress</span></h4>
+<p>If your headset is discovered, but fails to connect with the error "Failed to start discovery org.bluez.Error.InProgress", install <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/bluez-hciconfig/>bluez-hciconfig</a></span><sup><small>AUR</small></sup> and run
+</p>
+<pre>$ hciconfig hci<i>X</i> up
+$ hciconfig hci<i>X</i> reset
+</pre>
+<p>where <i>X</i> is the identifier of your computer's bluetooth device (typically 0).
+<p>You should then be able to connect following the steps in <a href=#Configuration_via_CLI>#Configuration via CLI</a>.
+</p>
+<h2><span id=Switch_between_HSP.2FHFP_and_A2DP_setting></span><span class=mw-headline id=Switch_between_HSP/HFP_and_A2DP_setting>Switch between HSP/HFP and A2DP setting</span></h2>
+<p>This can easily be achieved by the following command where the <code><i>card_number</i></code> can be obtained by running <code>pacmd list-cards</code>.
+</p>
+<pre>$ pacmd set-card-profile <i>card_number</i> a2dp_sink
+</pre>
+<p>For enabling automatic profile switching from A2DP to HSP when a recording stream appears without any role set, you can append <code>auto_switch=2</code> to <code>load-module module-bluetooth-policy</code> in <code>/etc/pulse/default.pa</code>.
+<p>For more information about PulseAudio profiles, see <a rel=nofollow class="external text" href=https://freedesktop.org/wiki/Software/PulseAudio/Documentation/User/Bluetooth/#index1h2>PulseAudio Documentation</a>.
+</p>
+<h3><span class=mw-headline id=A2DP_not_working_with_PulseAudio>A2DP not working with PulseAudio</span></h3>
+<h4><span class=mw-headline id=Socket_interface_problem>Socket interface problem</span></h4>
+<p>If PulseAudio fails when changing the profile to A2DP with bluez 4.1+ and PulseAudio 3.0+, you can try disabling the Socket interface from <code>/etc/bluetooth/main.conf</code> by removing the line <code>Enable=Socket</code> and adding line <code>Disable=Socket</code>.
+</p>
+<h4><span class=mw-headline id=A2DP_sink_profile_is_unavailable>A2DP sink profile is unavailable</span></h4>
+<p>When the A2DP sink profile is unavailable it will not be possible to switch to the A2DP sink (output) with a PulseAudio front-end and the A2DP sink will not even be listed. This can be confirmed with <code>pactl</code>.
+</p>
+<pre> $ pactl list | grep -C2 A2DP
+      Profiles:
+              headset_head_unit: Headset Head Unit (HSP/HFP) (sinks: 1, sources: 1, priority: 30, available: yes)
+              a2dp_sink: High Fidelity Playback (A2DP Sink) (sinks: 1, sources: 0, priority: 40, available: no)
+              off: Off (sinks: 0, sources: 0, priority: 0, available: yes)
+         Active Profile: headset_head_unit
+</pre>
+<p>Trying to manually set the card profile with <code>pacmd</code> will fail.
+</p>
+<pre> $ pacmd set-card-profile bluez_card.C4_45_67_09_12_00 a2dp_sink
+ Failed to set card profile to 'a2dp_sink'.
+</pre>
+<p>This is known to happen from version 10.0 of Pulseaudio when connecting to Bluetooth headphones via Bluedevil or another BlueZ front-end. See <a rel=nofollow class="external text" href=https://gitlab.freedesktop.org/pulseaudio/pulseaudio/issues/525>related bug report.</a>
+<p>This issue also appears after initial pairing of Headphones with some Bluetooth controllers (e.g. <code>0a12:0001, Cambridge Silicon Radio</code>) which might default to the <code>Handsfree</code> or <code>Headset - HS</code> service and will not allow switching to the A2DP PulseAudio sink that requires the <code>AudioSink</code> service.
+<p>Possible solutions:
+</p>
+<ul><li>For some headsets, using the headset's volume or play/pause controls while connected can trigger the A2DP profile to become available.</ul>
+<ul><li>It is possible that connecting to a headset via <code>bluetoothctl</code> from <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=bluez-utils">bluez-utils</a></span> will make the A2DP sink profile available. There is an automation for this every time a bluetooth device is connected: <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/fix-bt-a2dp/>fix-bt-a2dp</a></span><sup><small>AUR</small></sup> (<a rel=nofollow class="external text" href=https://github.com/pastleo/fix-bt-a2dp#usage>detailed usage</a>)</ul>
+<pre>[bluetooth]# connect <i>[headset MAC here]</i>
+</pre>
+<ul><li>Manually switching to Bluetooth's <code>AudioSink</code> service which would make the A2DP profile and its A2DP PulseAudio sink available. This can be done with blueman-manager which included in <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=blueman">blueman</a></span> or by registering the UUID of the AudioSink service with <code>bluetoothctl</code> .</ul>
+<pre> $ bluetoothctl
+ [bluetooth]# menu gatt
+ [bluetooth]# register-service 0000110b-0000-1000-8000-00805f9b34fb
+ [bluetooth]# quit
+</pre>
+<ul><li>Disable the headset profile</ul>
+<pre style=margin-bottom:0;border-bottom:none;padding-bottom:0.8em>/etc/bluetooth/main.conf</pre>
+<pre style=margin-top:0;border-top-style:dashed;padding-top:0.8em>[General]
+Disable=Headset
+</pre>
+<ul><li>Enable MultiProfile support. This may help with headsets that support A2DP as well as Headset audio.</ul>
+<pre style=margin-bottom:0;border-bottom:none;padding-bottom:0.8em>/etc/bluetooth/main.conf</pre>
+<pre style=margin-top:0;border-top-style:dashed;padding-top:0.8em>[General]
+MultiProfile=multiple
+</pre>
+<ul><li>Sometimes, none of the steps above will work. You may have tried rebooting and powering bluetooth off and on to no avail. In this case, try <a href=https://wiki.archlinux.org/index.php/Restart class=mw-redirect title=Restart>restarting</a> the <code>bluetooth.service</code>.</ul>
+<ul><li>Alternatively, replacing <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href="https://archlinux.org/packages/?name=pulseaudio-bluetooth">pulseaudio-bluetooth</a></span> with <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/pulseaudio-modules-bt/>pulseaudio-modules-bt</a></span><sup><small>AUR</small></sup> or <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/pulseaudio-modules-bt-git/>pulseaudio-modules-bt-git</a></span><sup><small>AUR</small></sup>, which provides additional Bluetooth codecs, may resolve the issue.</ul>
+<h4><span class=mw-headline id=Gnome_with_GDM>Gnome with GDM</span></h4>
+<div class="noprint archwiki-template-message">
+<p><a href=https://wiki.archlinux.org/index.php/File:Merge-arrows-2.png class=image><img alt=Merge-arrows-2.png src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect fill-opacity="0"/></svg>' decoding=async style="background-blend-mode:normal!important;background-clip:content-box!important;background-position:50% 50%!important;background-color:rgba(0,0,0,0)!important;background-image:var(--sf-img-8)!important;background-size:100% 100%!important;background-origin:content-box!important;background-repeat:no-repeat!important" width=48 height=48></a><b>This article or section is a candidate for merging with <a href=#Connecting_works,_but_I_cannot_play_sound>#Connecting works, but I cannot play sound</a>.</b><a href=https://wiki.archlinux.org/index.php/File:Merge-arrows-2.png class=image><img alt=Merge-arrows-2.png src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect fill-opacity="0"/></svg>' decoding=async style="background-blend-mode:normal!important;background-clip:content-box!important;background-position:50% 50%!important;background-color:rgba(0,0,0,0)!important;background-image:var(--sf-img-8)!important;background-size:100% 100%!important;background-origin:content-box!important;background-repeat:no-repeat!important" width=48 height=48></a></p>
+<div><b>Notes:</b> duplicate instructions (Discuss in <a rel=nofollow class="external text" href=https://wiki.archlinux.org/index.php/Talk:Bluetooth_headset>Talk:Bluetooth headset#</a>)</div>
+</div>
+<p>The instructions below were tested on Gnome 3.24.2 and PulseAudio 10.0 however they may still be applicable and useful for other versions.
+<p>If PulseAudio fails when changing the profile to A2DP while using GNOME with GDM, you need to prevent GDM from starting its own instance of PulseAudio:
+</p>
+<ul><li>Prevent Pulseaudio clients from automatically starting a server if one is not running by adding the following:</ul>
+<pre style=margin-bottom:0;border-bottom:none;padding-bottom:0.8em>/var/lib/gdm/.config/pulse/client.conf</pre>
+<pre style=margin-top:0;border-top-style:dashed;padding-top:0.8em>autospawn = no
+daemon-binary = /bin/true
+</pre>
+<ul><li>Prevent systemd from starting Pulseaudio anyway with socket activation:</ul>
+<pre>$ sudo -ugdm mkdir -p /var/lib/gdm/.config/systemd/user
+$ sudo -ugdm ln -s /dev/null /var/lib/gdm/.config/systemd/user/pulseaudio.socket
+</pre>
+<ul><li>Restart, and check that there is no PulseAudio process for the <code>gdm</code> user using:</ul>
+<pre> $ pgrep -u gdm pulseaudio
+</pre>
+<p>Further discussion about this problem and alternative fixes can be found <a rel=nofollow class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=194006">here</a> and <a rel=nofollow class="external text" href="https://bbs.archlinux.org/viewtopic.php?id=196689">here</a>. Alternatively, one may try and install <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/fix-bt-a2dp/>fix-bt-a2dp</a></span><sup><small>AUR</small></sup>.
+</p>
+<h3><span class=mw-headline id=HFP_not_working_with_PulseAudio>HFP not working with PulseAudio</span></h3>
+<p>HFP-only bluetooth headsets may not be usable in the standard configuration of pulseaudio. The respective profiles occur, but they are not available:
+</p>
+<ul><li><code>bluetoothctl info</code> output shows:</ul>
+<pre> UUID: Audio Sink                (0000110b-0000-1000-8000-00805f9b34fb)
+ UUID: A/V Remote Control Target (0000110c-0000-1000-8000-00805f9b34fb)
+ UUID: A/V Remote Control        (0000110e-0000-1000-8000-00805f9b34fb)
+ UUID: Handsfree                 (0000111e-0000-1000-8000-00805f9b34fb)
+</pre>
+<ul><li><code>pactl list</code> of respective device shows:</ul>
+<pre> ...
+ Profiles:
+       ...
+       headset_head_unit: Headset Head Unit (HSP/HFP) (sinks: 1, sources: 1, priority: 30, available: no)
+</pre>
+<p>To solve the respective issue, update to pulseaudio (&gt;=13) and potentially <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/pulseaudio-modules-bt-git/>pulseaudio-modules-bt-git</a></span><sup><small>AUR</small></sup> and bluez (&gt;=5.5) to latest versions. Then install <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/ofono/>ofono</a></span><sup><small>AUR</small></sup> (start and enable using systemctl) and <span class="plainlinks archwiki-template-pkg"><a rel=nofollow class="external text" href=https://aur.archlinux.org/packages/phonesim/>phonesim</a></span><sup><small>AUR</small></sup> and create / activate a fake modem as described here <a rel=nofollow class="external autonumber" href=https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/Bluetooth/#index1h3>[4]</a>:
+</p>
+<ul><li>Create <code>/etc/ofono/phonesim.conf</code> with:</ul>
+<pre> [phonesim]
+ Address=127.0.0.1
+ Driver=phonesim
+ Port=12345
+</pre>
+<ul><li>Start as user:</ul>
+<pre> phonesim -p 12345 /usr/share/phonesim/default.xml &amp;
+</pre>
+<ul><li><a href=https://wiki.archlinux.org/index.php/Enable class=mw-redirect title=Enable>Enable</a> and <a href=https://wiki.archlinux.org/index.php/Start class=mw-redirect title=Start>start</a> <code>ofono</code> service.</ul>
+<ul><li>Power modem:</ul>
+<pre> dbus-send --print-reply --system --dest=org.ofono /phonesim org.ofono.Modem.SetProperty string:"Powered" variant:boolean:true
+</pre>
+<ul><li>Activate modem:</ul>
+<pre> dbus-send --print-reply --system --dest=org.ofono /phonesim org.ofono.Modem.SetProperty string:"Online" variant:boolean:true
+</pre>
+<ul><li>If you want to check the results of this, download ofono git sources (<a rel=nofollow class="external autonumber" href=https://github.com/rilmodem/ofono.git>[5]</a>) and call <code>list-modems</code> from the <code>ofono/test</code> directory. The output of the respective modem section should read like this:</ul>
+<pre> ...
+ [ /phonesim ]
+   Online = 1
+   Powered = 1
+   Lockdown = 0
+   Emergency = 0
+   Manufacturer = MeeGo
+   ...
+</pre>
+<ul><li>Finally, restart pulseaudio and reconnect headset. Now, HFP should be available:</ul>
+<pre>   headset_head_unit: Headset Head Unit (HSP/HFP) (sinks: 1, sources: 1, priority: 30, available: yes)
+</pre>
+<div class="archwiki-template-box archwiki-template-box-note"><strong>Note:</strong> HFP support is not stable and may cause glitches with switching to A2DP; try reconnecting, if the needed mode is not available.</div>
+<h3><span id=Disable_auto_switching_headset_to_HSP.2FHFP></span><span class=mw-headline id=Disable_auto_switching_headset_to_HSP/HFP>Disable auto switching headset to HSP/HFP</span></h3>
+<p>When using a bluetooth headset that supports multiple profiles, some applications switch to HSP/HFP profile automatically. If this behaviour is undesired you can disable this by appending the auto_switch=false parameter to the bluetooth-policy module:
+</p>
+<pre style=margin-bottom:0;border-bottom:none;padding-bottom:0.8em>/etc/pulse/default.pa </pre>
+<pre style=margin-top:0;border-top-style:dashed;padding-top:0.8em>load-module module-bluetooth-policy auto_switch=false
+</pre>
+</div></div><div class="printfooter sf-hidden">Retrieved from ""</div>
+ <div id=catlinks class=catlinks data-mw=interface><div id=mw-normal-catlinks class=mw-normal-catlinks><a href=https://wiki.archlinux.org/index.php/Special:Categories title=Special:Categories>Categories</a>: <ul><li><a href=https://wiki.archlinux.org/index.php/Category:Sound title=Category:Sound>Sound</a><li><a href=https://wiki.archlinux.org/index.php/Category:Bluetooth title=Category:Bluetooth>Bluetooth</a></ul></div><div id=mw-hidden-catlinks class="mw-hidden-catlinks mw-hidden-cats-hidden sf-hidden">Hidden categories: </div></div>
+ </div>
+</div>
+<div id=mw-navigation>
+ <h2>Navigation menu</h2>
+ <div id=mw-head>
+ 
+<nav id=p-personal class=vector-menu aria-labelledby=p-personal-label role=navigation>
+ <h3 id=p-personal-label class=sf-hidden>
+ 
+ </h3>
+ 
+ <div class="body vector-menu-content">
+ 
+ <ul class=vector-menu-content-list><li id=pt-createaccount><a href="https://wiki.archlinux.org/index.php?title=Special:CreateAccount&amp;returnto=Bluetooth+headset" title="You are encouraged to create an account and log in; however, it is not mandatory">Create account</a><li id=pt-login><a href="https://wiki.archlinux.org/index.php?title=Special:UserLogin&amp;returnto=Bluetooth+headset" title="You are encouraged to log in; however, it is not mandatory [Alt+Shift+o]" accesskey=o>Log in</a></ul>
+ 
+ </div>
+</nav>
+ <div id=left-navigation>
+ 
+<nav id=p-namespaces class="vector-menu vector-menu-tabs vectorTabs" aria-labelledby=p-namespaces-label role=navigation>
+ <h3 id=p-namespaces-label class=sf-hidden>
+ 
+ </h3>
+ 
+ <div class="body vector-menu-content">
+ 
+ <ul class=vector-menu-content-list><li id=ca-nstab-main class=selected><a href=https://wiki.archlinux.org/index.php/Bluetooth_headset title="View the content page [Alt+Shift+c]" accesskey=c>Page</a><li id=ca-talk><a href=https://wiki.archlinux.org/index.php/Talk:Bluetooth_headset rel=discussion title="Discussion about the content page [Alt+Shift+t]" accesskey=t>Discussion</a></ul>
+ 
+ </div>
+</nav>
+ 
+<nav id=p-variants class="vector-menu-empty emptyPortlet vector-menu vector-menu-dropdown vectorMenu sf-hidden" aria-labelledby=p-variants-label role=navigation>
+ 
+ 
+ 
+ 
+</nav>
+ </div>
+ <div id=right-navigation>
+ 
+<nav id=p-views class="vector-menu vector-menu-tabs vectorTabs" aria-labelledby=p-views-label role=navigation>
+ <h3 id=p-views-label class=sf-hidden>
+ 
+ </h3>
+ 
+ <div class="body vector-menu-content">
+ 
+ <ul class=vector-menu-content-list><li id=ca-view class="collapsible selected"><a href=https://wiki.archlinux.org/index.php/Bluetooth_headset>Read</a><li id=ca-viewsource class=collapsible><a href="https://wiki.archlinux.org/index.php?title=Bluetooth_headset&amp;action=edit" title="This page is protected.
+You can view its source [Alt+Shift+e]" accesskey=e>View source</a><li id=ca-history class=collapsible><a href="https://wiki.archlinux.org/index.php?title=Bluetooth_headset&amp;action=history" title="Past revisions of this page [Alt+Shift+h]" accesskey=h>View history</a></ul>
+ 
+ </div>
+</nav>
+ 
+<nav id=p-cactions class="vector-menu-empty emptyPortlet vector-menu vector-menu-dropdown vectorMenu sf-hidden" aria-labelledby=p-cactions-label role=navigation>
+ 
+ 
+ 
+ 
+</nav>
+ <div id=p-search role=search>
+ <h3>
+ <label for=searchInput>Search</label>
+ </h3>
+ <form action=/index.php id=searchform>
+ <div id=simpleSearch>
+ <input type=search name=search placeholder="Search ArchWiki" title="Search ArchWiki [Alt+Shift+f]" accesskey=f id=searchInput value>
+ 
+ <input type=submit name=fulltext value=Search title="Search the pages for this text" id=mw-searchButton class="searchButton mw-fallbackSearchButton">
+ <input type=submit name=go value=Go title="Go to a page with this exact name if it exists" id=searchButton class=searchButton>
+ </div>
+ </form>
+</div>
+ </div>
+ </div>
+ 
+<div id=mw-panel>
+ <div id=p-logo role=banner class=sf-hidden>
+ 
+ </div>
+ 
+<nav id=p-navigation class="vector-menu vector-menu-portal portal portal-first" aria-labelledby=p-navigation-label role=navigation>
+ <h3 id=p-navigation-label class=sf-hidden>
+ 
+ </h3>
+ 
+ <div class="body vector-menu-content">
+ 
+ <ul class=vector-menu-content-list><li id=n-mainpage-description><a href=https://wiki.archlinux.org/index.php/Main_page title="Visit the main page [Alt+Shift+z]" accesskey=z>Main page</a><li id=n-Table-of-contents><a href=https://wiki.archlinux.org/index.php/Table_of_contents>Table of contents</a><li id=n-portal><a href=https://wiki.archlinux.org/index.php/Getting_involved title="Various ways Archers can contribute to the community">Getting involved</a><li id=n-currentevents><a href=https://wiki.archlinux.org/index.php/ArchWiki:News title="The latest lowdown on the wiki">Wiki news</a><li id=n-randompage><a href=https://wiki.archlinux.org/index.php/Special:Random title="Load a random page [Alt+Shift+x]" accesskey=x>Random page</a></ul>
+ 
+ </div>
+</nav>
+ 
+<nav id=p-Interaction class="vector-menu vector-menu-portal portal" aria-labelledby=p-Interaction-label role=navigation>
+ <h3 id=p-Interaction-label>
+ <span>Interaction</span>
+ </h3>
+ 
+ <div class="body vector-menu-content">
+ 
+ <ul class=vector-menu-content-list><li id=n-help><a href=https://wiki.archlinux.org/index.php/Category:Help title="Wiki navigation, reading, and editing help">Help</a><li id=n-Contributing><a href=https://wiki.archlinux.org/index.php/ArchWiki:Contributing>Contributing</a><li id=n-recentchanges><a href=https://wiki.archlinux.org/index.php/Special:RecentChanges title="A list of recent changes in the wiki [Alt+Shift+r]" accesskey=r>Recent changes</a><li id=n-Recent-talks><a href="https://wiki.archlinux.org/index.php?title=Special:RecentChanges&amp;namespace=all-discussions" rel=nofollow>Recent talks</a><li id=n-newpages><a href=https://wiki.archlinux.org/index.php/Special:NewPages>New pages</a><li id=n-Statistics><a href=https://wiki.archlinux.org/index.php/ArchWiki:Statistics>Statistics</a><li id=n-Requests><a href=https://wiki.archlinux.org/index.php/ArchWiki_talk:Requests>Requests</a></ul>
+ 
+ </div>
+</nav>
+<nav id=p-tb class="vector-menu vector-menu-portal portal" aria-labelledby=p-tb-label role=navigation>
+ <h3 id=p-tb-label>
+ <span>Tools</span>
+ </h3>
+ 
+ <div class="body vector-menu-content">
+ 
+ <ul class=vector-menu-content-list><li id=t-whatlinkshere><a href=https://wiki.archlinux.org/index.php/Special:WhatLinksHere/Bluetooth_headset title="A list of all wiki pages that link here [Alt+Shift+j]" accesskey=j>What links here</a><li id=t-recentchangeslinked><a href=https://wiki.archlinux.org/index.php/Special:RecentChangesLinked/Bluetooth_headset rel=nofollow title="Recent changes in pages linked from this page [Alt+Shift+k]" accesskey=k>Related changes</a><li id=t-specialpages><a href=https://wiki.archlinux.org/index.php/Special:SpecialPages title="A list of all special pages [Alt+Shift+q]" accesskey=q>Special pages</a><li id=t-print><a href=https://wiki.archlinux.org/index.php/Bluetooth_headset rel=alternate title="Printable version of this page [Alt+Shift+p]" accesskey=p>Printable version</a><li id=t-permalink><a href="https://wiki.archlinux.org/index.php?title=Bluetooth_headset&amp;oldid=656207" title="Permanent link to this revision of the page">Permanent link</a><li id=t-info><a href="https://wiki.archlinux.org/index.php?title=Bluetooth_headset&amp;action=info" title="More information about this page">Page information</a></ul>
+ 
+ </div>
+</nav>
+ 
+<nav id=p-lang class="vector-menu vector-menu-portal portal" aria-labelledby=p-lang-label role=navigation>
+ <h3 id=p-lang-label>
+ <span>In other languages</span>
+ </h3>
+ 
+ <div class="body vector-menu-content">
+ 
+ <ul class=vector-menu-content-list><li class="interlanguage-link interwiki-ja"><a href=https://wiki.archlinux.jp/index.php/Bluetooth_%E3%83%98%E3%83%83%E3%83%89%E3%82%BB%E3%83%83%E3%83%88 title="Bluetooth ヘッドセット – 日本語" hreflang=ja class=interlanguage-link-target lang=ja>日本語</a><li class="interlanguage-link interwiki-zh-hans"><a href=https://wiki.archlinux.org/index.php/Bluetooth_headset_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87) title="Bluetooth headset – 中文（简体）‎" hreflang=zh-Hans class=interlanguage-link-target lang=zh-Hans>中文（简体）‎</a></ul>
+ 
+ </div>
+</nav>
+</div>
+</div>
+<footer id=footer class=mw-footer role=contentinfo>
+ <ul id=footer-info>
+ <li id=footer-info-lastmod> This page was last edited on 26 March 2021, at 17:29.</li>
+ <li id=footer-info-copyright>Content is available under <a class=external rel=nofollow href=http://www.gnu.org/copyleft/fdl.html>GNU Free Documentation License 1.3 or later</a> unless otherwise noted.</li>
+ </ul>
+ <ul id=footer-places>
+ <li id=footer-places-privacy><a href=https://wiki.archlinux.org/index.php/ArchWiki:Privacy_policy title="ArchWiki:Privacy policy">Privacy policy</a></li>
+ <li id=footer-places-about><a href=https://wiki.archlinux.org/index.php/ArchWiki:About title=ArchWiki:About>About ArchWiki</a></li>
+ <li id=footer-places-disclaimer><a href=https://wiki.archlinux.org/index.php/ArchWiki:General_disclaimer title="ArchWiki:General disclaimer">Disclaimers</a></li>
+ </ul>
+ <ul id=footer-icons class="noprint sf-hidden">
+ 
+ </ul>
+ <div style=clear:both></div>
+</footer>
+<div style=all:initial><div style=all:initial id=__hcfy__><template shadowmode=open><style class=sf-hidden>#root{-webkit-text-size-adjust:100%;box-sizing:border-box;font-size:14px;font-weight:400;letter-spacing:0;line-height:1.28581;text-transform:none;color:#182026;font-family:-apple-system,'BlinkMacSystemFont','Segoe UI','Roboto','Oxygen','Ubuntu','Cantarell','Open Sans','Helvetica Neue','Icons16',sans-serif}</style><style class=sf-hidden>#translate-panel{background-color:#f5f8fa;display:flex;flex-direction:column;padding-bottom:8px}.bp3-dark #translate-panel{background-color:#293742}#translate-panel .fixed{flex-shrink:0;margin-bottom:10px}#translate-panel .body{flex-grow:1;overflow:auto;overscroll-behavior:contain}#translate-panel .body::-webkit-scrollbar{width:8px;background-color:rgba(0,0,0,0);-webkit-border-radius:100px}#translate-panel .body::-webkit-scrollbar:hover{background-color:rgba(0,0,0,0.09)}#translate-panel .body::-webkit-scrollbar-thumb:vertical{background:rgba(0,0,0,0.5);-webkit-border-radius:100px}#translate-panel .body::-webkit-scrollbar-thumb:vertical:active{background:rgba(0,0,0,0.61);-webkit-border-radius:100px}#translate-panel.size-small,#translate-panel.size-small h6.bp3-heading,#translate-panel.size-small .bp3-control.bp3-large,#translate-panel.size-small textarea.bp3-input.bp3-small{font-size:14px}#translate-panel.size-small .phonetic-item,#translate-panel.size-small .quick-settings a{font-size:12px}#translate-panel.size-middle,#translate-panel.size-middle h6.bp3-heading,#translate-panel.size-middle .bp3-control.bp3-large,#translate-panel.size-middle textarea.bp3-input{font-size:18px}#translate-panel.size-middle .phonetic-item,#translate-panel.size-middle .quick-settings a{font-size:14px}#translate-panel.size-large,#translate-panel.size-large h6.bp3-heading,#translate-panel.size-large .bp3-control.bp3-large,#translate-panel.size-large textarea.bp3-input.bp3-large{font-size:22px}#translate-panel.size-large .source,#translate-panel.size-large .phonetic-item,#translate-panel.size-large .quick-settings a{font-size:18px}#translate-panel .bp3-button.bp3-small,#translate-panel .bp3-small .bp3-button{min-height:20px;min-width:20px}#translate-panel .header{display:flex;align-items:center;padding:4px 6px 4px 10px;border-bottom:1px solid #d1d1d1}.bp3-dark #translate-panel .header{border-bottom-color:rgba(16,22,26,0.4)}#translate-panel .header .drag-block{min-width:5px;flex-shrink:0;flex-grow:1;align-self:stretch}#translate-panel .header .left{flex-shrink:0;display:flex}#translate-panel .header .right{flex-shrink:0;display:flex;align-items:center}#translate-panel .header .right .bp3-icon-arrow-right{flex-shrink:0;margin:0 5px}#translate-panel .header .right>.bp3-button{flex-shrink:0;margin:0 1px}#translate-panel .header .right>.bp3-button:last-child{margin-right:0}#translate-panel .quick-settings{padding:4px 9px;margin:0 1px}#translate-panel .quick-settings>div{margin-bottom:5px}#translate-panel .quick-settings .bp3-control{margin-bottom:0}#translate-panel .query-text{padding:10px 10px 2px 10px}#translate-panel .query-text textarea.bp3-input{min-height:44px;font-family:system-ui,-apple-system,'Segoe UI','Roboto','Ubuntu','Cantarell','Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji'}#translate-panel .body{padding:0 10px}#translate-panel .body .bp3-card:first-child{margin-top:1px}#translate-panel .body .bp3-card:last-child{margin-bottom:1px}#translate-panel .body .no-api{margin:20px 0}.result-block{margin:8px 0;padding:2px 5px}.result-block .bp3-button{visibility:hidden}.result-block .error .bp3-button,.result-block:hover .bp3-button{visibility:visible}.result-block .legend{display:flex;align-items:center;justify-content:space-between}.result-block .legend .legend-left{display:flex;align-items:center}.result-block .legend .api-ico,.result-block .legend .bp3-heading{flex-shrink:0;white-space:nowrap}.result-block .legend .api-ico{display:inline-block;width:14px;height:14px;background-size:contain;margin-right:3px}.result-block .legend .bp3-heading{margin-bottom:0;margin-right:10px}.result-block .legend .source{cursor:pointer;font-size:12px}.result-block .legend .source .bp3-icon{position:relative;top:-1px;margin-left:1px}.result-block .phonetic{display:flex;flex-wrap:wrap}.result-block .phonetic .phonetic-item{display:flex;align-items:center;font-size:12px}.result-block .phonetic .phonetic-item:not(:last-child){margin-right:12px}.result-block .phonetic .phonetic-item>span:first-child{margin-right:7px}.result-block .common-result p{line-height:1.3;margin:2px 0;overflow-wrap:break-word}.result-block .common-result .dict a{text-decoration:underline}.result-block .error{font-size:12px;padding:5px 10px}.result-block .dict-pos{margin-right:5px}.external-translators{margin-bottom:3px;padding:0;display:flex;flex-wrap:wrap}.external-translators>div{margin:0 5px 5px 0}.quick-links a{margin:0 5px 5px 0}#popper-container{width:250px;max-width:100%;position:absolute;left:0;top:0;z-index:9999999999;touch-action:none;transition:opacity 0.2s;background-color:#f5f8fa}.bp3-dark #popper-container{background-color:#293742}#popper-container.show{opacity:1;pointer-events:auto;user-select:auto}#popper-container,#popper-container[data-popper-reference-hidden='true']{opacity:0;pointer-events:none;user-select:none}#popper-container .drag-block{cursor:grab}#popper-container.pin{position:fixed}#popper-container.pin .arrow{display:none}#popper-container .arrow,#popper-container .arrow::before{position:absolute;width:8px;height:8px;z-index:-1}#popper-container .arrow::before{content:'';transform:rotate(45deg);background:#f5f8fa}.bp3-dark #popper-container .arrow::before{background-color:#293742}#popper-container .arrow{display:none}#popper-container.show[data-popper-placement]:not([data-popper-reference-hidden='true']) .arrow{display:block}#popper-container[data-popper-placement^='top'] .arrow{bottom:-5px}#popper-container[data-popper-placement^='top'] .arrow::before{border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1}#popper-container[data-popper-placement^='bottom'] .arrow{top:-5px}#popper-container[data-popper-placement^='bottom'] .arrow::before{border-left:1px solid #d1d1d1;border-top:1px solid #d1d1d1}#popper-container[data-popper-placement^='left'] .arrow{right:-5px}#popper-container[data-popper-placement^='left'] .arrow::before{border-right:1px solid #d1d1d1;border-top:1px solid #d1d1d1}#popper-container[data-popper-placement^='right'] .arrow{left:-5px}#popper-container[data-popper-placement^='right'] .arrow::before{border-left:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1}#translate-btn{display:none;position:absolute;z-index:9999999999;left:0;top:0}#translate-btn .bp3-button{padding:2px;min-width:0;min-height:0}#translate-btn .btn-icon{width:18px;height:18px;background-image:url(moz-extension://24222d6a-7d17-47dd-ac11-d53b90100eb3/logo.png);background-size:contain}.bp3-dark #translate-btn .btn-icon{background-image:url(moz-extension://24222d6a-7d17-47dd-ac11-d53b90100eb3/logowhite36.png)}#translate-btn.show{display:block}#ocr-container{position:fixed;z-index:99999999999999;left:0;top:0;right:0;bottom:0}#ocr-container .toolbar{display:none;position:absolute;z-index:1}#ocr-container img{max-width:100%}#app{cursor:default}.switch-pin{flex-shrink:0;cursor:pointer}.switch-pin .bp3-icon-pin{transition:transform 0.2s,color 0.2s;transform:rotate(-45deg)}.pin .switch-pin .bp3-icon-pin{transform:rotate(-70deg)}.cut-btn{margin-left:2px}.app-toaster-container{position:fixed!important;z-index:9999999999!important}</style><div id=root><div id=app><div id=translate-btn class=sf-hidden></div><div id=popper-container style=width:250px;transform:translate(0px) class=bp3-elevation-4><div id=translate-panel class=size-small><div class=fixed><div class=header><div class=left><div class=switch-pin><button type=button class="bp3-button bp3-minimal bp3-small"><span icon=pin class="bp3-icon bp3-icon-pin"><svg data-icon=pin width=14 height=14 viewBox="0 0 16 16"><desc>pin</desc><path d="M9.41.92c-.51.51-.41 1.5.15 2.56L4.34 7.54C2.8 6.48 1.45 6.05.92 6.58l3.54 3.54-3.54 4.95 4.95-3.54 3.54 3.54c.53-.53.1-1.88-.96-3.42l4.06-5.22c1.06.56 2.04.66 2.55.15L9.41.92z" fill-rule=evenodd></path></svg></span></button></div><button type=button class="bp3-button bp3-minimal bp3-small cut-btn" title=截图翻译><span icon=cut class="bp3-icon bp3-icon-cut"><svg data-icon=cut width=14 height=14 viewBox="0 0 16 16"><desc>cut</desc><path d="M13 2s.71-1.29 0-2L8.66 5.07l1.05 1.32L13 2zm.07 8c-.42 0-.82.09-1.18.26L3.31 0c-.69.71 0 2 0 2l3.68 5.02-2.77 3.24A2.996 2.996 0 000 13c0 1.66 1.34 3 3 3s3-1.34 3-3c0-.46-.11-.89-.29-1.27L8.1 8.54l2.33 3.19c-.18.39-.29.82-.29 1.27 0 1.66 1.31 3 2.93 3S16 14.66 16 13s-1.31-3-2.93-3zM3 14c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm10.07 0c-.54 0-.98-.45-.98-1s.44-1 .98-1 .98.45.98 1-.44 1-.98 1z" fill-rule=evenodd></path></svg></span></button><button type=button class="bp3-button bp3-minimal bp3-small cut-btn" title=网页翻译><span icon=translate class="bp3-icon bp3-icon-translate"><svg data-icon=translate width=14 height=14 viewBox="0 0 16 16"><desc>translate</desc><path d="M15.89 14.56l-3.99-8h-.01c-.17-.33-.5-.56-.89-.56s-.72.23-.89.56h-.01L9 8.76 7.17 7.38l.23-.18C8.37 6.47 9 5.31 9 4V3h1c.55 0 1-.45 1-1s-.45-1-1-1H7c0-.55-.45-1-1-1H5c-.55 0-1 .45-1 1H1c-.55 0-1 .45-1 1s.45 1 1 1h6v1c0 .66-.32 1.25-.82 1.61l-.68.51-.68-.5C4.32 5.25 4 4.66 4 4H2c0 1.31.63 2.47 1.6 3.2l.23.17L1.4 9.2l.01.01C1.17 9.4 1 9.67 1 10c0 .55.45 1 1 1 .23 0 .42-.09.59-.21l.01.01 2.9-2.17 2.6 1.95-1.99 3.98h.01c-.07.13-.12.28-.12.44 0 .55.45 1 1 1 .39 0 .72-.23.89-.56h.01L8.62 14h4.76l.72 1.45h.01c.17.32.5.55.89.55.55 0 1-.45 1-1 0-.16-.05-.31-.11-.44zM9.62 12L11 9.24 12.38 12H9.62z" fill-rule=evenodd></path></svg></span></button></div><div class=drag-block title=按住不放可以拖动></div><div class=right><button type=button title=添加到收藏夹 class="bp3-button bp3-minimal bp3-small"><span icon=star-empty class="bp3-icon bp3-icon-star-empty"><svg data-icon=star-empty width=14 height=14 viewBox="0 0 16 16"><desc>star-empty</desc><path d="M16 6.11l-5.53-.84L8 0 5.53 5.27 0 6.11l4 4.1L3.06 16 8 13.27 12.94 16 12 10.21l4-4.1zM4.91 13.2l.59-3.62L3 7.02l3.45-.53L8 3.2l1.55 3.29 3.45.53-2.5 2.56.59 3.62L8 11.49 4.91 13.2z" fill-rule=evenodd></path></svg></span></button><button type=button class="bp3-button bp3-minimal bp3-small settings" title=快捷设置><span icon=cog class="bp3-icon bp3-icon-cog"><svg data-icon=cog width=14 height=14 viewBox="0 0 16 16"><desc>cog</desc><path d="M15.19 6.39h-1.85c-.11-.37-.27-.71-.45-1.04l1.36-1.36c.31-.31.31-.82 0-1.13l-1.13-1.13a.803.803 0 00-1.13 0l-1.36 1.36c-.33-.17-.67-.33-1.04-.44V.79c0-.44-.36-.8-.8-.8h-1.6c-.44 0-.8.36-.8.8v1.86c-.39.12-.75.28-1.1.47l-1.3-1.3c-.3-.3-.79-.3-1.09 0L1.82 2.91c-.3.3-.3.79 0 1.09l1.3 1.3c-.2.34-.36.7-.48 1.09H.79c-.44 0-.8.36-.8.8v1.6c0 .44.36.8.8.8h1.85c.11.37.27.71.45 1.04l-1.36 1.36c-.31.31-.31.82 0 1.13l1.13 1.13c.31.31.82.31 1.13 0l1.36-1.36c.33.18.67.33 1.04.44v1.86c0 .44.36.8.8.8h1.6c.44 0 .8-.36.8-.8v-1.86c.39-.12.75-.28 1.1-.47l1.3 1.3c.3.3.79.3 1.09 0l1.09-1.09c.3-.3.3-.79 0-1.09l-1.3-1.3c.19-.35.36-.71.48-1.1h1.85c.44 0 .8-.36.8-.8v-1.6a.816.816 0 00-.81-.79zm-7.2 4.6c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" fill-rule=evenodd></path></svg></span></button><button type=button title=关闭(Esc) class="bp3-button bp3-minimal bp3-small"><span icon=cross class="bp3-icon bp3-icon-cross"><svg data-icon=cross width=18 height=18 viewBox="0 0 16 16"><desc>cross</desc><path d="M9.41 8l3.29-3.29c.19-.18.3-.43.3-.71a1.003 1.003 0 00-1.71-.71L8 6.59l-3.29-3.3a1.003 1.003 0 00-1.42 1.42L6.59 8 3.3 11.29c-.19.18-.3.43-.3.71a1.003 1.003 0 001.71.71L8 9.41l3.29 3.29c.18.19.43.3.71.3a1.003 1.003 0 00.71-1.71L9.41 8z" fill-rule=evenodd></path></svg></span></button></div></div><div class=bp3-collapse><div class="bp3-collapse-body bp3-fixed-positioning-containing-block sf-hidden" aria-hidden=true></div></div><div class=query-text style=display:none></div></div><div class=body><p>请输入需要翻译的文本。</p></div></div><div class="arrow sf-hidden"></div></div></div></div></template></div></div><script data-template-shadow-root>(()=>{document.currentScript.remove();processNode(document);function processNode(node){node.querySelectorAll("template[shadowmode]").forEach(element=>{let shadowRoot = element.parentElement.shadowRoot;if (!shadowRoot) {try {shadowRoot=element.parentElement.attachShadow({mode:element.getAttribute("shadowmode"),delegatesFocus:Boolean(element.getAttribute("delegatesfocus"))});shadowRoot.innerHTML=element.innerHTML;element.remove()} catch (error) {} if (shadowRoot) {processNode(shadowRoot)}}})}})()</script>

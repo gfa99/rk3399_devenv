@@ -4,6 +4,8 @@
 *~
 .repo/
 .git/
+IMAGE/
+rockdev/
 
 #
 # temporary files during compiling phase

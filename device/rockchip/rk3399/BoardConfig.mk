@@ -5,9 +5,9 @@ export RK_ARCH=arm64
 # Uboot defconfig
 export RK_UBOOT_DEFCONFIG=rk3399
 # Kernel defconfig
-export RK_KERNEL_DEFCONFIG=rockchip_linux_defconfig
+export RK_KERNEL_DEFCONFIG=temi_rk3399_linux_defconfig
 # Kernel dts
-export RK_KERNEL_DTS=rk3399-sapphire-excavator-linux
+export RK_KERNEL_DTS=temi-rk3399-sapphire-excavator-lp4-linux
 # boot image type
 export RK_BOOT_IMG=boot.img
 # kernel image path
@@ -44,3 +44,5 @@ export RK_USERDATA_DIR=userdata_normal
 export RK_MISC=wipe_all-misc.img
 #choose enable distro module
 export RK_DISTRO_MODULE=
+# for default use ubuntu rootfs 
+#export RK_ROOTFS_SYSTEM=ubuntu

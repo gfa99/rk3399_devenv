@@ -14,12 +14,15 @@ function usage()
 	echo "BoardConfig*.mk    -switch to specified board config"
 	echo "uboot              -build uboot"
 	echo "kernel             -build kernel"
+	echo "dtb                -build kernel dtb"
 	echo "modules            -build kernel modules"
+	echo "tools              -build kernel tools (eg. perf)"
 	echo "rootfs             -build default rootfs, currently build buildroot as default"
 	echo "buildroot          -build buildroot rootfs"
 	echo "ramboot            -build ramboot image"
 	echo "multi-npu_boot     -build boot image for multi-npu board"
 	echo "yocto              -build yocto rootfs"
+	echo "ubuntu             -build ubuntu rootfs"
 	echo "debian             -build debian9 stretch rootfs"
 	echo "distro             -build debian10 buster rootfs"
 	echo "pcba               -build pcba"
@@ -31,8 +34,9 @@ function usage()
 	echo "otapackage         -pack ab update otapackage image"
 	echo "save               -save images, patches, commands used to debug"
 	echo "allsave            -build all & firmware & updateimg & save"
+	echo "temifw version     -build temi fireware and packaging it"
 	echo ""
-	echo "Default option is 'allsave'."
+	echo "Default option is 'temifw'."
 }
 
 function build_uboot(){
@@ -66,6 +70,30 @@ function build_kernel(){
 	fi
 }
 
+function build_dtb(){
+	echo "============Start build kernel dtb============"
+	devname="$RK_KERNEL_DTS"
+	src_dts=$devname.dts
+	pre_dts=/tmp/$devname.pre.dts
+	dec_dts=/tmp/$devname.dec.dts
+	dst_dtb=$devname.dtb
+	dtc_cmd=$TOP_DIR/kernel/scripts/dtc/dtc
+	echo "Preprocessed  dts: $pre_dts"
+	echo "Decompilation dts: $dec_dts"
+
+	cd $TOP_DIR/kernel/arch/arm64/boot/dts/rockchip
+	cpp -nostdinc -I$TOP_DIR/kernel/include -undef -x assembler-with-cpp $src_dts > $pre_dts
+	$dtc_cmd -O dtb -b 0 -o $dst_dtb $pre_dts
+	$dtc_cmd -I dtb -O dts $dst_dtb -o $dec_dts
+	cd - > /dev/null
+	if [ $? -eq 0 ]; then
+		echo "====Build dtb ok!===="
+	else
+		echo "====Build dtb failed!===="
+		exit 1
+	fi
+}
+
 function build_modules(){
 	echo "============Start build kernel modules============"
 	echo "TARGET_ARCH          =$RK_ARCH"
@@ -73,9 +101,23 @@ function build_modules(){
 	echo "=================================================="
 	cd $TOP_DIR/kernel && make ARCH=$RK_ARCH $RK_KERNEL_DEFCONFIG && make ARCH=$RK_ARCH modules -j$RK_JOBS && cd -
 	if [ $? -eq 0 ]; then
-		echo "====Build kernel ok!===="
+		echo "====Build modules ok!===="
 	else
-		echo "====Build kernel failed!===="
+		echo "====Build modules failed!===="
+		exit 1
+	fi
+}
+
+function build_tools(){
+	echo "============Start build kernel tools============"
+	echo "TARGET_ARCH =$RK_ARCH"
+	echo "================================================"
+	C_C=$TOP_DIR/prebuilts/gcc/linux-x86/aarch64/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
+	cd $TOP_DIR/kernel/tools && make ARCH=$RK_ARCH CROSS_COMPILE=$C_C LDFLAGS=-static -j$RK_JOBS perf && cd -
+	if [ $? -eq 0 ]; then
+		echo "====Build tools ok!===="
+	else
+		echo "====Build tools failed!===="
 		exit 1
 	fi
 }
@@ -147,6 +189,20 @@ function build_yocto(){
 	fi
 }
 
+function build_ubuntu(){
+	cd ubuntu
+
+	# TODO: 
+
+	cd ..
+	if [ $? -eq 0 ]; then
+		echo "====Build Ubuntu ok!===="
+	else
+		echo "====Build Ubuntu failed!===="
+		exit 1
+	fi
+}
+
 function build_debian(){
 	cd debian
 
@@ -203,6 +259,10 @@ function build_rootfs(){
 		distro)
 			build_distro
 			ROOTFS_IMG=rootfs/linaro-rootfs.img
+			;;
+		ubuntu)
+			build_ubuntu
+			ROOTFS_IMG=ubuntu/ubuntu-rootfs.img
 			;;
 		*)
 			build_buildroot
@@ -356,7 +416,6 @@ function build_save(){
 	echo "UBOOT:  defconfig: $RK_UBOOT_DEFCONFIG" >> $STUB_PATH/build_cmd_info
 	echo "KERNEL: defconfig: $RK_KERNEL_DEFCONFIG, dts: $RK_KERNEL_DTS" >> $STUB_PATH/build_cmd_info
 	echo "BUILDROOT: $RK_CFG_BUILDROOT" >> $STUB_PATH/build_cmd_info
-
 }
 
 function build_allsave(){
@@ -364,6 +423,69 @@ function build_allsave(){
 	build_firmware
 	build_updateimg
 	build_save
+}
+
+function build_temifw() {
+	echo "Start make temi fireware"
+	
+	build_uboot
+	build_kernel
+	
+	IMAGE_PATH=$TOP_DIR/rockdev
+	IMAGE_NAME=new_update.img
+
+	PACK_TOOL_DIR=$TOP_DIR/tools/linux/Linux_Pack_Firmware
+	cd $PACK_TOOL_DIR/temidev && ./pack.sh $IMAGE_NAME && cd -
+	mv $PACK_TOOL_DIR/temidev/$IMAGE_NAME $IMAGE_PATH/$IMAGE_NAME
+	if [ $? -eq 0 ]; then
+		echo "Make update image ok!"
+		echo "Please check [$IMAGE_PATH/$IMAGE_NAME]"
+	else
+		echo "Make update image failed!"
+		exit 1
+	fi
+
+	DATE=$(date  +%Y%m%d.%H%M)
+	VERSION=v0
+	[ -n "$1" ] && VERSION="$1"
+	#STUB_PATH=Image/"$RK_KERNEL_DTS"_"$DATE"_RELEASE
+	STUB_PATH=Image/"TEMI-RK3399-LINUX"_"$DATE"_RELEASE_$VERSION
+	STUB_PATH="$(echo $STUB_PATH | tr '[:lower:]' '[:upper:]')"
+	export STUB_PATH=$TOP_DIR/$STUB_PATH
+	export STUB_PATCH_PATH=$STUB_PATH/PATCHES
+	mkdir -p $STUB_PATH/IMAGES
+	mkdir -p $STUB_PATH/TOOLS/{Linux_Repack_Tool,Linux_Upgrade_Tool,Windows_Upgrade_Tool}
+	rsync -vaL $PACK_TOOL_DIR/temidev/{bin,pack.sh,unpack.sh,Readme.md} $STUB_PATH/TOOLS/Linux_Repack_Tool
+	echo "remove upgrade_tool's log" && sudo rm -rf $TOP_DIR/tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/log
+	rsync -vaL $TOP_DIR/tools/linux/Linux_Upgrade_Tool/Linux_Upgrade_Tool/*        $STUB_PATH/TOOLS/Linux_Upgrade_Tool
+	rsync -vaL $TOP_DIR/tools/windows/AndroidTool/AndroidTool_Release/*            $STUB_PATH/TOOLS/Windows_Upgrade_Tool
+	cp $IMAGE_PATH/{MiniLoaderAll.bin,parameter.txt,uboot.img,trust.img,boot.img}  $STUB_PATH/IMAGES
+	mv $IMAGE_PATH/$IMAGE_NAME $STUB_PATH/
+	echo "How to burn update.img (Test under Ubuntu, ps: Only first burn need to step 1 and 2)" >> $STUB_PATH/Readme
+	echo "1. sudo ./TOOLS/Linux_Upgrade_Tool/upgrade_tool_v1.24 ef $IMAGE_NAME" >> $STUB_PATH/Readme
+	echo "2. sudo ./TOOLS/Linux_Upgrade_Tool/upgrade_tool       ef $IMAGE_NAME" >> $STUB_PATH/Readme
+	echo "3. sudo ./TOOLS/Linux_Upgrade_Tool/upgrade_tool       uf $IMAGE_NAME" >> $STUB_PATH/Readme
+	mkdir -p $STUB_PATCH_PATH/{u-boot,kernel}
+	cp $TOP_DIR/u-boot/.config    $STUB_PATCH_PATH/u-boot
+	cp $TOP_DIR/u-boot/u-boot     $STUB_PATCH_PATH/u-boot
+	cp $TOP_DIR/u-boot/System.map $STUB_PATCH_PATH/u-boot
+	cp $TOP_DIR/kernel/.config    $STUB_PATCH_PATH/kernel
+	cp $TOP_DIR/kernel/vmlinux    $STUB_PATCH_PATH/kernel
+	cp $TOP_DIR/kernel/System.map $STUB_PATCH_PATH/kernel
+	#Save build command info
+	echo "UBOOT:  defconfig: $RK_UBOOT_DEFCONFIG" >> $STUB_PATH/build_cmd_info
+	echo "KERNEL: defconfig: $RK_KERNEL_DEFCONFIG, dts: $RK_KERNEL_DTS" >> $STUB_PATH/build_cmd_info
+
+	cd $STUB_PATH
+	md5sum $IMAGE_NAME > ${IMAGE_NAME}.md5sum
+	7z a PRODUCTION_FIREWARE.7z Readme ${IMAGE_NAME}* TOOLS/{Linux_Upgrade_Tool,Windows_Upgrade_Tool}
+	fwsum=`md5sum PRODUCTION_FIREWARE.7z | cut -d ' ' -f1`
+	mv PRODUCTION_FIREWARE.7z PRODUCTION_FIREWARE_${VERSION}_${fwsum}.7z
+	rm ${IMAGE_NAME}.md5sum
+	mv ${IMAGE_NAME} $IMAGE_PATH/${IMAGE_NAME}.${VERSION}
+	cd -
+
+	echo "make temi fireware ok!"
 }
 
 #=========================
@@ -376,7 +498,7 @@ if echo $@|grep -wqE "help|-h"; then
 fi
 
 OPTIONS="$@"
-for option in ${OPTIONS:-allsave}; do
+for option in ${OPTIONS:-temifw}; do
 	echo "processing option: $option"
 	case $option in
 		BoardConfig*.mk)
@@ -389,12 +511,18 @@ for option in ${OPTIONS:-allsave}; do
 
 			ln -sf $CONF $BOARD_CONFIG
 			;;
-		buildroot|debian|distro|yocto)
+		buildroot|ubuntu|debian|distro|yocto)
 			build_rootfs $option
 			;;
 		recovery)
 			build_kernel
 			;&
+		temifw)
+			[ $# -ne 2 ] && echo "Parameter error!" && usage && exit 1
+			shift 1
+			build_temifw $@
+			break
+			;;
 		*)
 			eval build_$option || usage
 			;;

@@ -32,6 +32,8 @@
 
 #include "8250.h"
 
+#define TEMI_UART
+
 /* Offsets for the DesignWare specific registers */
 #define DW_UART_USR	0x1f /* UART Status Register */
 #define DW_UART_RFL	0x21 /* UART Receive Fifo Level Register */
@@ -241,6 +243,7 @@ dw8250_do_pm(struct uart_port *port, unsigned int state, unsigned int old)
 		pm_runtime_put_sync_suspend(port->dev);
 }
 
+#ifndef TEMI_UART
 static void dw8250_set_termios(struct uart_port *p, struct ktermios *termios,
 			       struct ktermios *old)
 {
@@ -299,6 +302,7 @@ out:
 
 	serial8250_do_set_termios(p, termios, old);
 }
+#endif
 
 /*
  * dw8250_fallback_dma_filter will prevent the UART from getting just any free
@@ -431,8 +435,9 @@ static int dw8250_probe(struct platform_device *pdev)
 	p->iotype	= UPIO_MEM;
 	p->serial_in	= dw8250_serial_in;
 	p->serial_out	= dw8250_serial_out;
+#ifndef TEMI_UART
 	p->set_termios = dw8250_set_termios;
-
+#endif
 	p->membase = devm_ioremap(&pdev->dev, regs->start, resource_size(regs));
 	if (!p->membase)
 		return -ENOMEM;
